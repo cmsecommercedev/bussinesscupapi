@@ -1,0 +1,64 @@
+@model WeekViewModel
+@{
+    ViewData["Title"] = "Yeni Hafta";
+    Layout = "_PopupLayout";
+}
+
+<div class="p-6 bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl mx-auto">
+    <div class="border-b border-gray-700 pb-4 mb-6">
+        <h2 class="text-2xl font-semibold text-yellow-500">Yeni Hafta Ekle</h2>
+        <p class="text-gray-400 mt-1">Lige yeni bir hafta ekleyebilirsiniz.</p>
+    </div>
+
+    <form asp-action="CreateWeek" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-red-500 mb-4"></div>
+        <input type="hidden" asp-for="LeagueID" />
+        <input type="hidden" asp-for="SeasonID" />
+
+        <div class="space-y-6">
+            <div>
+                <label asp-for="WeekName" class="block text-sm font-medium text-gray-300">Hafta Adı</label>
+                <input asp-for="WeekName" type="text" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-yellow-500 focus:ring focus:ring-yellow-500 focus:ring-opacity-50">
+                <span asp-validation-for="WeekName" class="text-sm text-red-500"></span>
+            </div>
+
+            <div>
+                <label asp-for="WeekStatus" class="block text-sm font-medium text-gray-300">Hafta Türü</label>
+                <select asp-for="WeekStatus" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-yellow-500 focus:ring focus:ring-yellow-500 focus:ring-opacity-50">
+                    <option value="League">Lig Haftası</option>
+                    <option value="Playoff">Eleme Haftası</option>
+                </select>
+                <span asp-validation-for="WeekStatus" class="text-sm text-red-500"></span>
+            </div>
+
+            <div>
+                <label asp-for="WeekNumber" class="block text-sm font-medium text-gray-300">Hafta Numarası</label>
+                <input asp-for="WeekNumber" type="number" min="1" max="52" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-yellow-500 focus:ring focus:ring-yellow-500 focus:ring-opacity-50">
+                <span asp-validation-for="WeekNumber" class="text-sm text-red-500"></span>
+            </div>
+
+            <div>
+                <label asp-for="StartDate" class="block text-sm font-medium text-gray-300">Başlangıç Tarihi</label>
+                <input asp-for="StartDate" type="date" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-yellow-500 focus:ring focus:ring-yellow-500 focus:ring-opacity-50">
+                <span asp-validation-for="StartDate" class="text-sm text-red-500"></span>
+            </div>
+
+            <div>
+                <label asp-for="EndDate" class="block text-sm font-medium text-gray-300">Bitiş Tarihi</label>
+                <input asp-for="EndDate" type="date" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-yellow-500 focus:ring focus:ring-yellow-500 focus:ring-opacity-50">
+                <span asp-validation-for="EndDate" class="text-sm text-red-500"></span>
+            </div>
+
+            <div class="flex justify-end space-x-3 pt-6 border-t border-gray-700">
+                <button type="button" onclick="closedynamicDashboardModal()" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-500 transition-colors">
+                    İptal
+                </button>
+                <button type="submit" class="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-500 transition-colors">
+                    Kaydet
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+ 
+@await Html.PartialAsync("_ValidationScriptsPartial")

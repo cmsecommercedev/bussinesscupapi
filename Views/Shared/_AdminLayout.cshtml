@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Euro Bussiness Cup Admin</title>
+    <link href="~/css/tail-wind.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+    </style>
+    <link rel="icon" type="image/x-icon" href="~/images/favicon.ico">
+    <!-- Alternatif formatlar için: -->
+    <link rel="shortcut icon" type="image/x-icon" href="~/images/favicon.ico">
+    <link rel="apple-touch-icon" href="~/images/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+</head>
+<body class="bg-gray-900">
+    <!-- Header Bar -->
+    <header class="bg-gray-800 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Euro Bussiness Cup Admin Logo -->
+                <div class="hidden md:flex items-center">
+                    <a href="@Url.Action("Dashboard", "Admin")" class="text-white font-bold text-xl">
+                        Euro Bussiness Cup Admin
+                    </a>
+                </div>
+                <!-- Sağdaki Menü Elemanları -->
+                <div class="flex items-center space-x-4 ml-auto">
+                    <span class="hidden md:inline text-gray-300">
+                        @Context.Session.GetString("UserName")
+                    </span>
+                    <a href="@Url.Action("Notifications", "Admin")" class="text-gray-300 hover:text-yellow-500 px-3 py-2">
+                        <i class="fas fa-mobile-alt text-xl"></i>
+                    </a>
+
+                    <a href="@Url.Action("Index", "Subscription")" class="text-gray-300 hover:text-yellow-500 px-3 py-2">
+                        <i class="fas fa-user-alt text-xl"></i>
+                    </a>
+
+                    <a href="@Url.Action("Settings", "Admin")" class="text-gray-300 hover:text-yellow-500 px-3 py-2">
+                        <i class="fas fa-cog text-xl"></i>
+                    </a>
+
+                    <a href="@Url.Action("Index", "Advertise")" class="text-gray-300 hover:text-yellow-500 px-3 py-2">
+                        <i class="fas fa-bullhorn text-xl"></i>
+                    </a>
+
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="inline">
+                        <button type="submit" class="text-gray-300 hover:text-red-500 px-3 py-2">
+                            <i class="fas fa-sign-out-alt text-xl"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="flex flex-col md:flex-row min-h-screen">
+
+            <div class="w-full md:w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white p-4 flex flex-row md:flex-col fixed bottom-0 md:static z-50 shadow-2xl rounded-t-xl md:rounded-xl space-x-2 md:space-x-0 md:space-y-2">
+                <a href="@Url.Action("Dashboard", "Admin")" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-all duration-300 group">
+                    <i class="fas fa-home text-lg group-hover:text-yellow-400"></i>
+                    <span class="hidden md:inline text-sm font-medium group-hover:text-yellow-400">Anasayfa</span>
+                </a> 
+                <a href="@Url.Action("Create", "City")" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-all duration-300 group">
+                    <i class="fas fa-city text-lg group-hover:text-yellow-400"></i>
+                    <span class="hidden md:inline text-sm font-medium group-hover:text-yellow-400">Şehir Ekle</span>
+                </a>
+                <a href="@Url.Action("CreateLeague", "League")" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-all duration-300 group">
+                    <i class="fas fa-calendar text-lg group-hover:text-yellow-400"></i>
+                    <span class="hidden md:inline text-sm font-medium group-hover:text-yellow-400">Lig Ekle</span>
+                </a>
+                <a href="@Url.Action("Teams", "Admin")" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-all duration-300 group">
+                    <i class="fas fa-shield-alt text-lg group-hover:text-yellow-400"></i>
+                    <span class="hidden md:inline text-sm font-medium group-hover:text-yellow-400">Takımlar</span>
+                </a>
+                <a href="@Url.Action("WeekBestTeam", "Admin")" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-all duration-300 group">
+                    <i class="fas fa-trophy text-lg group-hover:text-yellow-400"></i>
+                    <span class="hidden md:inline text-sm font-medium group-hover:text-yellow-400">Haftanın Enleri</span>
+                </a>
+                <a href="@Url.Action("Suspensions", "Admin")" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-all duration-300 group">
+                    <i class="fas fa-gavel text-lg group-hover:text-yellow-400"></i>
+                    <span class="hidden md:inline text-sm font-medium group-hover:text-yellow-400">Cezalılar</span>
+                </a>
+                <a href="@Url.Action("Index", "MatchNews")" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-all duration-300 group">
+                    <i class="fas fa-newspaper text-lg group-hover:text-yellow-400"></i>
+                    <span class="hidden md:inline text-sm font-medium group-hover:text-yellow-400">Maç Haberleri</span>
+                </a>
+                <a href="@Url.Action("Index", "UserManagement")" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-all duration-300 group">
+                    <i class="fas fa-users text-lg group-hover:text-yellow-400"></i>
+                    <span class="hidden md:inline text-sm font-medium group-hover:text-yellow-400">Kullanıcılar</span>
+                </a>
+                <a href="@Url.Action("Manage", "CityRestriction")" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-all duration-300 group">
+                    <i class="fas fa-ban text-lg group-hover:text-yellow-400"></i>
+                    <span class="hidden md:inline text-sm font-medium group-hover:text-yellow-400">Şehir Kısıtlamaları</span>
+                </a>
+            </div>
+
+
+            <div class="flex-1 p-4 pb-20 md:pb-4">
+                @RenderBody()
+            </div>
+        </div>
+
+    </main>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html> 

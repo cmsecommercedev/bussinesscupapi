@@ -1,0 +1,80 @@
+@model MatchDetailsViewModel
+@{
+    ViewData["Title"] = "Maç Detayları";
+    Layout = "_AdminLayout";
+}
+
+<div class="min-h-screen bg-gray-900">
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-yellow-500">Maç Detayları</h2>
+                    <a href="@Url.Action("Dashboard")" class="text-gray-400 hover:text-white">
+                        <i class="fas fa-arrow-left"></i> Geri
+                    </a>
+                </div>
+
+                <div class="text-center mb-8">
+                    <div class="text-gray-400">@Model.Match.League?.Name - @Model.Match.MatchDate.ToString("dd.MM.yyyy HH:mm")</div>
+                    <div class="flex justify-center items-center space-x-8 mt-4">
+                        <div class="text-right flex-1">
+                            <div class="text-xl font-bold text-white">@Model.Match.HomeTeam?.Name</div> 
+                        </div>
+                        <div class="text-3xl font-bold text-yellow-500">
+                            @if (Model.Match.IsPlayed)
+                            {
+                                <span>@Model.Match.HomeScore - @Model.Match.AwayScore</span>
+                            }
+                            else
+                            {
+                                <span>vs</span>
+                            }
+                        </div>
+                        <div class="text-left flex-1">
+                            <div class="text-xl font-bold text-white">@Model.Match.AwayTeam?.Name</div> 
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Takım Kadroları -->
+                <div class="grid grid-cols-2 gap-8 mt-8">
+                    <div>
+                        <h3 class="text-lg font-semibold text-yellow-500 mb-4">Ev Sahibi Kadro</h3>
+                        <div class="space-y-2">
+                            @foreach (var player in Model.HomePlayers)
+                            {
+                                <div class="bg-gray-700 p-3 rounded flex justify-between items-center">
+                                    <span class="text-white">@player.FirstName @player.LastName</span>
+                                    <span class="text-gray-400">@player.Position</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-yellow-500 mb-4">Deplasman Kadro</h3>
+                        <div class="space-y-2">
+                            @foreach (var player in Model.AwayPlayers)
+                            {
+                                <div class="bg-gray-700 p-3 rounded flex justify-between items-center">
+                                    <span class="text-white">@player.FirstName @player.LastName</span>
+                                    <span class="text-gray-400">@player.Position</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                @if (!Model.Match.IsPlayed)
+                {
+                    <div class="mt-8 flex justify-end">
+                        <a href="@Url.Action("EditMatch", new { id = Model.Match.MatchID })" 
+                           class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                            <i class="fas fa-edit"></i> Maçı Düzenle
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div> 

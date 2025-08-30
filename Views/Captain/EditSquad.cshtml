@@ -1,0 +1,157 @@
+@using BussinessCupApi.ViewModels.Captain;
+@model CaptainSquadViewModel
+@{
+    ViewData["Title"] = "Kadro Düzenle";
+    Layout = "_CaptainLayout"; // Veya _CaptainLayout
+}
+
+<div class="min-h-screen bg-gray-900">
+    <div class="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <h1 class="text-2xl font-semibold text-yellow-500 mb-2">Kadro Düzenle</h1>
+        <p class="text-gray-400 mb-6">@Model.MatchDescription</p>
+        <h2 class="text-xl font-semibold text-white mb-4">@Model.CaptainTeamName Kadrosu</h2>
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="mb-4 p-4 bg-red-600 text-white rounded-lg">
+                @TempData["Error"]
+            </div>
+        }
+
+        <div id="squad-feedback" class="mb-4 text-sm text-gray-400"></div>
+
+        <form asp-action="SaveSquad" method="post">
+            @Html.AntiForgeryToken() @* CSRF Token *@
+            <input type="hidden" asp-for="MatchId" />
+            <input type="hidden" asp-for="CaptainTeamId" />
+
+            <div class="bg-gray-800 shadow overflow-hidden sm:rounded-lg p-6">
+                <div class="space-y-4" id="squad-player-list">
+                    @* Mevcut kadroyu ve seçilebilir oyuncuları burada listeleyeceğiz *@
+                    @if (!Model.AvailablePlayers.Any())
+                    {
+                         <p class="text-gray-400">Takımınızda kayıtlı oyuncu bulunamadı.</p>
+                    }
+                    else
+                    {
+                         <p class="text-sm text-gray-400 mb-4">İlk @ViewBag.TeamSquadCount için @ViewBag.TeamSquadCount oyuncu seçin, yedekleri işaretleyin ve forma numaralarını girin.</p>
+                         @for (int i = 0; i < Model.AvailablePlayers.Count; i++)
+                        {
+                            var player = Model.AvailablePlayers[i];
+                            var squadInfo = Model.CurrentSquad.FirstOrDefault(s => s.PlayerId == player.PlayerID);
+                            var shirtNumber = squadInfo?.ShirtNumber ?? player.Number ?? 0;
+                            var isStarting = squadInfo?.IsStarting11 ?? false;
+                            var isSubstitute = squadInfo?.IsSubstitute ?? false;
+
+                            <div class="flex items-center space-x-4 bg-gray-700 p-3 rounded player-row" data-player-index="@i">
+                                <input type="hidden" name="SelectedSquadPlayers.Index" value="@i" />
+                                <input type="hidden" name="SelectedSquadPlayers[@i].PlayerId" value="@player.PlayerID" />
+                                <input type="hidden" name="SelectedSquadPlayers[@i].TeamId" value="@Model.CaptainTeamId" />
+
+                                <span class="w-8 text-center text-gray-400">@(i + 1).</span>
+
+                                <div class="flex-grow text-white">
+                                    @player.FullName @(player.Number.HasValue ? $"({player.Number})" : "")
+                                </div>
+
+                                <div class="flex items-center space-x-2">
+                                     <label class="text-sm text-gray-400" for="SelectedSquadPlayers[@i].ShirtNumber">No:</label>
+                                     <input type="number" name="SelectedSquadPlayers[@i].ShirtNumber" id="SelectedSquadPlayers[@i].ShirtNumber" value="@shirtNumber"
+                                           class="w-16 bg-gray-600 text-white rounded px-2 py-1 text-sm" min="1" max="99" required/>
+                                </div>
+
+                               <div class="flex items-center space-x-2">
+                                    <input type="checkbox" name="SelectedSquadPlayers[@i].IsStarting11" value="true" @(isStarting ? "checked" : "")
+                                           class="form-checkbox h-5 w-5 text-yellow-600 bg-gray-600 border-gray-500 rounded focus:ring-yellow-500 squad-checkbox starting-checkbox" data-player-index="@i"/>
+                                    <label class="text-sm text-gray-400">İlk 11</label>
+                                    <input type="hidden" name="SelectedSquadPlayers[@i].IsStarting11" value="false" />
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                     <input type="checkbox" name="SelectedSquadPlayers[@i].IsSubstitute" value="true" @(isSubstitute ? "checked" : "")
+                                           class="form-checkbox h-5 w-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500 squad-checkbox substitute-checkbox" data-player-index="@i"/>
+                                    <label class="text-sm text-gray-400">Yedek</label>
+                                    <input type="hidden" name="SelectedSquadPlayers[@i].IsSubstitute" value="false" />
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+
+                <div class="mt-6 flex justify-end space-x-3">
+                     <a asp-action="Dashboard" class="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded-md text-sm font-medium">
+                        İptal
+                    </a>
+                    <button type="submit" id="saveSquadButton"
+                            class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
+                            disabled="@(!Model.AvailablePlayers.Any())"> @* Oyuncu yoksa butonu disable et *@
+                        Kadro Kaydet
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // ViewBag'den alınan squadCount (ör: Razor ile JS'ye aktar)
+        const squadCount = @ViewBag.TeamSquadCount ?? 11;
+
+        function handleCheckboxChange(event) {
+            const changedCheckbox = event.target;
+            const playerIndex = changedCheckbox.dataset.playerIndex;
+            const isStartingCheckbox = document.querySelector(`.starting-checkbox[data-player-index="${playerIndex}"]`);
+            const isSubstituteCheckbox = document.querySelector(`.substitute-checkbox[data-player-index="${playerIndex}"]`);
+
+            if (changedCheckbox.checked) {
+                if (changedCheckbox.classList.contains('starting-checkbox')) {
+                    isSubstituteCheckbox.checked = false;
+                } else if (changedCheckbox.classList.contains('substitute-checkbox')) {
+                    isStartingCheckbox.checked = false;
+                }
+            }
+            validateSquadSelection();
+        }
+
+        function validateSquadSelection() {
+            const startingCheckboxes = document.querySelectorAll('.starting-checkbox');
+            const saveButton = document.getElementById('saveSquadButton');
+            const feedbackElement = document.getElementById('squad-feedback');
+            let startingCount = 0;
+
+            startingCheckboxes.forEach(cb => {
+                if (cb.checked) {
+                    startingCount++;
+                }
+            });
+
+            saveButton.disabled = startingCount !== squadCount;
+
+            if (feedbackElement) {
+                if (startingCount > squadCount) {
+                    feedbackElement.textContent = `Fazla kadro oyuncusu seçtiniz (${startingCount}/${squadCount}).`;
+                    feedbackElement.classList.add('text-red-500');
+                    feedbackElement.classList.remove('text-green-500', 'text-gray-400');
+                } else if (startingCount < squadCount) {
+                    feedbackElement.textContent = `Kadro için ${squadCount - startingCount} oyuncu daha seçmelisiniz.`;
+                    feedbackElement.classList.remove('text-red-500', 'text-green-500');
+                    feedbackElement.classList.add('text-gray-400');
+                } else {
+                    feedbackElement.textContent = 'Kadro tamamlandı.';
+                    feedbackElement.classList.add('text-green-500');
+                    feedbackElement.classList.remove('text-red-500', 'text-gray-400');
+                }
+            } else {
+                console.warn("Feedback element with ID 'squad-feedback' not found.");
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const allCheckboxes = document.querySelectorAll('.squad-checkbox');
+            allCheckboxes.forEach(cb => {
+                cb.addEventListener('change', handleCheckboxChange);
+            });
+            validateSquadSelection();
+        });
+    </script>
+}

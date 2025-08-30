@@ -1,0 +1,103 @@
+@model PlayerViewModel
+@{
+    ViewData["Title"] = "Oyuncu Düzenle";
+    Layout = "_AdminLayout";
+}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto bg-gray-800 rounded-lg shadow-lg p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-yellow-500">@Model.PageTitle</h1>
+            <a href="javascript:history.back()" class="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Geri Dön
+            </a>
+        </div>
+
+        <form asp-action="@(Model.PlayerID == 0 ? "CreatePlayer" : "EditPlayer")" method="post" enctype="multipart/form-data">
+            <input type="hidden" asp-for="PlayerID" /> 
+            <input type="hidden" asp-for="ExistingIcon" />
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="form-group">
+                    <label asp-for="FirstName" class="block text-gray-300 mb-2"></label>
+                    <input asp-for="FirstName" class="w-full bg-gray-700 text-white rounded px-3 py-2" />
+                    <span asp-validation-for="FirstName" class="text-red-500 text-sm"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="LastName" class="block text-gray-300 mb-2"></label>
+                    <input asp-for="LastName" class="w-full bg-gray-700 text-white rounded px-3 py-2" />
+                    <span asp-validation-for="LastName" class="text-red-500 text-sm"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Position" class="block text-gray-300 mb-2"></label>
+                    <select asp-for="Position" asp-items="Model.Positions" class="w-full bg-gray-700 text-white rounded px-3 py-2">
+                        <option value="">Mevki Seçin</option>
+                    </select>
+                    <span asp-validation-for="Position" class="text-red-500 text-sm"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Nationality" class="block text-gray-300 mb-2"></label>
+                    <select asp-for="Nationality" asp-items="Model.Nationalities" class="w-full bg-gray-700 text-white rounded px-3 py-2">
+                        <option value="">Uyruk Seçin</option>
+                    </select>
+                    <span asp-validation-for="Nationality" class="text-red-500 text-sm"></span>
+                </div>
+                 
+
+                <div class="form-group">
+                    <label asp-for="Number" class="block text-gray-300 mb-2"></label>
+                    <input asp-for="Number" type="number" min="1" max="99" class="w-full bg-gray-700 text-white rounded px-3 py-2" />
+                    <span asp-validation-for="Number" class="text-red-500 text-sm"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="DateOfBirth" class="block text-gray-300 mb-2"></label>
+                    <input asp-for="DateOfBirth" type="date" class="w-full bg-gray-700 text-white rounded px-3 py-2" />
+                    <span asp-validation-for="DateOfBirth" class="text-red-500 text-sm"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="TeamID" class="block text-gray-300 mb-2">Takım</label>
+                    <select asp-for="TeamID" asp-items="Model.Teams" class="w-full bg-gray-700 text-white rounded px-3 py-2">
+                        <option value="">Takım Seçin</option>
+                    </select>
+                    <span asp-validation-for="TeamID" class="text-red-500 text-sm"></span>
+                </div>
+
+                <div class="form-group col-span-2">
+                    <label asp-for="IconFile" class="block text-gray-300 mb-2"></label>
+                    <input asp-for="IconFile" type="file" accept="image/*" class="w-full bg-gray-700 text-white rounded px-3 py-2" />
+                    <span asp-validation-for="IconFile" class="text-red-500 text-sm"></span>
+                    @if (!string.IsNullOrEmpty(Model.ExistingIcon))
+                    {
+                        <div class="mt-2">
+                            <img src="@Model.ExistingIcon" alt="Mevcut Fotoğraf" class="h-20 w-20 object-cover rounded-full" />
+                        </div>
+                    }
+                </div>
+
+                <div class="form-group col-span-2">
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" asp-for="IsCaptain" class="form-checkbox" />
+                        <span class="ml-2">Kaptan</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end space-x-2">
+                <a href="javascript:history.back()" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-500 transition-colors">
+                    İptal
+                </a>
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-save mr-2"></i>@Model.SubmitButtonText
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+} 

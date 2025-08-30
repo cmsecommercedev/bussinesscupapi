@@ -1,0 +1,86 @@
+﻿@model List<BussinessCupApi.Models.City>
+@{
+    ViewBag.Title = "Şehir Kısıtlamaları";
+    if (User.IsInRole("Admin"))
+    {
+        Layout = "_AdminLayout";
+    }
+    else if (User.IsInRole("CityAdmin"))
+    {
+        Layout = "_CityAdminLayout";
+    }
+}
+
+<div class="bg-gray-800 rounded-lg p-6">
+    <h2 class="text-2xl font-semibold text-white mb-6">
+        @ViewBag.Title
+    </h2>
+    <section class="bg-gray-700 p-4 rounded-md mb-6">
+        <h4 class="text-xl font-medium text-white mb-3">Şehir Seç ve Kısıtlama Ekle</h4>
+        <form id="restrictionForm" class="space-y-4">
+            <div>
+                <label class="block text-gray-300 mb-1 font-medium">Şehir Seç</label>
+                <select id="cityDropdown" class="w-full bg-gray-600 text-white rounded px-3 py-2 border border-gray-500">
+                    <option value="">Şehir Seçiniz</option>
+                    @foreach (var city in Model)
+                    {
+                        <option value="@city.CityID">@city.Name</option>
+                    }
+                </select>
+            </div>
+            <div id="restrictionPanel" style="display:none;">
+                <label class="inline-flex items-center text-gray-300">
+                    <input type="checkbox" id="transferBan" class="form-checkbox h-5 w-5 text-blue-600" />
+                    <span class="ml-2">Transfer Yasağı</span>
+                </label>
+                <br />
+                <label class="inline-flex items-center text-gray-300">
+                    <input type="checkbox" id="registrationStop" class="form-checkbox h-5 w-5 text-blue-600" />
+                    <span class="ml-2">Kayıt Durdurma</span>
+                </label>
+                <br />
+                <button type="button" id="saveBtn" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition duration-150 mt-2">Kaydet</button>
+            </div>
+        </form>
+    </section>
+    <section class="bg-gray-700 p-4 rounded-md">
+        <h4 class="text-xl font-medium text-white mb-3">Açıklama</h4>
+        <p class="text-gray-300">Şehir seçerek ilgili kısıtlamaları ekleyebilir veya güncelleyebilirsiniz.</p>
+    </section>
+</div>
+
+@section Scripts {
+    <script>
+        let selectedCityId = null;
+        $('#cityDropdown').change(function () {
+            selectedCityId = $(this).val();
+            if (!selectedCityId) {
+                $('#restrictionPanel').hide();
+                return;
+            }
+            $.get('/CityRestriction/GetRestriction', { cityId: selectedCityId }, function (data) {
+                $('#transferBan').prop('checked', data.isTransferBanned);
+                $('#registrationStop').prop('checked', data.isRegistrationStopped);
+                $('#restrictionPanel').show();
+            });
+        });
+
+        $('#saveBtn').click(function () {
+            if (!selectedCityId) return;
+            const payload = {
+                CityID: selectedCityId,
+                IsTransferBanned: $('#transferBan').is(':checked'),
+                IsRegistrationStopped: $('#registrationStop').is(':checked')
+            };
+            $.ajax({
+                url: '/CityRestriction/UpdateRestriction',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(payload),
+                success: function (res) {
+                    alert('Kısıtlamalar kaydedildi.');
+                }
+            });
+        });
+    </script>
+}

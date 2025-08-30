@@ -1,0 +1,87 @@
+@{
+    ViewBag.Title = "Oyuncu Üyelik Durumları";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<style>
+    @@media (max-width: 576px) {
+        .card {
+            max-width: 350px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    }
+</style>
+
+<h2>Oyuncu Üyelik Durumları</h2>
+
+<div class="row mb-4 justify-content-center">
+    <div class="col-12 col-sm-6 col-md-4 mb-2">
+        <div class="card text-white bg-primary h-100">
+            <div class="card-body">
+                <h5 class="card-title">Toplam Oyuncu</h5>
+                <p class="card-text" id="toplamOyuncu">-</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-md-4 mb-2">
+        <div class="card text-white bg-success h-100">
+            <div class="card-body">
+                <h5 class="card-title">Üye Olan Oyuncu</h5>
+                <p class="card-text" id="uyeOlanOyuncu">-</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-md-4 mb-2">
+        <div class="card text-white bg-danger h-100">
+            <div class="card-body">
+                <h5 class="card-title">Üye Olmayan Oyuncu</h5>
+                <p class="card-text" id="uyeOlmayanOyuncu">-</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<table class="table table-bordered table-striped" id="oyuncuTablo">
+    <thead>
+        <tr>
+            <th>Ad</th>
+            <th>Soyad</th>
+            <th>Pozisyon</th>
+            <th>Numara</th>
+            <th>Takım</th>
+            <th>Üyelik</th>
+            <th>Bitiş Tarihi</th>
+            <th>Email</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- JS ile doldurulacak -->
+    </tbody>
+</table>
+
+@section Scripts {
+<script>
+    $(document).ready(function () {
+        $.getJSON('/api/subscription/players-summary', function (data) {
+            $('#toplamOyuncu').text(data.toplamOyuncu);
+            $('#uyeOlanOyuncu').text(data.uyeOlanOyuncu);
+            $('#uyeOlmayanOyuncu').text(data.uyeOlmayanOyuncu);
+            var tbody = '';
+            data.oyuncular.forEach(function (o) {
+                tbody += `<tr>
+                    <td>${o.firstName}</td>
+                    <td>${o.lastName}</td>
+                    <td>${o.position || ''}</td>
+                    <td>${o.number || ''}</td>
+                    <td>${o.takimAdi || ''}</td>
+                    <td>${o.isSubscribed ? 'Üye' : 'Değil'}</td>
+                    <td>${o.subscriptionExpireDate ? o.subscriptionExpireDate.substring(0,10) : ''}</td>
+                    <td>${o.userEmail || ''}</td>
+                </tr>`;
+            });
+            $('#oyuncuTablo tbody').html(tbody);
+        });
+    });
+</script>
+} 

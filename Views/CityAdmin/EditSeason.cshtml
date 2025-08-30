@@ -1,0 +1,31 @@
+@model Season
+
+<div class="p-6 bg-gray-800 rounded-lg">
+    <h2 class="text-xl font-semibold text-white mb-4">Sezonu Düzenle</h2>
+
+    <form method="post" action="@Url.Action("EditSeason", "CityAdmin")">
+        <input type="hidden" name="seasonId" value="@Model.SeasonID" />
+
+        <div>
+            <label class="block text-sm font-medium text-gray-300">Sezon Adı</label>
+            <input type="text" name="name" value="@Model.Name"
+                   class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white" />
+        </div>
+
+<div class="flex items-center">
+    <input type="checkbox" name="isActive" value="true" class="rounded bg-gray-700 border-gray-600 text-yellow-600"
+    @(Model.IsActive ? "checked" : "") />
+    <label class="ml-2 text-sm font-medium text-gray-300">Aktif Sezon</label>
+</div>
+
+        <div class="flex justify-end space-x-3">
+            <button type="button" onclick="closedynamicDashboardModal()"
+                    class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-500">
+                İptal
+            </button>
+            <button type="submit" class="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-500">
+                Güncelle
+            </button>
+        </div>
+    </form>
+</div>

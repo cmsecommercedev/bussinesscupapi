@@ -1,0 +1,115 @@
+@model CreateLeagueViewModel
+@{
+    ViewData["Title"] = "Lig Ekle";
+    Layout = "_AdminLayout";
+}
+<div class="bg-gray-800 rounded-lg p-6"> 
+
+    <form asp-action="CreateLeague" method="post" enctype="multipart/form-data">
+        <div class="mb-4">
+            <label asp-for="Name" class="block text-gray-300 mb-2"></label>
+            <input asp-for="Name" class="w-full bg-gray-700 text-white rounded px-3 py-2" />
+            <span asp-validation-for="Name" class="text-red-500 text-sm"></span>
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="LeagueType" class="block text-gray-300 mb-2"></label>
+            <select asp-for="LeagueType" asp-items="Html.GetEnumSelectList<LeagueType>()" 
+                    class="w-full bg-gray-700 text-white rounded px-3 py-2">
+                <option value="">Lig Türü Seçin</option>
+            </select>
+            <span asp-validation-for="LeagueType" class="text-red-500 text-sm"></span>
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="CityID" class="block text-gray-300 mb-2"></label>
+            <select asp-for="CityID" asp-items="@Model.Cities" 
+                    class="w-full bg-gray-700 text-white rounded px-3 py-2">
+                <option value="">Şehir Seçin</option>
+            </select>
+            <span asp-validation-for="CityID" class="text-red-500 text-sm"></span>
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="LogoFile" class="block text-gray-300 mb-2">Logo</label>
+            <input asp-for="LogoFile" type="file" accept="image/*" class="w-full bg-gray-700 text-white rounded px-3 py-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+            <span asp-validation-for="LogoFile" class="text-red-500 text-sm"></span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+                <label asp-for="StartDate" class="block text-gray-300 mb-2"></label>
+                <input asp-for="StartDate" type="date" class="w-full bg-gray-700 text-white rounded px-3 py-2" />
+                <span asp-validation-for="StartDate" class="text-red-500 text-sm"></span>
+            </div>
+            <div>
+                <label asp-for="EndDate" class="block text-gray-300 mb-2"></label>
+                <input asp-for="EndDate" type="date" class="w-full bg-gray-700 text-white rounded px-3 py-2" />
+                <span asp-validation-for="EndDate" class="text-red-500 text-sm"></span>
+            </div>
+        </div> 
+
+        <div class="mb-4">
+            <div>
+                <label asp-for="TeamSquadCount" class="block text-gray-300 mb-2">Sahadaki Oyuncu Sayısı</label>
+                <select asp-for="TeamSquadCount" class="w-full bg-gray-700 text-white rounded px-3 py-2">
+                    <option value="">Seçiniz</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                </select>
+                <span asp-validation-for="TeamSquadCount" class="text-sm text-red-500"></span>
+            </div> 
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-gray-300 mb-2">Lig Sıralama Statüleri</label>
+            <div id="ranking-status-list"> 
+            </div>
+            <button type="button" id="add-status" class="mt-2 px-3 py-1 bg-green-600 text-white rounded">+ Statü Ekle</button>
+        </div>
+
+        <div class="flex justify-end space-x-2">
+            <button type="button" onclick="closedynamicDashboardModal()" 
+                    class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">
+                İptal
+            </button>
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                Kaydet
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    let statusIndex = @Model.RankingStatuses?.Count ?? 0;
+
+    document.getElementById('add-status').addEventListener('click', function () {
+        const container = document.getElementById('ranking-status-list');
+        const row = document.createElement('div');
+        row.className = 'flex items-center gap-2 mb-2 ranking-status-row';
+        row.innerHTML = `
+            <input type="hidden" name="RankingStatuses[${statusIndex}].Id" value="" />
+            <input name="RankingStatuses[${statusIndex}].OrderNo" type="number" placeholder="Sıra" class="w-16 bg-gray-700 text-white rounded px-2 py-1" />
+            <select name="RankingStatuses[${statusIndex}].ColorCode" class="w-24 bg-gray-700 text-white rounded px-2 py-1">
+                <option value="#FFD700">Altın</option>
+                <option value="#C0C0C0">Gümüş</option>
+                <option value="#CD7F32">Bronz</option>
+                <option value="#FF0000">Kırmızı</option>
+                <option value="#0000FF">Mavi</option>
+            </select>
+            <input name="RankingStatuses[${statusIndex}].Description" type="text" placeholder="Açıklama" class="flex-1 bg-gray-700 text-white rounded px-2 py-1" />
+            <button type="button" class="remove-status px-2 py-1 bg-red-600 text-white rounded">-</button>
+        `;
+        container.appendChild(row);
+        statusIndex++;
+    });
+
+    document.getElementById('ranking-status-list').addEventListener('click', function (e) {
+        if (e.target.classList.contains('remove-status')) {
+            e.target.parentElement.remove();
+        }
+    });
+</script>

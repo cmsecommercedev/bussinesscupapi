@@ -1,0 +1,88 @@
+@model Settings
+@{
+    ViewData["Title"] = "Ayarlar";
+    Layout = "_AdminLayout";
+}
+
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-gray-800 rounded-lg shadow-lg p-6">
+        <h2 class="text-2xl font-bold text-yellow-500 mb-6">Sistem Ayarları</h2>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="bg-green-600 text-white p-4 rounded-lg mb-4">
+                @TempData["Success"]
+            </div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="bg-red-600 text-white p-4 rounded-lg mb-4">
+                @TempData["Error"]
+            </div>
+        }
+
+        <form asp-action="SaveSettings" method="post">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label asp-for="iOSVersion" class="block text-gray-300 mb-2"></label>
+                    <input asp-for="iOSVersion" class="w-full bg-gray-700 text-white rounded p-2 border border-gray-600 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500">
+                </div>
+
+                <div>
+                    <label asp-for="AndroidVersion" class="block text-gray-300 mb-2"></label>
+                    <input asp-for="AndroidVersion" class="w-full bg-gray-700 text-white rounded p-2 border border-gray-600 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500">
+                </div>
+
+                <div class="col-span-2">
+                    <label class="inline-flex items-center mb-4">
+                        <input asp-for="ForceUpdate" type="checkbox" class="form-checkbox h-5 w-5 text-yellow-500">
+                        <span class="ml-2 text-gray-300">@Html.DisplayNameFor(m => m.ForceUpdate)</span>
+                    </label>
+                </div>
+
+                <div class="col-span-2">
+                    <label class="inline-flex items-center mb-4">
+                        <input asp-for="AppStop" type="checkbox" class="form-checkbox h-5 w-5 text-yellow-500">
+                        <span class="ml-2 text-gray-300">@Html.DisplayNameFor(m => m.AppStop)</span>
+                    </label>
+                </div>
+
+                <div class="col-span-2">
+                    <label asp-for="AppStopMessage" class="block text-gray-300 mb-2"></label>
+                    <textarea asp-for="AppStopMessage" rows="3" 
+                              class="w-full bg-gray-700 text-white rounded p-2 border border-gray-600 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500"
+                              placeholder="Uygulama durdurulduğunda gösterilecek mesaj..."></textarea>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-2 px-4 rounded">
+                    Ayarları Kaydet
+                </button>
+            </div>
+
+            <div class="mt-4 text-gray-400 text-sm">
+                Son Güncelleme: @Model.LastUpdated.ToString("dd.MM.yyyy HH:mm")
+            </div>
+        </form>
+
+        <!-- OneSignal Bilgileri (Salt Okunur) -->
+        <div class="mt-8 border-t border-gray-700 pt-6">
+            <h3 class="text-xl font-bold text-yellow-500 mb-4">OneSignal Ayarları</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-gray-300 mb-2">OneSignal App ID</label>
+                    <input type="text" value="@ViewBag.OneSignalAppId" readonly class="w-full bg-gray-700 text-gray-400 rounded p-2 border border-gray-600">
+                </div>
+                <div>
+                    <label class="block text-gray-300 mb-2">OneSignal API Key</label>
+                    <input type="text" value="@ViewBag.OneSignalApiKey" readonly class="w-full bg-gray-700 text-gray-400 rounded p-2 border border-gray-600">
+                </div>
+            </div>
+            <p class="mt-2 text-sm text-gray-400">
+                * OneSignal ayarları *** dosyasından yönetilmektedir.
+            </p>
+        </div>
+    </div>
+</div> 

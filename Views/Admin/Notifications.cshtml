@@ -1,0 +1,141 @@
+@model NotificationViewModel
+@{
+    ViewData["Title"] = "Bildirim Gönder";
+    Layout = "_AdminLayout";
+}
+
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-gray-800 rounded-lg shadow-lg p-6">
+        <h2 class="text-2xl font-bold text-yellow-500 mb-6">Push Bildirim Gönder</h2>
+
+        <div class="mb-6">
+            <ul class="flex border-b border-gray-700" id="pushTabs">
+                <li class="mr-1">
+                    <a href="#" class="tab-link inline-block py-2 px-4 font-semibold rounded-t-lg transition-colors duration-200
+                        text-yellow-500 bg-gray-900 border-b-2 border-yellow-500 shadow"
+                        data-tab="generalTab" id="tabGeneral">
+                        Tüm Kullanıcılara Gönder
+                    </a>
+                </li>
+                <li class="mr-1">
+                    <a href="#" class="tab-link inline-block py-2 px-4 font-semibold rounded-t-lg transition-colors duration-200
+                        text-gray-300 bg-gray-800 hover:text-yellow-500 border-b-2 border-transparent"
+                        data-tab="teamTab" id="tabTeam">
+                        Takıma Gönder
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Genel Push Tab -->
+        <div id="generalTab" class="tab-content">
+            <div class="mb-4">
+                <label class="block text-gray-300 mb-2">Başlık</label>
+                <input type="text" id="generalTitle" class="w-full bg-gray-700 text-white rounded p-2 border border-gray-600 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500">
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-300 mb-2">Detay</label>
+                <textarea id="generalDetail" rows="3" class="w-full bg-gray-700 text-white rounded p-2 border border-gray-600 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500"></textarea>
+            </div>
+            <button type="button" onclick="sendGeneralPush()" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-2 px-4 rounded">
+                Tüm Kullanıcılara Push Gönder
+            </button>
+        </div>
+
+        <!-- Takım Bazlı Push Tab -->
+        <div id="teamTab" class="tab-content hidden">
+            <div class="mb-4">
+                <label class="block text-gray-300 mb-2">Şehir Seç</label>
+                <select id="citySelect" class="w-full bg-gray-700 text-white rounded p-2 border border-gray-600">
+                    <option value="">Şehir Seçiniz</option>
+                    @foreach (var city in ViewBag.Cities as List<City>)
+                    {
+                        <option value="@city.CityID">@city.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-300 mb-2">Takım Seç</label>
+                <select id="teamSelect" class="w-full bg-gray-700 text-white rounded p-2 border border-gray-600">
+                    <option value="">Takım Seçiniz</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-300 mb-2">Başlık</label>
+                <input type="text" id="teamTitle" class="w-full bg-gray-700 text-white rounded p-2 border border-gray-600 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500">
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-300 mb-2">Detay</label>
+                <textarea id="teamDetail" rows="3" class="w-full bg-gray-700 text-white rounded p-2 border border-gray-600 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500"></textarea>
+            </div>
+            <button type="button" onclick="sendTeamPush()" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-2 px-4 rounded">
+                Takıma Push Gönder
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Tab switching
+        document.querySelectorAll('.tab-link').forEach(link => {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelectorAll('.tab-link').forEach(l => {
+                    l.classList.remove('text-yellow-500', 'bg-gray-900', 'border-yellow-500', 'shadow');
+                    l.classList.add('text-gray-300', 'bg-gray-800', 'border-transparent');
+                });
+                this.classList.add('text-yellow-500', 'bg-gray-900', 'border-yellow-500', 'shadow');
+                this.classList.remove('text-gray-300', 'bg-gray-800', 'border-transparent');
+                document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+                document.getElementById(this.dataset.tab).classList.remove('hidden');
+            });
+        });
+
+        // Şehir seçilince takımları getir
+        document.getElementById('citySelect').addEventListener('change', function () {
+            var cityId = this.value;
+            var teamSelect = document.getElementById('teamSelect');
+            teamSelect.innerHTML = '<option value="">Takım Seçiniz</option>';
+            if (cityId) {
+                fetch('/MatchNews/GetTeamsByCity?cityId=' + cityId)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(function (team) {
+                            var opt = document.createElement('option');
+                            opt.value = team.teamID;
+                            opt.text = team.name;
+                            teamSelect.appendChild(opt);
+                        });
+                    });
+            }
+        });
+
+        // Genel push gönder
+        function sendGeneralPush() {
+            var title = document.getElementById('generalTitle').value;
+            var detail = document.getElementById('generalDetail').value;
+            fetch('/Admin/SendGeneralPush', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                body: JSON.stringify({ title: title, detail: detail })
+            })
+            .then(r => r.ok ? toastr.success('Genel push gönderildi!') : toastr.error('Push gönderilemedi!'));
+        }
+
+        // Takım bazlı push gönder
+        function sendTeamPush() {
+            var teamId = document.getElementById('teamSelect').value;
+            var title = document.getElementById('teamTitle').value;
+            var detail = document.getElementById('teamDetail').value;
+            if (!teamId) { toastr.error('Takım seçiniz!'); return; }
+            fetch('/Admin/SendTeamPush', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                body: JSON.stringify({ teamId: teamId, title: title, detail: detail })
+            })
+            .then(r => r.ok ? toastr.success('Takım push gönderildi!') : toastr.error('Push gönderilemedi!'));
+        }
+    </script>
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

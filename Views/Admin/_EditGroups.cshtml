@@ -1,0 +1,30 @@
+@model List<Group>
+
+<div class="p-6 text-white">
+    <h2 class="text-xl font-semibold mb-4">Grupları Düzenle</h2>
+    
+    <div class="space-y-4">
+        @foreach (var group in Model)
+        {
+            <div class="bg-gray-700 p-4 rounded-lg group-item" data-group-id="@group.GroupID">
+                <div class="flex items-center justify-between">
+                    <input type="text" value="@group.GroupName" 
+                           class="bg-gray-600 text-white rounded px-3 py-2 group-name" />
+                           
+                    <div class="flex space-x-2">
+                        <button onclick="updateGroup(@group.GroupID)" 
+                                class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">
+                            <i class="fas fa-save"></i>
+                        </button>
+                        <button onclick="deleteGroup(@group.GroupID)"
+                                class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <textarea class="w-full bg-gray-600 text-white rounded px-3 py-2 mt-2 group-description">@group.Description</textarea>
+            </div>
+        }
+    </div>
+</div>
+ 

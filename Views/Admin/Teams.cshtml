@@ -1,0 +1,81 @@
+@model List<TeamListViewModel>
+@{
+    ViewData["Title"] = "Tüm Takımlar";
+    Layout = "_AdminLayout";
+}
+@if (TempData["Success"] != null)
+{
+    <div class="mb-4 p-4 bg-green-600 text-white rounded-lg">
+        @TempData["Success"]
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="mb-4 p-4 bg-red-600 text-white rounded-lg">
+        @TempData["Error"]
+    </div>
+}
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-gray-800 rounded-lg shadow-lg p-6">
+        <!-- Üst Başlık ve Butonlar -->
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-yellow-500">
+                Takımlar
+                <span class="text-gray-400 text-lg ml-2">(@Model.Count)</span>
+            </h1>
+            <div class="flex space-x-2">
+                <a href="@Url.Action("Dashboard")" class="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Geri Dön
+                </a>
+                <a href="@Url.Action("CreateTeam")" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors">
+                    <i class="fas fa-plus mr-2"></i>Yeni Takım
+                </a>
+            </div>
+        </div>
+         
+        @if (Model.Any())
+        {
+            var groupedTeams = Model.GroupBy(t => t.CityName ?? "Belirtilmemiş") 
+                                    .OrderBy(g => g.Key); 
+
+            foreach (var group in groupedTeams)
+            {
+                <div class="mb-8"> 
+                    <h2 class="text-xl font-semibold text-yellow-400 mb-4 border-b border-gray-700 pb-2">
+                        @group.Key (@group.Count() Takım)
+                    </h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        @foreach (var team in group.OrderBy(t => t.Name)) 
+                        {
+                            <div class="bg-gray-700 rounded-lg p-4 hover:bg-gray-600 transition-colors">
+                                <div class="flex items-center justify-between">
+                                    <a href="@Url.Action("TeamDetails", new { id = team.TeamID })"
+                                       class="text-white font-medium hover:text-yellow-500 transition-colors">@team.Name</a>
+                                    <div class="flex space-x-2">
+                                        <a href="@Url.Action("EditTeam", new { teamId = team.TeamID })"
+                                           class="text-blue-400 hover:text-blue-300 transition-colors">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="@Url.Action("TeamDetails", new { id = team.TeamID })"
+                                           class="text-gray-400 hover:text-white transition-colors">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        }
+        else // Model boş ise gösterilecek mesaj
+        {
+            <div class="text-center py-8">
+                <p class="text-gray-400">Henüz takım bulunmuyor.</p>
+                <a href="@Url.Action("CreateTeam")" class="inline-block mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors">
+                    <i class="fas fa-plus mr-2"></i>İlk Takımı Ekle
+                </a>
+            </div>
+        }
+    </div>
+</div> 

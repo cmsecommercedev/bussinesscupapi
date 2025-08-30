@@ -1,0 +1,782 @@
+@using BussinessCupApi.ViewModels.MatchSquad
+@model DashBoardMatchSquadViewModel
+@{
+    ViewData["Title"] = "Maç Kadrosu";
+    Layout = "_AdminLayout";
+}
+<link href="\css\matchsquad.css" rel="stylesheet" />
+
+<div class="min-h-screen bg-gray-900 py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-gray-800 rounded-lg shadow-lg p-4 md:p-6">
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+                <h2 class="text-lg sm:text-xl font-semibold text-white text-center sm:text-left">
+                    Maç Kadrosu: @Model.HomeTeam.Name vs @Model.AwayTeam.Name
+                </h2>
+                <button onclick="saveSquad()" class="w-full sm:w-auto bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                    <i class="fas fa-save"></i> Kadroyu Kaydet
+                </button>
+
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Ev Sahibi Takım -->
+                <div class="bg-gray-700 rounded-lg p-4">
+                    <h3 class="text-lg font-medium text-white mb-4 text-center">@Model.HomeTeam.Name</h3>
+                    <div class="pitch relative aspect-[2/3] w-full max-w-md mx-auto rounded-lg overflow-hidden mb-4" id="homePitch">
+
+                        <img src="/images/logo.png" class="pitch-logo" alt="Logo" />
+
+                        @foreach (var player in Model.HomeSquad.Where(p => p.IsStarting11))
+                        {
+                            <div class="player-icon" data-player-id="@player.PlayerId"
+                                 style="position: absolute; top: @(player.TopPosition ?? 50)%; left: @(player.LeftPosition ?? 50)%;">
+                                <div class="player-icon-img">
+                                    <img src="@(player.PlayerImage ?? "/images/defaultplayer.png")"
+                                         alt="@player.PlayerName" />
+                                </div>
+                                <span class="player-name">@player.PlayerName</span>
+                            </div>
+                        }
+                    </div>
+
+                    <button id="saveHomePitchImage"
+                            class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 block mx-auto mt-4">
+                        Formasyonu Kaydet
+                    </button>
+
+                    <div class="mb-4">
+                        <h4 class="text-yellow-500 font-medium mb-2">Başlangıç Kadrosu</h4>
+                        <div id="homeTeamStarting11" class="space-y-2">
+                            @foreach (var player in Model.HomeTeam.Players)
+                            {
+                                var squadPlayer = Model.HomeSquad.FirstOrDefault(s => s.PlayerId == player.PlayerID);
+                                if (squadPlayer?.IsStarting11 == true)
+                                {
+                                    <div class="flex items-center space-x-2 bg-gray-600 p-2 rounded">
+                                        <input type="number" class="w-12 text-sm bg-gray-700 text-white rounded px-1 py-1"
+                                               placeholder="No" value="@(squadPlayer?.ShirtNumber ?? 0)" min="1" max="99">
+                                        <span class="flex-grow text-white text-sm">@player.FirstName @player.LastName</span>
+                                        <select class="text-sm bg-gray-700 text-white rounded px-1 py-1 statusonchange"
+                                                data-player-id="@player.PlayerID"
+                                                data-player-img="@player.Icon"
+                                                data-player-name="@player.FirstName @player.LastName"
+                                                data-team-id="@Model.HomeTeam.TeamID"
+                                                data-side="home">
+                                            <option value="starting11" selected>Kadro</option>
+                                            <option value="substitute">Yedek</option>
+                                            <option value="none">Kadroda Yok</option>
+                                        </select>
+
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h4 class="text-yellow-500 font-medium mb-2">Yedekler</h4>
+                        <div id="homeTeamSubstitutes" class="space-y-2">
+                            @foreach (var player in Model.HomeTeam.Players)
+                            {
+                                var squadPlayer = Model.HomeSquad.FirstOrDefault(s => s.PlayerId == player.PlayerID);
+                                if (squadPlayer?.IsSubstitute == true)
+                                {
+                                    <div class="flex items-center space-x-2 bg-gray-600 p-2 rounded">
+                                        <input type="number" class="w-12 text-sm bg-gray-700 text-white rounded px-1 py-1"
+                                               placeholder="No" value="@(squadPlayer?.ShirtNumber ?? 0)" min="1" max="99">
+                                        <span class="flex-grow text-white text-sm">@player.FirstName @player.LastName</span>
+                                        <select class="text-sm bg-gray-700 text-white rounded px-1 py-1 statusonchange"
+                                                data-player-id="@player.PlayerID"
+                                                data-player-img="@player.Icon"
+                                                data-player-name="@player.FirstName @player.LastName"
+                                                data-team-id="@Model.HomeTeam.TeamID"
+                                                data-side="home">
+                                            <option value="starting11">Kadro</option>
+                                            <option value="substitute" selected>Yedek</option>
+                                            <option value="none">Kadroda Yok</option>
+                                        </select>
+
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="text-yellow-500 font-medium mb-2">Diğer Oyuncular</h4>
+                        <div id="homeTeamOthers" class="space-y-2">
+                            @foreach (var player in Model.HomeTeam.Players)
+                            {
+                                var squadPlayer = Model.HomeSquad.FirstOrDefault(s => s.PlayerId == player.PlayerID);
+                                if (squadPlayer == null || (!squadPlayer.IsStarting11 && !squadPlayer.IsSubstitute))
+                                {
+                                    <div class="flex items-center space-x-2 bg-gray-600 p-2 rounded">
+                                        <input type="number" class="w-12 text-sm bg-gray-700 text-white rounded px-1 py-1"
+                                               placeholder="No" value="@(squadPlayer?.ShirtNumber ?? 0)" min="1" max="99">
+                                        <span class="flex-grow text-white text-sm">@player.FirstName @player.LastName</span>
+                                        <select class="text-sm bg-gray-700 text-white rounded px-1 py-1 statusonchange"
+                                                data-player-id="@player.PlayerID"
+                                                data-player-img="@player.Icon"
+                                                data-player-name="@player.FirstName @player.LastName"
+                                                data-team-id="@Model.HomeTeam.TeamID"
+                                                data-side="home">
+                                            <option value="starting11">Kadro</option>
+                                            <option value="substitute">Yedek</option>
+                                            <option value="none" selected>Kadroda Yok</option>
+                                        </select>
+
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deplasman Takımı -->
+                <div class="bg-gray-700 rounded-lg p-4">
+                    <h3 class="text-lg font-medium text-white mb-4 text-center">@Model.AwayTeam.Name</h3>
+                    <div class="pitch relative aspect-[2/3] w-full max-w-md mx-auto rounded-lg overflow-hidden mb-4" id="awayPitch">
+
+                        <img src="/images/logo.png" class="pitch-logo" alt="Logo" />
+
+                        <!-- Oyuncular - Burada, veritabanından alınan topPosition ve leftPosition bilgileriyle oyuncular yerleştirilecek -->
+                        @foreach (var player in Model.AwaySquad.Where(p => p.IsStarting11))
+                        {
+                            <div class="player-icon" data-player-id="@player.PlayerId"
+                                 style="position: absolute; top: @(player.TopPosition ?? 50)%; left: @(player.LeftPosition ?? 50)%;">
+                                <div class="player-icon-img">
+                                    <img src="@(player.PlayerImage ?? "/images/defaultplayer.png")"
+                                         alt="@player.PlayerName" />
+                                </div>
+                                <span class="player-name">@player.PlayerName</span>
+                            </div>
+                        }
+                    </div>
+                    <button id="saveAwayPitchImage"
+                            class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 block mx-auto mt-4">
+                        Formasyonu Kaydet
+                    </button>
+                    <!-- İlk 11 -->
+                    <div class="mb-4">
+                        <h4 class="text-yellow-500 font-medium mb-2">İlk 11</h4>
+                        <div id="awayTeamStarting11" class="space-y-2">
+                            @foreach (var player in Model.AwayTeam.Players)
+                            {
+                                var squadPlayer = Model.AwaySquad.FirstOrDefault(s => s.PlayerId == player.PlayerID);
+                                if (squadPlayer?.IsStarting11 == true)
+                                {
+                                    <div class="flex items-center space-x-2 bg-gray-600 p-2 rounded">
+                                        <input type="number" class="w-12 text-sm bg-gray-700 text-white rounded px-1 py-1"
+                                               placeholder="No" value="@(squadPlayer?.ShirtNumber ?? 0)" min="1" max="99">
+                                        <span class="flex-grow text-white text-sm">@player.FirstName @player.LastName</span>
+                                        <select class="text-sm bg-gray-700 text-white rounded px-1 py-1 statusonchange"
+                                                data-player-id="@player.PlayerID"
+                                                data-player-img="@player.Icon"
+                                                data-player-name="@player.FirstName @player.LastName"
+                                                data-team-id="@Model.AwayTeam.TeamID"
+                                                data-side="away">
+                                            <option value="starting11" selected>Kadro</option>
+                                            <option value="substitute">Yedek</option>
+                                            <option value="none">Kadroda Yok</option>
+                                        </select>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Yedekler -->
+                    <div class="mb-4">
+                        <h4 class="text-yellow-500 font-medium mb-2">Yedekler</h4>
+                        <div id="awayTeamSubstitutes" class="space-y-2">
+                            @foreach (var player in Model.AwayTeam.Players)
+                            {
+                                var squadPlayer = Model.AwaySquad.FirstOrDefault(s => s.PlayerId == player.PlayerID);
+                                if (squadPlayer?.IsSubstitute == true)
+                                {
+                                    <div class="flex items-center space-x-2 bg-gray-600 p-2 rounded">
+                                        <input type="number" class="w-12 text-sm bg-gray-700 text-white rounded px-1 py-1"
+                                               placeholder="No" value="@(squadPlayer?.ShirtNumber ?? 0)" min="1" max="99">
+                                        <span class="flex-grow text-white text-sm">@player.FirstName @player.LastName</span>
+                                        <select class="text-sm bg-gray-700 text-white rounded px-1 py-1 statusonchange"
+                                                data-player-id="@player.PlayerID"
+                                                data-player-img="@player.Icon"
+                                                data-player-name="@player.FirstName @player.LastName"
+                                                data-team-id="@Model.AwayTeam.TeamID"
+                                                data-side="away">
+                                            <option value="starting11">Kadro</option>
+                                            <option value="substitute" selected>Yedek</option>
+                                            <option value="none">Kadroda Yok</option>
+                                        </select>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Diğer Oyuncular -->
+                    <div>
+                        <h4 class="text-yellow-500 font-medium mb-2">Diğer Oyuncular</h4>
+                        <div id="awayTeamOthers" class="space-y-2">
+                            @foreach (var player in Model.AwayTeam.Players)
+                            {
+                                var squadPlayer = Model.AwaySquad.FirstOrDefault(s => s.PlayerId == player.PlayerID);
+                                if (squadPlayer == null || (!squadPlayer.IsStarting11 && !squadPlayer.IsSubstitute))
+                                {
+                                    <div class="flex items-center space-x-2 bg-gray-600 p-2 rounded">
+                                        <input type="number" class="w-12 text-sm bg-gray-700 text-white rounded px-1 py-1"
+                                               placeholder="No" value="@(squadPlayer?.ShirtNumber ?? 0)" min="1" max="99">
+                                        <span class="flex-grow text-white text-sm">@player.FirstName @player.LastName</span>
+                                        <select class="text-sm bg-gray-700 text-white rounded px-1 py-1 statusonchange"
+                                                data-player-id="@player.PlayerID"
+                                                data-player-img="@player.Icon"
+                                                data-player-name="@player.FirstName @player.LastName"
+                                                data-team-id="@Model.AwayTeam.TeamID"
+                                                data-side="away">
+
+                                            <option value="starting11">Kadro</option>
+                                            <option value="substitute">Yedek</option>
+                                            <option value="none" selected>Kadroda Yok</option>
+                                        </select>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+
+    <script>
+        function getTeamSquad(teamPrefix, side) {
+            const starting11 = document.getElementById(`${teamPrefix}Starting11`).children;
+            const substitutes = document.getElementById(`${teamPrefix}Substitutes`).children;
+            const others = document.getElementById(`${teamPrefix}Others`).children;
+
+            const pitch = document.querySelector(`#${side}Pitch`);
+
+            const getAllPlayers = (elements) => {
+                return Array.from(elements).map(player => {
+                    const select = player.querySelector('select');
+                    const status = select.value;
+                    const playerId = parseInt(select.dataset.playerId);
+
+                    let topPosition = null;
+                    let leftPosition = null;
+
+                    if (status === 'starting11' && pitch) {
+                        const icon = pitch.querySelector(`.player-icon[data-player-id="${playerId}"]`);
+                        if (icon) {
+                            topPosition = parseFloat(icon.style.top);
+                            leftPosition = parseFloat(icon.style.left);
+                        }
+                    }
+
+                    return {
+                        playerId: playerId,
+                        teamId: parseInt(select.dataset.teamId),
+                        shirtNumber: parseInt(player.querySelector('input[type="number"]').value) || 0,
+                        isStarting11: status === 'starting11',
+                        isSubstitute: status === 'substitute',
+                        topPosition: topPosition,
+                        leftPosition: leftPosition
+                    };
+                });
+            };
+
+            const allPlayers = [
+                ...getAllPlayers(starting11),
+                ...getAllPlayers(substitutes),
+                ...getAllPlayers(others)
+            ];
+
+            return allPlayers.filter(player => player.isStarting11 || player.isSubstitute);
+        }
+
+        async function saveSquad() {
+            const saveBtn = document.querySelector('button[onclick="saveSquad()"]');
+            saveBtn.disabled = true;
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Kaydediliyor...';
+
+            const homeSquad = getTeamSquad('homeTeam', 'home');
+            const awaySquad = getTeamSquad('awayTeam', 'away');
+            const homeImageBlob = await getPitchAsBlob('homePitch');
+            const awayImageBlob = await getPitchAsBlob('awayPitch');
+
+            const formData = new FormData();
+            formData.append("matchId", @Html.Raw(Model.MatchId));
+            formData.append("homeTeamId", @Html.Raw(Model.HomeTeam.TeamID));
+            formData.append("awayTeamId", @Html.Raw(Model.AwayTeam.TeamID));
+            formData.append("homeSquad", JSON.stringify(homeSquad));
+            formData.append("awaySquad", JSON.stringify(awaySquad));
+            if (homeImageBlob) formData.append("homeTeamFormationImg", homeImageBlob, "homeFormation.png");
+            if (awayImageBlob) formData.append("awayTeamFormationImg", awayImageBlob, "awayFormation.png");
+
+            try {
+                const response = await fetch('/Admin/SaveMatchSquad', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        // Başarılıysa kullanıcıya bildir
+                        toastr.success('Kadro başarıyla kaydedildi!');
+                        saveBtn.innerHTML = '<i class="fas fa-check"></i> Kaydedildi';
+                        // setTimeout(() => {
+                        //     window.location.href = '/Admin/Dashboard';
+                        // }, 1200);
+                    } else {
+                        toastr.error(result.message || 'Kadro kaydedilemedi.');
+                        saveBtn.disabled = false;
+                        saveBtn.innerHTML = originalText;
+                    }
+                } else {
+                    toastr.error('Sunucu hatası oluştu.');
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = originalText;
+                }
+            } catch (error) {
+                toastr.error('Kadro kaydedilirken hata: ' + error.message);
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalText;
+            }
+        }
+
+       class ImageCache {
+            static async getImage(url) {
+                const cache = await caches.open('player-images');
+                let response = await cache.match(url);
+
+                if (!response) {
+                    try {
+                        response = await fetch(url);
+                        const clonedResponse = response.clone();
+                        await cache.put(url, clonedResponse);
+                    } catch (error) {
+                        console.error('Resim yüklenemedi:', url);
+                        return '/images/defaultplayer.png';
+                    }
+                }
+
+                return response.url;
+            }
+        }
+
+                async function getPitchAsBlob(divId) {
+            const element = document.getElementById(divId);
+            if (!element) {
+                console.error(`Element with ID '${divId}' not found.`);
+                return null;
+            }
+
+            // Wait for all images to load
+            await Promise.all(
+                Array.from(element.getElementsByTagName('img')).map(img => {
+                    if (img.complete) return Promise.resolve();
+                    return new Promise(resolve => {
+                        img.onload = resolve;
+                        img.onerror = resolve;
+                    });
+                })
+            );
+
+            // Apply fixed styles for image capture
+            element.classList.add('for-image-capture');
+              
+            const canvas = await html2canvas(element, {
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: null,
+                scale: 2, // High-quality output
+                logging: false, // Set to true for debugging html2canvas issues
+                onclone: function (clonedDoc) { // Renamed from beforeClone for clarity, onclone is the correct property name
+                    const clonedElement = clonedDoc.getElementById(divId);
+
+                    if (!clonedElement) {
+                        console.error('In onclone: Cloned element with ID ' + divId + ' not found.');
+                        return;
+                    }
+                    clonedElement.classList.add('for-image-capture');
+
+                    const playerNames = clonedElement.querySelectorAll('.player-name');
+                    playerNames.forEach(playerName => {
+                        // It's crucial that the parent of .player-name (or an ancestor)
+                        // has a 'position: relative', 'position: absolute', or 'position: fixed'
+                        // for 'position: absolute' with 'bottom' to work predictably.
+                        // If the relevant parent is 'clonedElement', you might need:
+                        // clonedElement.style.setProperty('position', 'relative', 'important');
+
+                        // Force absolute positioning for capture and make styles !important
+                        playerName.style.setProperty('position', 'absolute', 'important');
+                        playerName.style.setProperty('bottom', '-24px', 'important');
+
+                        // It's good practice to also set left/right or width for absolutely positioned elements
+                        // to avoid them collapsing or stretching unexpectedly.
+                        // For example, if you want them centered:
+                        // playerName.style.setProperty('left', '50%', 'important');
+                        // playerName.style.setProperty('transform', 'translateX(-50%)', 'important');
+                        // Or if they should span a certain width:
+                        // playerName.style.setProperty('width', '100px', 'important'); // Example width
+
+                        playerName.style.setProperty('font-size', '11px', 'important');
+                        playerName.style.setProperty('padding', '3px 6px', 'important');
+                        playerName.style.setProperty('min-width', '60px', 'important'); // This might conflict if width is also set, choose one
+                        playerName.style.setProperty('background-color', 'rgba(55, 65, 81, 0.95)', 'important');
+                        playerName.style.setProperty('color', 'white', 'important');
+                        playerName.style.setProperty('border-radius', '4px', 'important');
+                        playerName.style.setProperty('border', '1px solid rgba(255, 255, 255, 0.4)', 'important');
+                        playerName.style.setProperty('box-shadow', '0 1px 3px rgba(0, 0, 0, 0.2)', 'important');
+                        playerName.style.setProperty('z-index', '11', 'important'); // Ensure z-index is high enough
+                        playerName.style.setProperty('font-weight', '500', 'important');
+                        playerName.style.setProperty('white-space', 'nowrap', 'important');
+                        playerName.style.setProperty('text-align', 'center', 'important');
+                        playerName.style.setProperty('line-height', '1.2', 'important');
+
+                        // Remove the CSS variable as originally intended
+                        playerName.style.removeProperty('--original-bottom');
+
+                        // Optional: Force a reflow. This can sometimes help ensure styles are applied before capture.
+                        // Use with caution as it can impact performance.
+                        // void playerName.offsetHeight;
+                    });
+
+                    // If player names are shifting relative to the main `clonedElement`,
+                    // ensure `clonedElement` itself has stable dimensions and overflow properties.
+                    // For example:
+                    // clonedElement.style.setProperty('overflow', 'visible', 'important');
+                }
+            });
+            // Use the canvas (e.g., canvas.toDataURL(), document.body.appendChild(canvas))
+       
+
+            // Remove fixed styles after capture
+            element.classList.remove('for-image-capture');
+
+            return new Promise(resolve => {
+                canvas.toBlob(blob => resolve(blob), 'image/png');
+            });
+        }
+
+        document.querySelectorAll('select.statusonchange').forEach(select => {
+            select.addEventListener('change', function () {
+                const playerDiv = this.closest('div');
+
+                const playerId = this.dataset.playerId;
+                const playerImg = this.dataset.playerImg?.trim();
+                const playerName = this.dataset.playerName;
+                const teamId = this.dataset.teamId;
+                const side = this.dataset.side; // 'home' veya 'away'
+
+
+                const status = this.value;
+
+                const teamPrefix = teamId === '@Model.HomeTeam.TeamID' ? 'homeTeam' : 'awayTeam';
+
+                let targetContainer;
+                 if (status === 'starting11') {
+             targetContainer = document.getElementById(`${teamPrefix}Starting11`);
+
+             const pitch = document.querySelector(`#${side}Pitch`);
+             if (pitch && !pitch.querySelector(`.player-icon[data-player-id="${playerId}"]`)) {
+                 // Ana div (player-icon)
+                 const icon = document.createElement('div');
+                 icon.className = 'player-icon';
+                 icon.dataset.playerId = playerId;
+                 icon.title = playerName;
+                 icon.style.position = 'absolute';
+                 icon.style.top = `${Math.random() * 85}%`;
+                 icon.style.left = `${Math.random() * 85}%`;
+
+                 // Resim div'i (player-icon-img)
+                 const imgDiv = document.createElement('div');
+                 imgDiv.className = 'player-icon-img';
+
+                 // <img> etiketi ile resmi ekle
+                 const img = document.createElement('img');
+                 const imageUrl = playerImg && playerImg !== "" ? playerImg : '/images/defaultplayer.png';
+                 img.src = imageUrl;
+                 img.alt = playerName;
+
+                 imgDiv.appendChild(img);
+
+                 // İsim span'ı (player-name)
+                 const nameSpan = document.createElement('span');
+                 nameSpan.className = 'player-name';
+                 nameSpan.innerText = playerName;
+
+                 // Elementleri birbirine ekle
+                 icon.appendChild(imgDiv);
+                 icon.appendChild(nameSpan);
+
+                 // Sürükle bırak ve sahaya ekleme
+                 makeDraggable(icon, pitch);
+                 pitch.appendChild(icon);
+             }
+         }
+
+
+                else {
+                    // Starting11'den başka yere taşınıyorsa sahadan sil
+                    const pitch = document.querySelector(`#${side}Pitch`);
+                    const existingIcon = pitch?.querySelector(`.player-icon[data-player-id="${playerId}"]`);
+                    if (existingIcon) {
+                        existingIcon.remove();
+                    }
+
+                    if (status === 'substitute') {
+                        targetContainer = document.getElementById(`${teamPrefix}Substitutes`);
+                    } else {
+                        targetContainer = document.getElementById(`${teamPrefix}Others`);
+                    }
+                }
+
+                targetContainer.appendChild(playerDiv);
+            });
+        });
+
+        function makeDraggable(element, pitch) {
+            let offsetX, offsetY;
+            let isDragging = false;
+            let currentX, currentY; // Pozisyonu saklamak için (px cinsinden)
+            let activeEvent = null; // Aktif olayı takip etmek için (mouse veya touch)
+
+            // ----- Olay Başlatıcıları -----
+            element.addEventListener('mousedown', dragStart, { passive: false });
+            element.addEventListener('touchstart', dragStart, { passive: false });
+
+            // ----- Olay Sonlandırıcıları -----
+            document.addEventListener('mouseup', dragEnd, { passive: false });
+            document.addEventListener('touchend', dragEnd, { passive: false });
+
+            // ----- Sürükleme İşleyicisi -----
+            document.addEventListener('mousemove', drag, { passive: false });
+            document.addEventListener('touchmove', drag, { passive: false });
+
+
+            function dragStart(e) {
+                // Zaten sürükleniyorsa veya sağ tıklama ise (fare için) başlama
+                if (isDragging || (e.type === 'mousedown' && e.button !== 0)) return;
+
+                isDragging = true;
+                activeEvent = e.type; // 'mousedown' veya 'touchstart'
+
+                // Başlangıç pozisyonunu ve offset'i hesapla
+                const rect = element.getBoundingClientRect();
+                const pitchRect = pitch.getBoundingClientRect();
+
+                // Olay türüne göre koordinatları al
+                const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+                const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+
+                offsetX = clientX - rect.left;
+                offsetY = clientY - rect.top;
+
+                currentX = element.offsetLeft; // Mevcut sol pozisyon (px)
+                currentY = element.offsetTop;  // Mevcut üst pozisyon (px)
+
+                // Görsel iyileştirmeler
+                element.style.cursor = 'grabbing';
+                element.style.zIndex = 1001;
+                element.style.transition = 'none'; // Sürüklerken animasyonu kaldır
+
+                // Dokunma olaylarında sayfa kaymasını engelle (isteğe bağlı)
+                // if (e.type === 'touchstart') {
+                //     e.preventDefault(); // Bu satır, dokunmatik cihazlarda sayfa kaydırmayı engelleyebilir.
+                // }                     // Ancak bazen istenmeyen yan etkilere neden olabilir. Test ederek karar verin.
+            }
+
+            function drag(e) {
+                if (!isDragging || activeEvent !== e.type.replace('move', activeEvent.includes('touch') ? 'start' : 'down')) return; // Sadece aktif olay türünü dinle
+
+                e.preventDefault(); // **ÖNEMLİ:** Hem fare hem de dokunma için sayfa kaymasını engelle
+
+                const pitchRect = pitch.getBoundingClientRect();
+
+                // Olay türüne göre koordinatları al
+                const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+                const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+
+                // Yeni pozisyonu hesapla (pitch'e göre)
+                let x = clientX - pitchRect.left - offsetX;
+                let y = clientY - pitchRect.top - offsetY;
+
+                // Saha sınırları içinde kalmasını sağla
+                const elementWidth = element.offsetWidth;
+                const elementHeight = element.offsetHeight;
+                x = Math.max(0, Math.min(x, pitch.clientWidth - elementWidth));
+                y = Math.max(0, Math.min(y, pitch.clientHeight - elementHeight));
+
+                // Yeni pozisyonu uygula (px cinsinden)
+                element.style.left = `${x}px`;
+                element.style.top = `${y}px`;
+
+                // Güncel pozisyonu sakla
+                currentX = x;
+                currentY = y;
+            }
+
+            function dragEnd(e) {
+                // Sadece aktif olay türüyle eşleşen bitiş olayını işle
+                if (!isDragging || activeEvent !== e.type.replace('end', activeEvent.includes('touch') ? 'start' : 'down').replace('up', activeEvent.includes('touch') ? 'start' : 'down')) return;
+
+                isDragging = false;
+                activeEvent = null;
+
+                // Görsel iyileştirmeleri geri al
+                element.style.cursor = 'grab';
+                element.style.zIndex = 1000;
+                element.style.transition = ''; // Animasyonu geri ekle
+
+                // Son pozisyonu % olarak güncelle (kaydetme için)
+                const pitchWidth = pitch.clientWidth;
+                const pitchHeight = pitch.clientHeight;
+                if (pitchWidth > 0 && pitchHeight > 0) {
+                    element.style.left = `${(currentX / pitchWidth) * 100}%`;
+                    element.style.top = `${(currentY / pitchHeight) * 100}%`;
+                } else {
+                    // Eğer saha boyutu 0 ise, px değerlerini koru (hata durumunda)
+                    element.style.left = `${currentX}px`;
+                    element.style.top = `${currentY}px`;
+                }
+            }
+
+            // İsteğe bağlı: Sürükleme iptali için ek olay dinleyicileri
+            document.addEventListener('mouseleave', () => {
+                if (isDragging && activeEvent === 'mousemove') dragEnd({ type: 'mouseup' }); // Fare saha dışına çıkarsa bırak
+            });
+            // touchcancel olayı da eklenebilir
+            document.addEventListener('touchcancel', () => {
+                if (isDragging && activeEvent === 'touchstart') dragEnd({ type: 'touchend' });
+            });
+        }
+
+
+        const pitch = document.querySelectorAll('.pitch'); // hem home hem away pitch için
+        pitch.forEach(p => {
+            p.addEventListener('dragover', (e) => e.preventDefault());
+
+            p.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const playerId = e.dataTransfer.getData('text/plain');
+                const icon = document.querySelector(`.player-icon[data-player-id="${playerId}"]`);
+                if (icon) {
+                    const rect = p.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+
+                    icon.style.left = `${(x / rect.width) * 100}%`;
+                    icon.style.top = `${(y / rect.height) * 100}%`;
+                }
+            });
+        });
+
+
+        function createPlayerIcon(playerId, playerName, playerImg) {
+            const icon = document.createElement('div');
+            icon.className = 'player-icon';
+            icon.dataset.playerId = playerId;
+            icon.title = playerName;
+            icon.style.backgroundImage = `url('${playerImg || '/images/defaultplayer.png'}')`;
+
+            // Adı göstermek için içeriği ekle
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'player-name';
+            nameDiv.innerText = playerName;
+
+            icon.appendChild(nameDiv);
+            return icon;
+        }
+
+        function collectPlayerPositions(side) {
+            const pitch = document.querySelector(`#${side}Pitch`);
+            const players = pitch.querySelectorAll('.player-icon');
+
+            const positions = [];
+
+            players.forEach(player => {
+                positions.push({
+                    playerId: player.dataset.playerId,
+                    teamId: player.dataset.teamId, // Eğer bu veri varsa
+                    top: parseFloat(player.style.top),
+                    left: parseFloat(player.style.left)
+                });
+            });
+
+            return positions;
+        }
+
+        // Başlangıçta mevcut oyuncuları sahaya yerleştir ve sürükle bırak etkinleştir
+        document.addEventListener('DOMContentLoaded', () => {
+            initializePitch('home');
+            initializePitch('away');
+        });
+
+        function initializePitch(side) {
+            const pitchElement = document.getElementById(`${side}Pitch`);
+            if (!pitchElement) return;
+
+            const initialPlayers = pitchElement.querySelectorAll('.player-icon');
+            initialPlayers.forEach(icon => {
+                // Eğer pozisyonlar px cinsinden geldiyse %'ye çevir (isteğe bağlı, backend'den % geldiği varsayılıyor)
+                // Önemli: Konumların % olarak ayarlandığından emin olun.
+                // Eğer backend'den % gelmiyorsa burada veya Razor tarafında dönüşüm yapılmalı.
+                if (!icon.style.top.includes('%')) {
+                    const topPx = parseFloat(icon.style.top || '0');
+                    icon.style.top = `${(topPx / pitchElement.clientHeight) * 100}%`;
+                }
+                if (!icon.style.left.includes('%')) {
+                    const leftPx = parseFloat(icon.style.left || '0');
+                    icon.style.left = `${(leftPx / pitchElement.clientWidth) * 100}%`;
+                }
+
+                makeDraggable(icon, pitchElement);
+                icon.style.cursor = 'grab'; // Başlangıç cursor'ı
+            });
+        }
+         
+
+
+    </script>
+    <script>
+        function savePitchAsImage(pitchId, teamName) {
+            const pitchElement = document.getElementById(pitchId);
+            if (!pitchElement) {
+                console.error("Saha elementi bulunamadı:", pitchId);
+                return;
+            }
+
+            html2canvas(pitchElement, {
+                useCORS: true,
+                backgroundColor: null // Transparan arka plan için
+                // scale: 2 // Daha yüksek çözünürlük için ölçeklendirme (isteğe bağlı)
+            })
+                .then(function (canvas) {
+                    const link = document.createElement('a');
+                    link.download = `${crypto.randomUUID()}_saha_kadrosu.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                })
+                .catch(function (error) {
+                    console.error('Saha resmi oluşturulurken hata:', error);
+                });
+        }
+
+        document.getElementById('saveHomePitchImage').addEventListener('click', function () {
+            savePitchAsImage('homePitch', '@Model.HomeTeam.Name.Replace(" ", "_")');
+        });
+
+        document.getElementById('saveAwayPitchImage').addEventListener('click', function () {
+            savePitchAsImage('awayPitch', '@Model.AwayTeam.Name.Replace(" ", "_")');
+        });
+
+    </script>
+
+}

@@ -1,0 +1,38 @@
+@model SeasonViewModel
+
+<div class="bg-gray-800 rounded-lg p-6">
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold text-white">@ViewBag.LeagueName - Yeni Sezon Ekle</h2>
+        <button onclick="closedynamicDashboardModal()" class="text-gray-400 hover:text-white">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+     
+        <form asp-action="CreateSeason" method="post" enctype="multipart/form-data">
+        <input type="hidden" asp-for="LeagueID" />
+
+        <div class="mb-4">
+            <label asp-for="Name" class="block text-gray-300 mb-2"></label>
+            <input asp-for="Name" class="w-full bg-gray-700 text-white rounded px-3 py-2" />
+            <span asp-validation-for="Name" class="text-red-500 text-sm"></span>
+        </div>
+
+        <div class="mb-6">
+            <label class="flex items-center text-gray-300">
+                <input asp-for="IsActive" class="mr-2" />
+                <span>Aktif Sezon</span>
+            </label>
+        </div>
+
+        <div class="flex justify-end space-x-2">
+            <button type="button" onclick="closedynamicDashboardModal()" 
+                    class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">
+                İptal
+            </button>
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                Kaydet
+            </button>
+        </div>
+    </form>
+</div>
+ 

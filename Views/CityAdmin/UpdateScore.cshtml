@@ -1,0 +1,555 @@
+﻿@model Match
+@{
+    Layout = "_CityAdminLayout";
+    ViewData["Title"] = "Skor Güncelle";
+    var players = ViewBag.Players as List<Player>;
+}
+
+<div class="flex-1 px-2 sm:px-0 max-w-4xl mx-auto">
+    <div class="flex flex-col sm:flex-row justify-between items-center mt-4 gap-4">
+        <h3 class="text-xl sm:text-2xl font-semibold text-gray-200">Skor Güncelle</h3>
+        <div class="flex flex-wrap items-center gap-2">
+            <button class="w-full sm:w-auto text-white hover:text-white smooth-hover bg-green-600/80 hover:bg-green-500/80 p-2 rounded-md flex items-center justify-center gap-2"
+                    data-toggle="modal" data-target="#addGoalModal">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                <span>Gol Ekle</span>
+            </button>
+            <button class="w-full sm:w-auto text-white hover:text-white smooth-hover bg-yellow-600/80 hover:bg-yellow-500/80 p-2 rounded-md flex items-center justify-center gap-2"
+                    data-toggle="modal" data-target="#addCardModal">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                <span>Kart Ekle</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="mb-6 sm:mb-0 mt-6">
+        <!-- Skor Güncelleme Kartı -->
+        <div class="relative group bg-gray-800 py-4 sm:py-6 px-3 sm:px-4 flex flex-col space-y-2 items-center rounded-md hover:bg-gray-700 hover:smooth-hover">
+            <div class="w-full"> 
+                    <input type="hidden" name="matchId" value="@Model.MatchID" />
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                        <div class="bg-gray-700/50 p-3 sm:p-4 rounded-lg">
+                            <h3 class="text-base sm:text-lg font-semibold text-gray-200">
+                                @Model.HomeTeam.Name
+                            </h3>
+                            <input type="number" id="homeScore" class="w-full p-2 mt-2 rounded bg-gray-600 text-gray-200"
+                                   value="@Model.HomeScore" required />
+                        </div>
+                        <div class="bg-gray-700/50 p-3 sm:p-4 rounded-lg">
+                            <h3 class="text-base sm:text-lg font-semibold text-gray-200">
+                                @Model.AwayTeam.Name
+                            </h3>
+                            <input type="number" id="awayScore" class="w-full p-2 mt-2 rounded bg-gray-600 text-gray-200"
+                                   value="@Model.AwayScore" required />
+                        </div>
+                    </div>
+
+                <div class="mt-4">
+                    <div class="bg-gray-700/50 p-3 sm:p-4 rounded-lg">
+                        <h3 class="text-base sm:text-lg font-semibold text-gray-200">
+                            Maç Linki
+                        </h3>
+                        <input type="text" id="matchUrl" class="w-full p-2 mt-2 rounded bg-gray-600 text-gray-200"
+                               value="@Model.MatchURL" required />
+                    </div> 
+                </div>
+
+                    <!-- Maçın Oyuncusu seçimi -->
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-200 mb-2">Maçın Oyuncusu</label>
+                        @if (ViewBag.Players != null)
+                        {
+                            <select id="manOfTheMatchId" class="w-full p-2 rounded bg-gray-600 text-gray-200">
+                                <option value="">Seçiniz...</option>
+                                <optgroup label="@Model.HomeTeam.Name">
+                                    @foreach (var player in (ViewBag.Players as List<Player>).Where(p => p.TeamID == Model.HomeTeamID))
+                                    {
+                                        <option value="@player.PlayerID"
+                                                selected="@(Model.ManOfTheMatchID.HasValue && Model.ManOfTheMatchID == player.PlayerID ? "selected" : null)">
+                                            @player.FirstName @player.LastName
+                                        </option>
+                                    }
+                                </optgroup>
+                                <optgroup label="@Model.AwayTeam.Name">
+                                    @foreach (var player in (ViewBag.Players as List<Player>).Where(p => p.TeamID == Model.AwayTeamID))
+                                    {
+                                        <option value="@player.PlayerID"
+                                                selected="@(Model.ManOfTheMatchID.HasValue && Model.ManOfTheMatchID == player.PlayerID ? "selected" : null)">
+                                            @player.FirstName @player.LastName
+                                        </option>
+                                    }
+                                </optgroup>
+                            </select>
+                        }
+                        else
+                        {
+                            <p class="text-red-500">Oyuncu listesi bulunamadı.</p>
+                        }
+                    </div>
+
+                    <div class="mt-4 flex justify-end">
+                        <button id="updateScoreBtn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-500 smooth-hover">
+                            Skoru Güncelle
+                        </button>
+                    </div> 
+            </div>
+        </div>
+    </div>
+
+    <!-- Maçın Oyuncusu Gösterimi -->
+    @if (Model.ManOfTheMatch != null)
+    {
+        <div class="mt-6">
+            <div class="bg-yellow-600/20 p-4 rounded-lg">
+                <h3 class="text-lg font-semibold text-yellow-400 mb-2">Maçın Oyuncusu</h3>
+                <div class="flex items-center gap-2">
+                    <span class="@(Model.ManOfTheMatch.TeamID == Model.HomeTeamID ? "text-blue-400" : "text-red-400")">
+                        @Model.ManOfTheMatch.FirstName @Model.ManOfTheMatch.LastName
+                    </span>
+                    <span class="text-gray-400">
+                        (@(Model.ManOfTheMatch.TeamID == Model.HomeTeamID ? Model.HomeTeam.Name : Model.AwayTeam.Name))
+                    </span>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Goller Tablosu -->
+    <div class="mt-6">
+        <div class="relative group bg-gray-800 py-4 sm:py-6 px-3 sm:px-4 flex flex-col space-y-2 items-center rounded-md">
+            <h3 class="text-xl sm:text-2xl font-semibold text-gray-200 mb-4 self-start">Goller</h3>
+            <div class="w-full overflow-x-auto">
+                <table class="w-full border-collapse min-w-[600px]">
+                    <thead>
+                        <tr class="bg-gray-700">
+                            <th class="p-2 text-gray-200 text-left">Oyuncu</th>
+                            <th class="p-2 text-gray-200 text-left">Asist</th>
+                            <th class="p-2 text-gray-200 text-left">Dakika</th>
+                            <th class="p-2 text-gray-200 text-left">Penaltı</th>
+                            <th class="p-2 text-gray-200 text-left">Kendi Kalesine</th>
+                            <th class="p-2 text-gray-200 text-left">İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Goals != null && Model.Goals.Any())
+                        {
+                            @foreach (var goal in Model.Goals.OrderBy(g => g.Minute))
+                            {
+                                <tr class="border-b border-gray-700 hover:bg-gray-700/50">
+                                    <td class="p-2 text-white/90">
+                                        <span class="@(goal.Player.TeamID == Model.HomeTeamID ? "text-blue-400" : "text-red-400")">
+                                            @goal.Player.FirstName @goal.Player.LastName
+                                        </span>
+                                    </td>
+                                    <td class="p-2 text-white/90">
+                                        @(goal.AssistPlayer != null ? $"{goal.AssistPlayer.FirstName} {goal.AssistPlayer.LastName}" : "-")
+                                    </td>
+                                    <td class="p-2 text-white/90">@goal.Minute</td>
+                                    <td class="p-2">
+                                        @if (goal.IsPenalty)
+                                        {
+                                            <span class="px-2 py-1 bg-blue-500/20 text-blue-400 rounded">Evet</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="px-2 py-1 bg-gray-500/20 text-gray-400 rounded">Hayır</span>
+                                        }
+                                    </td>
+                                    <td class="p-2">
+                                        @if (goal.IsOwnGoal)
+                                        {
+                                            <span class="px-2 py-1 bg-purple-500/20 text-purple-400 rounded">Evet</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="px-2 py-1 bg-gray-500/20 text-gray-400 rounded">Hayır</span>
+                                        }
+                                    </td>
+                                    <td class="p-2">
+                                        <button onclick="deleteGoal(@goal.GoalID)"
+                                                class="bg-red-600/80 hover:bg-red-500/80 text-white p-1 rounded-md">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                            </svg>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6" class="p-4 text-center text-gray-400">Henüz gol kaydı bulunmamaktadır.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kartlar Tablosu -->
+    <div class="mt-6">
+        <div class="relative group bg-gray-800 py-4 sm:py-6 px-3 sm:px-4 flex flex-col space-y-2 items-center rounded-md">
+            <h3 class="text-xl sm:text-2xl font-semibold text-gray-200 mb-4 self-start">Kartlar</h3>
+            <div class="w-full overflow-x-auto">
+                <table class="w-full border-collapse min-w-[600px]">
+                    <thead>
+                        <tr class="bg-gray-700">
+                            <th class="p-2 text-gray-200 text-left">Oyuncu</th>
+                            <th class="p-2 text-gray-200 text-left">Takım</th>
+                            <th class="p-2 text-gray-200 text-left">Kart Tipi</th>
+                            <th class="p-2 text-gray-200 text-left">Dakika</th>
+                            <th class="p-2 text-gray-200 text-left">İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Cards != null && Model.Cards.Any())
+                        {
+                            @foreach (var card in Model.Cards.OrderBy(c => c.Minute))
+                            {
+                                <tr class="border-b border-gray-700 hover:bg-gray-700/50">
+                                    <td class="p-2 text-white/90">@card.Player.FirstName @card.Player.LastName</td>
+                                    <td class="p-2">
+                                        <span class="@(card.Player.TeamID == Model.HomeTeamID ? "text-blue-400" : "text-red-400")">
+                                            @(card.Player.TeamID == Model.HomeTeamID ? Model.HomeTeam.Name : Model.AwayTeam.Name)
+                                        </span>
+                                    </td>
+                                    <td class="p-2">
+                                        @if (card.CardType == CardType.Yellow)
+                                        {
+                                            <span class="px-2 py-1 bg-yellow-500/30 text-yellow-400 rounded">Sarı</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="px-2 py-1 bg-red-500/30 text-red-400 rounded">Kırmızı</span>
+                                        }
+                                    </td>
+                                    <td class="p-2 text-white/90">@card.Minute</td>
+                                    <td class="p-2">
+                                        <button onclick="deleteCard(@card.CardID, @Model.MatchID)"
+                                                class="bg-red-600/80 hover:bg-red-500/80 text-white p-1 rounded-md">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                            </svg>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="p-4 text-center text-gray-400">Henüz kart kaydı bulunmamaktadır.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gol Ekle Modal -->
+<div class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden p-4" id="addGoalModal">
+    <div class="bg-gray-800 p-4 rounded-lg w-full max-w-sm">
+        <h3 class="text-lg font-bold text-white">Gol Ekle</h3>
+        <form id="addGoalForm" class="mt-4">
+            <input type="hidden" name="matchId" value="@Model.MatchID" />
+            @Html.AntiForgeryToken() <!-- CSRF KORUMASI EKLENDİ -->
+
+            <div class="mb-2">
+                <label class="block text-sm text-white">Gol Atan Oyuncu:</label>
+                <select class="w-full p-2 mt-1 rounded bg-gray-700 text-white" name="playerId" required>
+                    <optgroup label="@Model.HomeTeam.Name">
+                        @foreach (var player in players.Where(p => p.TeamID == Model.HomeTeamID))
+                        {
+                            <option value="@player.PlayerID">@player.FirstName @player.LastName</option>
+                        }
+                    </optgroup>
+                    <optgroup label="@Model.AwayTeam.Name">
+                        @foreach (var player in players.Where(p => p.TeamID == Model.AwayTeamID))
+                        {
+                            <option value="@player.PlayerID">@player.FirstName @player.LastName</option>
+                        }
+                    </optgroup>
+                </select>
+            </div>
+
+            <div class="mb-2">
+                <label class="block text-sm text-white">Asist Yapan Oyuncu:</label>
+                <select class="w-full p-2 mt-1 rounded bg-gray-700 text-white" name="assistPlayerId">
+                    <option value="">Yok</option>
+                    <optgroup label="@Model.HomeTeam.Name">
+                        @foreach (var player in players.Where(p => p.TeamID == Model.HomeTeamID))
+                        {
+                            <option value="@player.PlayerID">@player.FirstName @player.LastName</option>
+                        }
+                    </optgroup>
+                    <optgroup label="@Model.AwayTeam.Name">
+                        @foreach (var player in players.Where(p => p.TeamID == Model.AwayTeamID))
+                        {
+                            <option value="@player.PlayerID">@player.FirstName @player.LastName</option>
+                        }
+                    </optgroup>
+                </select>
+            </div>
+
+            <div class="mb-2">
+                <label class="block text-sm text-white">Gol Dakikası:</label>
+                <input type="number" class="w-full p-2 mt-1 rounded bg-gray-700 text-white" name="minute" required />
+            </div>
+
+            <div class="mb-2 flex items-center">
+                <input type="checkbox" class="form-checkbox bg-gray-700" name="isPenalty">
+                <label class="ml-2 text-white text-sm">Penaltı Golü</label>
+            </div>
+
+            <div class="mb-2 flex items-center">
+                <input type="checkbox" class="form-checkbox bg-gray-700" name="isOwnGoal">
+                <label class="ml-2 text-white text-sm">Kendi Kalesine</label>
+            </div>
+
+            <div class="flex justify-end space-x-2">
+                <button type="submit" class="bg-green-600 px-3 py-1 text-sm rounded hover:bg-green-500">Ekle</button>
+                <button type="button" class="bg-red-600 px-3 py-1 text-sm rounded hover:bg-red-500" id="closeModal">İptal</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Kart Ekle Modal -->
+<div class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden p-4" id="addCardModal">
+    <div class="bg-gray-800 p-4 rounded-lg w-full max-w-sm">
+        <h3 class="text-lg font-bold text-white">Kart Ekle</h3>
+        <form id="addCardForm" class="mt-4">
+            <input type="hidden" name="matchId" value="@Model.MatchID" />
+            @Html.AntiForgeryToken()
+
+            <div class="mb-2">
+                <label class="block text-sm text-white">Oyuncu:</label>
+                <select class="w-full p-2 mt-1 rounded bg-gray-700 text-white" name="playerId" required>
+                    <optgroup label="@Model.HomeTeam.Name">
+                        @foreach (var player in players.Where(p => p.TeamID == Model.HomeTeamID))
+                        {
+                            <option value="@player.PlayerID">@player.FirstName @player.LastName</option>
+                        }
+                    </optgroup>
+                    <optgroup label="@Model.AwayTeam.Name">
+                        @foreach (var player in players.Where(p => p.TeamID == Model.AwayTeamID))
+                        {
+                            <option value="@player.PlayerID">@player.FirstName @player.LastName</option>
+                        }
+                    </optgroup>
+                </select>
+            </div>
+
+            <div class="mb-2">
+                <label class="block text-sm text-white">Kart Tipi:</label>
+                <select class="w-full p-2 mt-1 rounded bg-gray-700 text-white" name="cardType" required>
+                    <option value="1">Sarı Kart</option>
+                    <option value="2">Kırmızı Kart</option>
+                </select>
+            </div>
+
+            <div class="mb-2">
+                <label class="block text-sm text-white">Dakika:</label>
+                <input type="number" class="w-full p-2 mt-1 rounded bg-gray-700 text-white" name="minute" required />
+            </div>
+
+            <div class="flex justify-end space-x-2">
+                <button type="submit" class="bg-green-600 px-3 py-1 text-sm rounded hover:bg-green-500">Ekle</button>
+                <button type="button" class="bg-red-600 px-3 py-1 text-sm rounded hover:bg-red-500" id="closeCardModal">İptal</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+
+    document.querySelector("#updateScoreBtn").addEventListener("click", function () {
+        
+        toastr.options = {
+            "closeButton": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "timeOut": "3000",
+        };
+
+        const data = {
+            matchId: @Model.MatchID,
+            homeScore: $('#homeScore').val(),
+            awayScore: $('#awayScore').val(),
+            manOfTheMatchId: $('#manOfTheMatchId').val(),
+            matchUrl: $('#matchUrl').val()
+
+        };
+
+        $.ajax({
+            url: '@Url.Action("UpdateScore", "CityAdmin")',
+            type: 'POST',
+            data: data,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function (response) {
+                if (response.success) {
+                    toastr.success('Skor başarıyla güncellendi!', 'Başarılı'); 
+                } else {
+                    toastr.error(response.message || 'Bir hata oluştu!', 'Hata');
+                }
+            },
+            error: function (xhr, status, error) {
+                toastr.error('Bir hata oluştu!', 'Hata');
+                console.error('Error:', error);
+            }
+        });
+    });
+
+    document.querySelector("#addGoalForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const goalScorer = document.querySelector('select[name="playerId"]').value;
+        const assist = document.querySelector('select[name="assistPlayerId"]').value;
+        const isPenalty = document.querySelector('input[name="isPenalty"]').checked;
+        const isOwnGoal = document.querySelector('input[name="isOwnGoal"]').checked;
+
+        // Gol atan ve asist yapan aynı kişi kontrolü
+        if (goalScorer === assist && assist !== '') {
+            e.preventDefault();
+            alert('Gol atan oyuncu ile asist yapan oyuncu aynı kişi olamaz!');
+            return false;
+        }
+
+        // Penaltı ve kendi kalesine kontrolü
+        if (isPenalty && isOwnGoal) {
+            e.preventDefault();
+            alert('Bir gol hem penaltı hem kendi kalesine olamaz!');
+            return false;
+        }
+
+        let formData = new FormData(this);
+        let token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+        fetch('@Url.Action("AddGoal", "CityAdmin")', {
+            method: 'POST',
+            headers: {
+                'RequestVerificationToken': token
+            },
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert("Hata: " + data.message);
+                }
+            });
+    });
+    document.querySelector("[data-toggle='modal']").addEventListener("click", function () {
+        document.querySelector("#addGoalModal").classList.remove("hidden");
+    });
+
+    document.querySelector("#closeModal").addEventListener("click", function () {
+        document.querySelector("#addGoalModal").classList.add("hidden");
+    });
+
+    document.querySelector("#addCardForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        let formData = new FormData(this);
+        let token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+        fetch('@Url.Action("AddCard", "CityAdmin")', {
+            method: 'POST',
+            headers: {
+                'RequestVerificationToken': token
+            },
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert("Hata: " + data.message);
+                }
+            });
+    });
+
+    document.querySelector("[data-target='#addCardModal']").addEventListener("click", function () {
+        document.querySelector("#addCardModal").classList.remove("hidden");
+    });
+
+    document.querySelector("#closeCardModal").addEventListener("click", function () {
+        document.querySelector("#addCardModal").classList.add("hidden");
+    });
+
+    function deleteGoal(goalId) {
+        if (confirm('Bu golü silmek istediğinizden emin misiniz?')) {
+            fetch(`/CityAdmin/DeleteGoal?goalId=${goalId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Hata: ' + data.message);
+                    }
+                });
+        }
+    }
+
+    function deleteCard(cardId) {
+        if (confirm('Bu kartı silmek istediğinizden emin misiniz?')) {
+            fetch(`/CityAdmin/DeleteCard?cardId=${cardId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: JSON.stringify({ cardId: cardId })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Hata: ' + data.message);
+                    }
+                });
+        }
+    }
+
+    // Kendi kalesine gol olduğunda asist seçeneğini devre dışı bırak
+    document.querySelector('input[name="isOwnGoal"]').addEventListener('change', function (e) {
+        const assistSelect = document.querySelector('select[name="assistPlayerId"]');
+        if (this.checked) {
+            assistSelect.value = '';
+            assistSelect.disabled = true;
+        } else {
+            assistSelect.disabled = false;
+        }
+    });
+
+    // Penaltı seçildiğinde asist seçeneğini devre dışı bırak
+    document.querySelector('input[name="isPenalty"]').addEventListener('change', function (e) {
+        const assistSelect = document.querySelector('select[name="assistPlayerId"]');
+        if (this.checked) {
+            assistSelect.value = '';
+            assistSelect.disabled = true;
+        } else {
+            assistSelect.disabled = false;
+        }
+    });
+</script>
+

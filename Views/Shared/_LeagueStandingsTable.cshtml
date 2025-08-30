@@ -1,0 +1,63 @@
+﻿@model LeagueStandingsViewModel
+ 
+    <table class="min-w-full divide-y divide-gray-700">
+        <thead>
+            <tr class="bg-gray-700">
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Sıra</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Takım</th>
+                <th class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">O</th>
+                <th class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">G</th>
+                <th class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">B</th>
+                <th class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">M</th>
+                <th class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">AG</th>
+                <th class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">YG</th>
+                <th class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">AV</th>
+                <th class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">P</th>
+                <th class="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Son 5 Maç</th>
+            </tr>
+        </thead>
+        <tbody class="bg-gray-800 divide-y divide-gray-700">
+            @for (int i = 0; i < Model.Standings.Count; i++)
+            {
+                var team = Model.Standings[i];
+                <tr class="hover:bg-gray-700 standing-row" data-group="@team.Group">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">@(i + 1)</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-white">@team.TeamName</div>
+                                <div class="text-sm text-gray-400">@team.Manager</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">@team.Played</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">@team.Won</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">@team.Drawn</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">@team.Lost</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">@team.GoalsFor</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">@team.GoalsAgainst</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">@team.GoalDifference</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-yellow-500 text-center">@team.Points</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                        <div class="flex justify-center space-x-1">
+                            @foreach (var result in team.LastFiveMatches)
+                            {
+                                @switch (result)
+                                {
+                                    case "W":
+                                        <span class="w-6 h-6 flex items-center justify-center rounded-full bg-green-600 text-white text-xs">G</span>
+                                        break;
+                                    case "D":
+                                        <span class="w-6 h-6 flex items-center justify-center rounded-full bg-yellow-600 text-white text-xs">B</span>
+                                        break;
+                                    case "L":
+                                        <span class="w-6 h-6 flex items-center justify-center rounded-full bg-red-600 text-white text-xs">M</span>
+                                        break;
+                                }
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table> 

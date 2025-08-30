@@ -1,0 +1,58 @@
+@model BussinessCupApi.Models.User
+@{
+    ViewData["Title"] = "Kullanıcı Düzenle";
+    Layout = "_AdminLayout";
+}
+
+<div class="min-h-screen bg-gray-900 text-gray-100">
+    <div class="max-w-2xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div class="bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+            <div class="p-6">
+                <h2 class="text-xl font-semibold text-yellow-500 mb-6">Kullanıcı Bilgilerini Düzenle</h2>
+
+                <form asp-action="Edit" method="post" class="space-y-4">
+                    <input type="hidden" asp-for="Id" />
+                    @Html.AntiForgeryToken() @* Güvenlik için *@
+
+                    <div>
+                        <label asp-for="Email" class="block text-sm font-medium text-gray-300 mb-1">Email (Kullanıcı Adı)</label>
+                        <input asp-for="Email" class="w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                        <span asp-validation-for="Email" class="mt-1 text-xs text-red-500"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="Firstname" class="block text-sm font-medium text-gray-300 mb-1">Ad</label>
+                        <input asp-for="Firstname" class="w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                        <span asp-validation-for="Firstname" class="mt-1 text-xs text-red-500"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="Lastname" class="block text-sm font-medium text-gray-300 mb-1">Soyad</label>
+                        <input asp-for="Lastname" class="w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                        <span asp-validation-for="Lastname" class="mt-1 text-xs text-red-500"></span>
+                    </div>
+
+                    @* Diğer kullanıcı alanları (gerekirse eklenebilir ama sadece bu 3'ü istendi) *@
+                    <input type="hidden" asp-for="PasswordHash" /> @* Bu alan düzenlenemez ama formda kalmalı *@ 
+                    <input type="hidden" asp-for="MacID" />
+                    <input type="hidden" asp-for="OS" />
+                    <input type="hidden" asp-for="UserType" /> 
+                    <input type="hidden" asp-for="UserRole" /> 
+
+                    <div class="flex justify-end gap-3 pt-4">
+                        <a href="@Url.Action("Index")" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors text-sm font-medium">
+                            <i class="fas fa-arrow-left mr-1"></i> Geri Dön
+                        </a>
+                        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors text-sm font-medium">
+                            <i class="fas fa-save mr-1"></i> Kaydet
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+} 

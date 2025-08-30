@@ -1,0 +1,59 @@
+@model LeagueStandingsViewModel
+@{
+    ViewData["Title"] = $"{Model.LeagueName} - {Model.SeasonName} Puan Durumu"; // Model.Season yerine Model.SeasonName kullanıldı
+    Layout = "_PopupLayout";
+}
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-gray-800 rounded-lg shadow-lg p-6">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-yellow-500">
+                    @Model.LeagueName - @Model.SeasonName <!-- Model.Season yerine Model.SeasonName -->
+                    <span class="text-gray-400 text-lg ml-2">Puan Durumu</span>
+                    <span id="currentGroupName" class="text-gray-400 text-lg ml-2">@Model.Groups.FirstOrDefault(g => g.GroupID == Model.CurrentGroupId)?.GroupName</span>
+                </h1>
+                <input type="hidden" id="LeagueIDHidden" value="@Model.LeagueID" />
+                <input type="hidden" id="SeasonIDHidden" value="@Model.SeasonId" />
+
+                @if (Model.Groups != null && Model.Groups.Any())
+                {
+                    <div class="mt-4 flex space-x-2">
+                        @foreach (var groupInfo in Model.Groups)
+                        {
+                            var isActive = Model.CurrentGroupId.HasValue && Model.CurrentGroupId.Value == groupInfo.GroupID;
+                            // AJAX ile yükleme yapacağımız için href'i kaldırıp data attribute'ları ekliyoruz.
+                            <button type="button"
+                                    data-group-id="@groupInfo.GroupID"
+                                    data-group-name="@groupInfo.GroupName"
+                                    class="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-600 group-filter-btn @(isActive ? "active" : "")">
+                                @groupInfo.GroupName
+                            </button>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="overflow-x-auto" id="standingsTableContainer">
+            @* Puan durumu tablosu başlangıçta sunucu tarafından render edilecek, sonra AJAX ile güncellenecek *@
+            @await Html.PartialAsync("_LeagueStandingsTable", Model)
+        </div>
+    </div>
+</div>
+ 
+
+<style>
+    .group-filter-btn.active {
+        background-color: #4B5563; /* Tailwind gray-600 */
+        border: 2px solid #F59E0B; /* Tailwind yellow-500 */
+        font-weight: bold;
+    }
+
+    .group-filter-btn {
+        transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+    }
+
+        .group-filter-btn:hover {
+            background-color: #374151; /* Tailwind gray-700 */
+        }
+</style>

@@ -1,0 +1,79 @@
+﻿@model BussinessCupApi.ViewModels.SubscriptionSummaryViewModel
+@{
+    Layout = "_AdminLayout";
+}
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-gray-800 rounded-lg shadow-lg p-6">  
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            <div class="bg-gradient-to-br from-green-700 to-green-900 text-white rounded-xl p-6 shadow-lg">
+                <div class="text-center">
+                    <h5 class="text-sm uppercase font-semibold tracking-wider text-green-200">Toplam Oyuncu</h5>
+                    <p class="text-5xl font-bold mt-2">@Model.ToplamOyuncu</p>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-blue-700 to-blue-900 text-white rounded-xl p-6 shadow-lg">
+                <div class="text-center">
+                    <h5 class="text-sm uppercase font-semibold tracking-wider text-blue-200">Üye Olan Oyuncu</h5>
+                    <p class="text-5xl font-bold mt-2">@Model.UyeOlanOyuncu</p>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-red-700 to-red-900 text-white rounded-xl p-6 shadow-lg">
+                <div class="text-center">
+                    <h5 class="text-sm uppercase font-semibold tracking-wider text-red-200">Üye Olmayan Oyuncu</h5>
+                    <p class="text-5xl font-bold mt-2">@Model.UyeOlmayanOyuncu</p>
+                </div>
+            </div>
+        </div>
+        <br />  
+        <!-- Tablo -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm text-left text-gray-600 dark:text-gray-300">
+                    <thead class="bg-gray-100 dark:bg-gray-700 text-xs uppercase tracking-wide text-gray-700 dark:text-gray-300">
+                        <tr>
+                            <th class="px-6 py-4">Resim</th>
+                            <th class="px-6 py-4">Ad</th>
+                            <th class="px-6 py-4">Soyad</th>
+                            <th class="px-6 py-4">Pozisyon</th>
+                            <th class="px-6 py-4">Numara</th>
+                            <th class="px-6 py-4">Takım</th>
+                            <th class="px-6 py-4 text-center">Üyelik</th>
+                            <th class="px-6 py-4">Bitiş Tarihi</th>
+                            <th class="px-6 py-4">Email</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        @foreach (var o in Model.Oyuncular)
+                        {
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                                <td class="px-6 py-4">
+                                    <img class="w-10 h-10 rounded-full object-cover shadow-md"
+                                         src="@(!string.IsNullOrEmpty(o.Icon) ? o.Icon : "/images/default-player.png")"
+                                         alt="Oyuncu Resmi" />
+                                </td>
+                                <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">@o.FirstName</td>
+                                <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">@o.LastName</td>
+                                <td class="px-6 py-4">@o.Position</td>
+                                <td class="px-6 py-4">@o.Number</td>
+                                <td class="px-6 py-4">@o.TakimAdi</td>
+                                <td class="px-6 py-4 text-center">
+                                    <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full
+                                            @(o.isSubscribed == true
+                                                                                      ? "bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100"
+                                                                                      : "bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100")">
+                                    @(o.isSubscribed == true ? "Aktif Üye" : "Üye Değil")
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">@(o.SubscriptionExpireDate?.ToString("dd-MM-yyyy") ?? "N/A")</td>
+                            <td class="px-6 py-4">@o.UserEmail</td>
+                        </tr>
+                                                }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>

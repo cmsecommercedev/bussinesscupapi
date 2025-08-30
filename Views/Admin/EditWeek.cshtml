@@ -1,0 +1,72 @@
+﻿@model BussinessCupApi.ViewModels.SubscriptionSummaryViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "_AdminLayout";
+}
+
+<div class="bg-gray-900 text-gray-300 min-h-screen">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+        <h2 class="text-3xl md:text-4xl font-bold text-yellow-500 text-center mb-10 md:mb-16 tracking-wide">
+            Oyuncu Üyelik Durumları
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-10 md:mb-16">
+            <div class="bg-gray-800 rounded-xl p-6 text-center border border-gray-700 transition-all duration-300 ease-in-out hover:bg-gray-700/80 hover:border-yellow-500/50 transform hover:-translate-y-1">
+                <h5 class="text-lg font-semibold text-gray-400 uppercase tracking-wider">Toplam Oyuncu</h5>
+                <p class="text-6xl font-bold text-yellow-500 mt-2">@Model.ToplamOyuncu</p>
+            </div>
+            <div class="bg-gray-800 rounded-xl p-6 text-center border border-gray-700 transition-all duration-300 ease-in-out hover:bg-gray-700/80 hover:border-yellow-500/50 transform hover:-translate-y-1">
+                <h5 class="text-lg font-semibold text-gray-400 uppercase tracking-wider">Üye Olan Oyuncu</h5>
+                <p class="text-6xl font-bold text-yellow-500 mt-2">@Model.UyeOlanOyuncu</p>
+            </div>
+            <div class="bg-gray-800 rounded-xl p-6 text-center border border-gray-700 transition-all duration-300 ease-in-out hover:bg-gray-700/80 hover:border-yellow-500/50 transform hover:-translate-y-1">
+                <h5 class="text-lg font-semibold text-gray-400 uppercase tracking-wider">Üye Olmayan Oyuncu</h5>
+                <p class="text-6xl font-bold text-yellow-500 mt-2">@Model.UyeOlmayanOyuncu</p>
+            </div>
+        </div>
+
+        <div class="bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-700">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-400">
+                    <thead class="text-xs text-gray-300 uppercase bg-gray-700/50">
+                        <tr>
+                            <th scope="col" class="px-6 py-4">Resim</th>
+                            <th scope="col" class="px-6 py-4">Ad Soyad</th>
+                            <th scope="col" class="px-6 py-4">Pozisyon</th>
+                            <th scope="col" class="px-6 py-4">Numara</th>
+                            <th scope="col" class="px-6 py-4">Takım</th>
+                            <th scope="col" class="px-6 py-4 text-center">Üyelik</th>
+                            <th scope="col" class="px-6 py-4">Bitiş Tarihi</th>
+                            <th scope="col" class="px-6 py-4">Email</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var o in Model.Oyuncular)
+                        {
+                            <tr class="bg-gray-800 border-b border-gray-700 hover:bg-gray-700/60 transition-colors duration-200">
+                                <td class="px-6 py-4">
+                                    <img class="w-10 h-10 rounded-full object-cover"
+                                         src="@(!string.IsNullOrEmpty(o.Icon) ? o.Icon : "/images/default-player.png")"
+                                         alt="Oyuncu Resmi" />
+                                </td>
+                                <td class="px-6 py-4 font-medium text-gray-100 whitespace-nowrap">@o.FirstName @o.LastName</td>
+                                <td class="px-6 py-4">@o.Position</td>
+                                <td class="px-6 py-4">@o.Number</td>
+                                <td class="px-6 py-4">@o.TakimAdi</td>
+                                <td class="px-6 py-4 text-center">
+                                    <span class="px-3 py-1 text-xs font-semibold leading-tight rounded-full @(o.isSubscribed == true ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400")">
+                                        @(o.isSubscribed == true ? "Aktif Üye" : "Üye Değil")
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">@(o.SubscriptionExpireDate?.ToString("dd-MM-yyyy") ?? "N/A")</td>
+                                <td class="px-6 py-4">@o.UserEmail</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>

@@ -1,0 +1,49 @@
+<li class="mb-2">
+    <a asp-controller="Admin" asp-action="Suspensions" class="flex items-center p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg">
+        <i class="fas fa-ban w-5 h-5 mr-3"></i> <!-- Font Awesome ikonu örneği -->
+        <span class="ml-3">Haftalık Cezalar</span>
+    </a>
+</li>
+<div class="flex min-h-screen">
+    <!-- Sol Menü -->
+    <div id="sidebar" class="bg-blue-900 text-gray-200 w-64 flex-shrink-0 transition-all duration-300">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-700">
+            <span class="font-bold text-lg tracking-wide">Admin Menü</span>
+            <button 
+                class="text-gray-400 hover:text-white focus:outline-none"
+                onclick="document.getElementById('sidebar').classList.toggle('w-16');document.getElementById('sidebar').classList.toggle('w-64');">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <nav class="mt-4 space-y-1">
+            <a href="@Url.Action("Teams", "Admin")" class="flex items-center px-4 py-2 hover:bg-blue-800 rounded transition group">
+                <i class="fas fa-shield-alt w-5 h-5 mr-3 text-gray-400 group-hover:text-yellow-400"></i>
+                <span class="sidebar-label">Takımlar</span>
+            </a>
+            <a href="@Url.Action("WeekBestTeam", "Admin")" class="flex items-center px-4 py-2 hover:bg-blue-800 rounded transition group">
+                <i class="fas fa-trophy w-5 h-5 mr-3 text-gray-400 group-hover:text-yellow-400"></i>
+                <span class="sidebar-label">Haftanın Enleri</span>
+            </a>
+            <a href="@Url.Action("Suspensions", "Admin")" class="flex items-center px-4 py-2 hover:bg-blue-800 rounded transition group">
+                <i class="fas fa-gavel w-5 h-5 mr-3 text-gray-400 group-hover:text-yellow-400"></i>
+                <span class="sidebar-label">Haftanın Cezalıları</span>
+            </a>
+            <a href="@Url.Action("Index", "UserManagement")" class="flex items-center px-4 py-2 hover:bg-blue-800 rounded transition group">
+                <i class="fas fa-users w-5 h-5 mr-3 text-gray-400 group-hover:text-yellow-400"></i>
+                <span class="sidebar-label">Kullanıcı Listesi</span>
+            </a>
+            <a href="javascript:void(0);" onclick="openDynamicModal('@Url.Action("CreateLeague", "League")')" class="flex items-center px-4 py-2 hover:bg-blue-800 rounded transition group">
+                <i class="fas fa-calendar w-5 h-5 mr-3 text-gray-400 group-hover:text-yellow-400"></i>
+                <span class="sidebar-label">Lig Ekle</span>
+            </a>
+        </nav>
+    </div>
+    <!-- Ana İçerik -->
+    <div class="flex-1 bg-gray-100 min-h-screen">
+        @RenderBody()
+    </div>
+</div>
+<style>
+    #sidebar.w-16 .sidebar-label { display: none; }
+    #sidebar.w-16 { width: 4rem !important; }
+</style> 

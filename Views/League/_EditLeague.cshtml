@@ -1,0 +1,134 @@
+@model EditLeagueViewModel
+
+<div class="bg-gray-800 rounded-lg p-6">
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold text-white">Lig Düzenle</h2>
+        <button onclick="closedynamicDashboardModal()" class="text-gray-400 hover:text-white">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <form asp-action="EditLeague" method="post" enctype="multipart/form-data">
+        <input type="hidden" asp-for="LeagueID" />
+        <input type="hidden" asp-for="ExistingLogoPath" />
+        <input type="hidden" asp-for="LeagueType" />
+
+        <div class="mb-4">
+            <label asp-for="Name" class="block text-gray-300 mb-2"></label>
+            <input asp-for="Name" class="w-full bg-gray-700 text-white rounded px-3 py-2" />
+            <span asp-validation-for="Name" class="text-red-500 text-sm"></span>
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-gray-300 mb-2">Lig Türü</label>
+            <div class="w-full bg-gray-700 text-gray-300 rounded px-3 py-2 border border-gray-600">
+                @switch (Model.LeagueType)
+                {
+                    case BussinessCupApi.Models.LeagueType.Knockout:
+                        <span>Elemeli</span>
+                        break;
+                    case BussinessCupApi.Models.LeagueType.League:
+                        <span>Lig Usulü</span>
+                        break;
+                    case BussinessCupApi.Models.LeagueType.LeagueThenKnockout:
+                        <span>Lig Sonra Elemeli</span>
+                        break;
+                    case BussinessCupApi.Models.LeagueType.GroupLeagueThenKnockout:
+                        <span>Gruplu Lig Sonra Elemeli</span>
+                        break;
+                    default:
+                        <span>@Model.LeagueType</span>
+                        break;
+                }
+            </div>
+            <span class="text-gray-400 text-sm italic">Lig türü güncellenemez</span>
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="CityID" class="block text-gray-300 mb-2"></label>
+            <select asp-for="CityID" asp-items="@Model.Cities"
+                    class="w-full bg-gray-700 text-white rounded px-3 py-2">
+                <option value="">Şehir Seçin</option>
+            </select>
+            <span asp-validation-for="CityID" class="text-red-500 text-sm"></span>
+        </div>
+
+        <div class="mb-4">
+            <div>
+                <label asp-for="TeamSquadCount" class="block text-gray-300 mb-2"></label>
+                <input asp-for="TeamSquadCount" type="number" min="1" max="12" class="w-full bg-gray-700 text-white rounded px-3 py-2" />
+                <span asp-validation-for="TeamSquadCount" class="text-sm text-red-500"></span>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-gray-300 mb-2">Mevcut Logo</label>
+            @if (!string.IsNullOrEmpty(Model.ExistingLogoPath))
+            {
+                <img src="@Url.Content(Model.ExistingLogoPath)" alt="Mevcut Lig Logosu" class="h-20 w-20 object-contain rounded mb-2 bg-gray-700 p-1" />
+            }
+            else
+            {
+                <span class="text-gray-400 italic text-sm">Logo yok</span>
+            }
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="NewLogoFile" class="block text-gray-300 mb-2">Yeni Logo Yükle (Değiştirmek istemiyorsanız boş bırakın)</label>
+            <input asp-for="NewLogoFile" type="file" accept="image/*" class="w-full bg-gray-700 text-white rounded px-3 py-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+            <span asp-validation-for="NewLogoFile" class="text-red-500 text-sm"></span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+                <label asp-for="StartDate" class="block text-gray-300 mb-2"></label>
+                <input asp-for="StartDate" type="date" class="w-full bg-gray-700 text-white rounded px-3 py-2" />
+                <span asp-validation-for="StartDate" class="text-red-500 text-sm"></span>
+            </div>
+            <div>
+                <label asp-for="EndDate" class="block text-gray-300 mb-2"></label>
+                <input asp-for="EndDate" type="date" class="w-full bg-gray-700 text-white rounded px-3 py-2" />
+                <span asp-validation-for="EndDate" class="text-red-500 text-sm"></span>
+            </div>
+        </div>
+
+        <div class="bg-gray-800 rounded-lg p-6">
+            <div class="mb-4">
+                <label class="block text-gray-300 mb-2">Lig Sıralama Statüleri</label>
+                <div id="ranking-status-list">
+                    @if (Model.RankingStatuses != null && Model.RankingStatuses.Count > 0)
+                    {
+                        for (int i = 0; i < Model.RankingStatuses.Count; i++)
+                        {
+                            <div class="flex items-center gap-2 mb-2 ranking-status-row">
+                                <input name="RankingStatuses[@i].OrderNo" type="number" placeholder="Sıra" class="w-16 bg-gray-700 text-white rounded px-2 py-1" value="@Model.RankingStatuses[i].OrderNo" />
+                                <select name="RankingStatuses[@i].ColorCode" class="w-24 bg-gray-700 text-white rounded px-2 py-1">
+                                    <option value="#FFD700" selected="@(Model.RankingStatuses[i].ColorCode == "#FFD700")">Altın</option>
+                                    <option value="#C0C0C0" selected="@(Model.RankingStatuses[i].ColorCode == "#C0C0C0")">Gümüş</option>
+                                    <option value="#CD7F32" selected="@(Model.RankingStatuses[i].ColorCode == "#CD7F32")">Bronz</option>
+                                    <option value="#FF0000" selected="@(Model.RankingStatuses[i].ColorCode == "#FF0000")">Kırmızı</option>
+                                    <option value="#0000FF" selected="@(Model.RankingStatuses[i].ColorCode == "#0000FF")">Mavi</option>
+                                </select>
+                                <input name="RankingStatuses[@i].Description" type="text" placeholder="Açıklama" class="flex-1 bg-gray-700 text-white rounded px-2 py-1" value="@Model.RankingStatuses[i].Description" />
+                                <button type="button" class="remove-status px-2 py-1 bg-red-600 text-white rounded">-</button>
+                            </div>
+                        }
+                    }
+                </div>
+                <button type="button" id="add-status" class="mt-2 px-3 py-1 bg-green-600 text-white rounded">+ Statü Ekle</button>
+            </div>
+        </div>
+
+        <div class="flex justify-end space-x-2">
+            <button type="button" onclick="closedynamicDashboardModal()"
+                    class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">
+                İptal
+            </button>
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                Kaydet
+            </button>
+        </div>
+    </form>
+
+</div>
+ 

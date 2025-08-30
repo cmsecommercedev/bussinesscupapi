@@ -1,0 +1,159 @@
+﻿.dropdown-container {
+    margin: 20px;
+}
+
+.logo-overlay {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    width: 80px;
+    opacity: 0.3;
+    z-index: 10;
+    pointer-events: none;
+}
+.pitch {
+    position: relative;
+    width: 100%;
+    height: auto; /* Adjust height based on image */
+    margin: auto;
+    background-image: url('/images/ntlJ3T.jpg');
+    background-color: transparent;
+    background-size: cover; /* Ensure the image fills the container */
+    background-repeat: no-repeat;
+    background-position: center;
+    border: none;
+    overflow: hidden;
+    max-width: 400px; /* Maximum width for responsiveness */
+}
+
+.pitch-logo {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 60%; /* Sahanın genişliğinin %60'ı kadar maksimum */
+    max-height: 60%; /* Sahanın yüksekliğinin %60'ı kadar maksimum */
+    width: auto;
+    height: auto;
+    object-fit: contain; /* Resmin oranını koru */
+    opacity: 0.25; /* Yarı transparanlık (0.0 ile 1.0 arası bir değer) */
+    z-index: 1; /* Oyuncu ikonlarından daha düşük bir z-index */
+    pointer-events: none; /* Logonun fare olaylarını yakalamasını engelle */
+}
+
+
+.player-icon {
+    position: absolute;
+    width: 40px; /* Icon size */
+    height: 40px;
+    cursor: grab;
+    z-index: 10;
+    transform: translate(-50%, -50%);
+}
+
+.player-icon-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    overflow: hidden;
+    background-color: #4a5568;
+}
+
+.player-icon-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.player-name {
+    position: absolute;
+    bottom: var(--original-bottom, -24px); /* Default bottom value */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(55, 65, 81, 0.95);
+    color: white;
+    padding: 3px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    line-height: 1.2;
+    white-space: nowrap;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    z-index: 11;
+    min-width: 60px;
+    font-weight: 500;
+}
+
+/* Ensure pitch size matches the image during image capture */
+.for-image-capture {
+    width: 400px !important;
+    height: auto !important;
+    padding: 0 !important;
+    background-size: cover !important;
+    position: relative !important;
+}
+
+    .for-image-capture .player-icon {
+        width: 40px !important;
+        height: 40px !important;
+    }
+
+    .for-image-capture .player-name {
+        font-size: 11px !important; /* Düzeltildi: 111px yerine 11px */
+        bottom: -24px !important; /* Düzeltildi: -104px yerine -24px */
+        padding: 3px 6px !important;
+        min-width: 60px !important;
+    }
+/* Responsive ayarlar */
+@media (min-width: 1024px) {
+    .pitch {
+        max-width: 400px; /* Desktop için maksimum genişlik */
+    }
+
+    .player-icon {
+        width: 44px;
+        height: 44px;
+    }
+
+    .player-name {
+        font-size: 12px;
+        min-width: 70px;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+    .pitch {
+        max-width: 350px; /* Tablet için maksimum genişlik */
+    }
+
+    .player-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .player-name {
+        font-size: 11px;
+        min-width: 65px;
+    }
+}
+
+@media (max-width: 767px) {
+    .pitch {
+        max-width: 300px; /* Mobil için maksimum genişlik */
+    }
+
+    .player-icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    .player-name {
+        font-size: 10px;
+        min-width: 60px;
+        padding: 2px 4px;
+    }
+}

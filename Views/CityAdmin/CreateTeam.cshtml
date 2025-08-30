@@ -1,0 +1,95 @@
+@model TeamViewModel
+@{
+    ViewData["Title"] = "Yeni Takım";
+    Layout = "_CityAdminLayout";
+}
+
+<div class="min-h-screen bg-gray-900">
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-yellow-500">Yeni Takım Ekle</h2>
+                    <a href="@Url.Action("Teams")" class="text-gray-400 hover:text-white">
+                        <i class="fas fa-arrow-left"></i> Geri
+                    </a>
+                </div>
+
+                <form asp-action="CreateTeam" method="post" enctype="multipart/form-data">
+                    <div asp-validation-summary="ModelOnly" class="text-red-500 mb-4"></div> 
+
+                    <div class="space-y-4">
+                        <div>
+                            <label asp-for="Name" class="block text-sm font-medium text-gray-300">Takım Adı *</label>
+                            <input asp-for="Name" data-val="false" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500" required>
+                            <span asp-validation-for="Name" class="text-red-500 text-sm"></span>
+                        </div>
+
+                        <div>
+                            <label asp-for="CityID" class="block text-sm font-medium text-gray-300"></label>
+                            <select asp-for="CityID" asp-items="@Model.AvailableCities" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500" required>
+                                <option value="">-- Şehir Seçiniz --</option>
+                            </select>
+                            <span asp-validation-for="CityID" class="text-red-500 text-sm"></span>
+                        </div>
+
+                        <div>
+                            <label asp-for="Stadium" class="block text-sm font-medium text-gray-300"></label>
+                            <input asp-for="Stadium" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                        </div>
+                        <div>
+                            <label asp-for="Manager" class="block text-sm font-medium text-gray-300">Teknik Direktör</label>
+                            <input asp-for="Manager" class="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm focus:border-yellow-500 focus:ring focus:ring-yellow-500 focus:ring-opacity-50" />
+                        </div>
+                        <div>
+                            <label asp-for="TeamPassword" class="block text-sm font-medium text-gray-300">Takım Şifresi</label>
+                            <input asp-for="TeamPassword" class="mt-1 block w-full bg-gray-700 border-gray-600 text-white rounded-md shadow-sm focus:border-yellow-500 focus:ring focus:ring-yellow-500 focus:ring-opacity-50" />
+                        </div>
+                        <div>
+                            <label asp-for="Logo" class="block text-sm font-medium text-gray-300"></label>
+                            <div class="mt-1 flex items-center space-x-4">
+                                <label class="relative cursor-pointer bg-gray-700 rounded-md px-4 py-2 hover:bg-gray-600">
+                                    <span class="text-white">Logo Seç</span>
+                                    <input type="file" asp-for="Logo" class="hidden" accept="image/*" onchange="previewImage(event)">
+                                </label>
+                                <img id="logoPreview" src="#" alt="Logo Önizleme" class="hidden h-20 w-20 object-contain rounded-md bg-gray-600">
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="mt-6 flex justify-end space-x-3">
+                        <a href="@Url.Action("Teams")" class="bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-600">
+                            İptal
+                        </a>
+                        <button type="submit" class="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700">
+                            Kaydet
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+ 
+@section Scripts { 
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+
+        function previewImage(event) {
+            const input = event.target;
+            const preview = document.getElementById('logoPreview');
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                }
+                
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
+} 

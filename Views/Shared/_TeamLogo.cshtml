@@ -1,0 +1,12 @@
+@model string
+
+@if (!string.IsNullOrEmpty(Model))
+{
+    <img src="data:image/png;base64,@Model" alt="Takım Logosu" class="h-10 w-10 object-contain rounded-full bg-gray-600">
+}
+else
+{
+    <div class="h-10 w-10 rounded-full bg-gray-600 flex items-center justify-center">
+        <i class="fas fa-shield-alt text-gray-400"></i>
+    </div>
+} 

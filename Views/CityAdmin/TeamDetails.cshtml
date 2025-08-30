@@ -1,0 +1,164 @@
+@model TeamDetailsViewModel
+@{
+    ViewData["Title"] = "Takım Kadrosu";
+    Layout = "_CityAdminLayout";
+} 
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-gray-800 rounded-lg shadow-lg p-6">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-yellow-500">@Model.Name</h1>
+                <div class="text-gray-400 mt-1">
+                    <span class="mr-4"><i class="fas fa-map-marker-alt mr-1"></i>@Model.City</span>
+                    <span class="mr-4"><i class="fas fa-stadium mr-1"></i>@Model.Stadium</span>
+                    <span><i class="fas fa-user-tie mr-1"></i>@Model.Manager</span>
+                </div>
+            </div>
+            <div class="flex space-x-2">
+                <a href="@Url.Action("Teams")" class="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Geri Dön
+                </a>
+                <a href="@Url.Action("EditTeam", new { teamId = Model.TeamID })" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-edit mr-2"></i>Takımı Düzenle
+                </a>
+            </div>
+        </div>
+
+        <div class="mt-6">
+            <h2 class="text-xl font-semibold text-white mb-4">Oyuncular (@Model.Players.Count)</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-700">
+                    <thead>
+                        <tr class="bg-gray-700">
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Fotoğraf</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Forma No</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Ad Soyad</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Mevki</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Tip</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Abonelik</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Bitiş Tarihi</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-gray-800 divide-y divide-gray-700">
+                        @foreach (var player in Model.Players)
+                        {
+                            <tr class="hover:bg-gray-700 transition-colors @(player.IsArchived == true ? "opacity-50" : "")">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex-shrink-0 h-10 w-10">
+                                        @if (!string.IsNullOrEmpty(player.Icon))
+                                        {
+                                            <img class="h-10 w-10 rounded-full object-cover"
+                                                 src="@player.Icon"
+                                                 alt="@player.FullName" />
+                                        }
+                                        else
+                                        {
+                                            <img class="h-10 w-10 rounded-full object-cover"
+                                                 src="@player.DefaultIcon"
+                                                 alt="@player.FullName" />
+                                        }
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full bg-gray-700 text-white">
+                                        @player.Number
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
+                                    @player.FullName
+                                    @if (player.IsArchived == true)
+                                    {
+                                        <span class="ml-2 px-2 py-1 text-xs bg-red-600 text-white rounded-full">Arşiv</span>
+                                    }
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">@player.Position</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">@player.PlayerType</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                    @(player.isSubscribed == true ? "Aktif" : "Pasif")
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                    @(player.SubscriptionExpireDate.HasValue? player.SubscriptionExpireDate.Value.ToString("dd.MM.yyyy") : "-")
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-right">
+                                    <div class="flex flex-col space-y-2 items-end">
+                                        <a href="@Url.Action("EditPlayer", new { playerId = player.PlayerID })"
+                                           class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors text-xs inline-flex items-center justify-center w-auto">
+                                            <i class="fas fa-edit mr-1"></i>Düzenle
+                                        </a>
+                                        @if(!Model.TeamIsFree)
+                                        {
+                                            <form asp-action="SetCaptain" method="post" class="inline-block">
+                                                <input type="hidden" name="playerId" value="@player.PlayerID" />
+                                                @if (player.UserRole == "Captain")
+                                                {
+                                                    <input type="hidden" name="isCaptain" value="false" />
+                                                    <button type="submit" class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition-colors text-xs inline-flex items-center justify-center w-auto" title="Kaptanlığı Kaldır">
+                                                        <i class="fas fa-crown mr-1"></i>Kaptan Kaldır
+                                                    </button>
+                                                }
+                                                else
+                                                {
+                                                    <input type="hidden" name="isCaptain" value="true" />
+                                                    <button type="submit" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition-colors text-xs inline-flex items-center justify-center w-auto" title="Kaptan Yap">
+                                                        <i class="fas fa-user mr-1"></i>Kaptan Yap
+                                                    </button>
+                                                }
+                                            </form>
+                                        } 
+
+                                        <form asp-action="TogglePlayerArchive" method="post" class="inline-block">
+                                            <input type="hidden" name="playerId" value="@player.PlayerID" />
+                                            @if (player.IsArchived == true)
+                                            {
+                                                 <button type="submit" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition-colors text-xs inline-flex items-center justify-center w-auto" title="Arşivden Çıkar">
+                                                    <i class="fas fa-archive mr-1"></i>Arşivden Çıkar
+                                                </button>
+                                            }
+                                            else
+                                            {   <button type="submit" class="bg-orange-600 text-white px-3 py-1 rounded hover:bg-orange-700 transition-colors text-xs inline-flex items-center justify-center w-auto" title="Arşive Al">
+                                                    <i class="fas fa-archive mr-1"></i>Arşive Al
+                                                </button>
+                                             
+                                            }
+                                        </form>
+
+                                        <form asp-action="TogglePlayerLicense" method="post" class="inline-block">
+                                            <input type="hidden" name="playerId" value="@player.PlayerID" />
+                                            <input type="hidden" name="isLicensed" value="@(player.LicensedPlayer == true ? "false" : "true")" />
+                                            <button type="submit"
+                                                    class="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700 transition-colors text-xs inline-flex items-center justify-center w-auto"
+                                                    title="@(player.LicensedPlayer == true ? "Lisanssız Yap" : "Lisanslı Yap")">
+                                                <i class="fas fa-id-card mr-1"></i>
+                                                @(player.LicensedPlayer == true ? "Lisanssız Yap" : "Lisanslı Yap")
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (!Model.Players.Any())
+            {
+                <div class="text-center py-8">
+                    <p class="text-gray-400">Bu takımda henüz oyuncu bulunmuyor.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+@if (TempData["Error"] != null)
+{
+    <script>
+        toastr.error("@TempData["Error"]");
+    </script>
+}
+@if (TempData["Success"] != null)
+{
+    <script>
+        toastr.success("@TempData["Success"]");
+    </script>
+}

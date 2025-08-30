@@ -1,0 +1,30 @@
+@model CreateGroupViewModel
+
+<div class="p-6 text-white">
+    <h2 class="text-xl font-semibold mb-4">Grup Ekle</h2>
+    <form id="createGroupForm" asp-action="CreateGroup" method="post" class="space-y-4">
+        <input type="hidden" asp-for="LeagueID" />
+        <input type="hidden" asp-for="SeasonID" />
+        
+        <div>
+            <label asp-for="GroupName" class="block mb-1">Grup Adı</label>
+            <input asp-for="GroupName" class="w-full bg-gray-700 text-white rounded px-3 py-2" />
+            <span asp-validation-for="GroupName" class="text-red-500"></span>
+        </div>
+
+        <div>
+            <label asp-for="Description" class="block mb-1">Açıklama</label>
+            <textarea asp-for="Description" class="w-full bg-gray-700 text-white rounded px-3 py-2"></textarea>
+        </div>
+
+        <div class="flex justify-end space-x-2">
+            <button type="button" onclick="closedynamicDashboardModal()" 
+                    class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
+                İptal
+            </button>
+            <button type="submit" class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700">
+                Kaydet
+            </button>
+        </div>
+    </form>
+</div> 

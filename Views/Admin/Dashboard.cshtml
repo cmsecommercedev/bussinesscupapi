@@ -1,0 +1,964 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "_AdminLayout";
+}
+
+<div class="min-h-screen bg-grey-700 text-[#8B0000]">
+    <div class="max-w-full mx-auto py-6 px-2 sm:px-4 md:px-6 lg:px-10">
+        @if (TempData["Success"] != null)
+        {
+            <div class="mb-4 p-4 bg-green-600 text-white rounded-lg">
+                @TempData["Success"]
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="mb-4 p-4 bg-red-600 text-white rounded-lg">
+                @TempData["Error"]
+            </div>
+        }
+
+        @* Şehir Filtreleme Dropdown'ı *@
+        <div class="mb-4 px-4 md:px-0">
+            <label for="cityFilterDropdown" class="block text-sm font-medium text-gray-300 mb-1">Şehre Göre Filtrele:</label>
+            <select id="cityFilterDropdown" name="cityFilter"
+                    class="w-full md:w-auto bg-gray-700 text-white rounded-md px-3 py-2 border border-gray-600 focus:outline-none focus:border-indigo-500 text-sm"
+                    onchange="filterLeaguesByCity(); saveSelectedCity();">
+                <option value="all">Tüm Şehirler</option>
+                @if (Model.Cities != null)
+                {
+                    foreach (var city in Model.Cities.OrderBy(c => c.Name))
+                    {
+                        <option value="@city.CityID">@city.Name</option>
+                    }
+                }
+            </select>
+        </div>
+
+        @foreach (var league in Model.Leagues)
+        {
+            <div class="league-card bg-gray-800 rounded-lg shadow-lg overflow-hidden mb-6" data-city-id="@league.CityID">
+                <div class="p-4 md:p-6">
+                    <div class="flex flex-col md:flex-row flex-wrap justify-between items-start md:items-center gap-4 mb-4">
+                        <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+                            <h3 class="text-xl font-semibold text-white mr-2">@league.Name</h3>
+                            <div class="flex flex-nowrap items-center gap-2">
+                                <select class="bg-gray-700 text-white rounded-md px-3 py-1 text-sm border border-gray-600 focus:outline-none focus:border-indigo-500" data-season-select
+                                        data-league-id="@league.LeagueID"
+                                        onchange="handleSeasonChange(this, @league.LeagueID)">
+                                    <option value="">Sezon Seçin</option>
+                                    @foreach (var season in league.Seasons.OrderByDescending(s => s.SeasonID))
+                                    {
+                                        <option value="@season.SeasonID" selected="@(season == league.Seasons.OrderByDescending(s => s.SeasonID).First() ? "selected" : null)">
+                                            @season.Name @(season.IsActive ? "(Aktif)" : "")
+                                        </option>
+                                    }
+                                </select>
+                                <button onclick="editSelectedSeason(this)"
+                                        class="bg-blue-600 text-white p-1 rounded-md text-sm hover:bg-blue-700 aspect-square flex items-center justify-center">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="block md:hidden w-full">
+                            <button onclick="toggleMobileMenu('@league.LeagueID')"
+                                    class="w-full bg-gray-700 text-white px-4 py-2 rounded-md flex justify-between items-center">
+                                <span>İşlemler</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                            <div id="mobileMenu-@league.LeagueID" class="hidden mt-2 space-y-2">
+                                <a href="javascript:void(0);" onclick="openDynamicModal('@Url.Action("CreateSeason", new { leagueId = league.LeagueID })')"
+                                   class="block w-full bg-yellow-600 text-white px-4 py-2 rounded-md text-sm hover:bg-yellow-700">
+                                    <i class="fas fa-calendar mr-1"></i> Sezon Ekle
+                                </a>
+                                @* ...ilgili yerde... *@
+                                @if (league.LeagueType == LeagueType.GroupLeagueThenKnockout)
+                                {
+                                    <a href="javascript:void(0);" onclick="openDynamicModal('@Url.Action("CreateGroup", new { leagueId = league.LeagueID })' + '&seasonId=' + document.querySelector('[data-league-id=\'@league.LeagueID\']').value)"
+                                       class="block w-full bg-orange-600 text-white px-4 py-2 rounded-md text-sm hover:bg-orange-700">
+                                        <i class="fas fa-layer-group mr-1"></i> Grup Ekle
+                                    </a>
+                                    <a href="javascript:void(0);"
+                                       onclick="openDynamicModal('@Url.Action("EditGroups", new { leagueId = league.LeagueID })')"
+                                       class="block w-full bg-orange-500 text-white px-4 py-2 rounded-md text-sm hover:bg-orange-600">
+                                        <i class="fas fa-edit mr-1"></i> Grupları Düzenle
+                                    </a>
+                                }
+                                <a href="javascript:void(0);"
+                                   onclick="openDynamicModal('@Url.Action("EditLeague", "League", new { leagueId = league.LeagueID })')"
+                                   class="block w-full bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700">
+                                    <i class="fas fa-edit mr-1"></i> Ligi Düzenle
+                                </a>
+                                <button onclick="openDynamicModal('@Url.Action("CreateWeek", new { leagueId = league.LeagueID })' + '&seasonId=' + document.querySelector('[data-league-id=\'@league.LeagueID\']').value)"
+                                        class="block w-full bg-green-600 text-white px-4 py-2 rounded-md text-sm hover:bg-green-700"
+                                        data-add-week-btn="@league.LeagueID">
+                                    <i class="fas fa-calendar-plus mr-1"></i> Hafta Ekle
+                                </button>
+                                <a href="@Url.Action("ManageFixture", "League", new { leagueId = league.LeagueID })"
+                                   class="block w-full bg-indigo-600 text-white px-4 py-2 rounded-md text-sm hover:bg-indigo-700 mt-2 text-center">
+                                    <i class="fas fa-play-circle mr-1"></i> Sezon Simülasyonu
+                                </a>
+
+                                <button onclick="openDynamicModal('@Url.Action("LeagueStandings", new { leagueId = league.LeagueID })' + '&seasonId=' + document.querySelector('[data-league-id=\'@league.LeagueID\']').value)"
+                                        class="block w-full bg-purple-600 text-white px-4 py-2 rounded-md text-sm hover:bg-purple-700">
+                                    <i class="fas fa-table mr-1"></i> Puan Durumu
+                                </button>
+                                <a href="@Url.Action("Index", "LeagueRules")?leagueId=@league.LeagueID&seasonId=' + document.querySelector('[data-league-id=\'@league.LeagueID\']').value"
+                                   class="block w-full bg-red-600 text-white px-4 py-2 rounded-md text-sm hover:bg-red-700">
+                                    <i class="fas fa-gavel mr-1"></i> Kural Yönetimi
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="hidden md:flex flex-wrap gap-2 justify-start md:justify-end w-full md:w-auto">
+                            <a href="javascript:void(0);"
+                               onclick="openDynamicModal('@Url.Action("CreateSeason", new { leagueId = league.LeagueID })')"
+                               class="bg-yellow-600 text-white px-3 py-1 rounded-md text-xs sm:text-sm hover:bg-yellow-700 whitespace-nowrap">
+                                <i class="fas fa-calendar mr-1"></i> Sezon Ekle
+                            </a>
+                            @* ...ilgili yerde... *@
+                            @if (league.LeagueType == LeagueType.GroupLeagueThenKnockout)
+                            {
+                                <a href="javascript:void(0);"
+                                   onclick="openDynamicModal('@Url.Action("CreateGroup", new { leagueId = league.LeagueID })' + '&seasonId=' + document.querySelector('[data-league-id=\'@league.LeagueID\']').value)"
+                                   class="bg-orange-600 text-white px-3 py-1 rounded-md text-xs sm:text-sm hover:bg-orange-700 whitespace-nowrap">
+                                    <i class="fas fa-layer-group mr-1"></i> Grup Ekle
+                                </a>
+                                <a href="javascript:void(0);"
+                                   onclick="openDynamicModal('@Url.Action("EditGroups", new { leagueId = league.LeagueID })')"
+                                   class="bg-orange-500 text-white px-3 py-1 rounded-md text-xs sm:text-sm hover:bg-orange-600 whitespace-nowrap">
+                                    <i class="fas fa-edit mr-1"></i> Grupları Düzenle
+                                </a>
+                            }
+                            <a href="javascript:void(0);"
+                               onclick="openDynamicModal('@Url.Action("EditLeague", "League", new { leagueId = league.LeagueID })')"
+                               class="bg-blue-600 text-white px-3 py-1 rounded-md text-xs sm:text-sm hover:bg-blue-700 whitespace-nowrap">
+                                <i class="fas fa-edit mr-1"></i> Ligi Düzenle
+                            </a>
+                            <button onclick="openDynamicModal('@Url.Action("CreateWeek", new { leagueId = league.LeagueID })' + '&seasonId=' + document.querySelector('[data-league-id=\'@league.LeagueID\']').value)"
+                                    class="bg-green-600 text-white px-3 py-1 rounded-md text-xs sm:text-sm hover:bg-green-700 whitespace-nowrap"
+                                    data-add-week-btn="@league.LeagueID">
+                                <i class="fas fa-calendar-plus mr-1"></i> Hafta Ekle
+                            </button>
+                            <a href="@Url.Action("ManageFixture", "League", new { leagueId = league.LeagueID })"
+                               class="inline-block bg-indigo-600 text-white px-3 py-1 rounded-md text-xs sm:text-sm hover:bg-indigo-700 whitespace-nowrap">
+                                <i class="fas fa-play-circle mr-1"></i> Sezon Simülasyonu
+                            </a>
+
+                            <button onclick="openDynamicModal('@Url.Action("LeagueStandings", new { leagueId = league.LeagueID })' + '&seasonId=' + document.querySelector('[data-league-id=\'@league.LeagueID\']').value)"
+                                    class="bg-purple-600 text-white px-3 py-1 rounded-md text-xs sm:text-sm hover:bg-purple-700 whitespace-nowrap">
+                                <i class="fas fa-table mr-1"></i> Puan Durumu
+                            </button>
+                            <a href="javascript:void(0);"
+                               onclick="window.location.href='@Url.Action("Index", "LeagueRules")?leagueId=@league.LeagueID&seasonId=' + document.querySelector('[data-league-id=\'@league.LeagueID\']').value"
+                               class="inline-block bg-red-600 text-white px-3 py-1 rounded-md text-xs sm:text-sm hover:bg-red-700 whitespace-nowrap">
+                                <i class="fas fa-gavel mr-1"></i> Kural Yönetimi
+                            </a>
+
+
+                        </div>
+
+                    </div>
+                    <div class="weeks-container flex flex-wrap gap-4" data-league="@league.LeagueID">
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<div id="dynamicDashboardModal" class="fixed inset-0 hidden bg-gray-900 bg-opacity-75 flex justify-center items-center p-4 z-50">
+    <div id="modalContainer" class="relative max-w-6xl w-full max-h-[90vh] overflow-y-auto bg-gray-800 p-5 sm:p-6 rounded-lg shadow-xl border border-gray-700">
+        <div id="modalContent" class="text-white">
+            Yükleniyor...
+        </div>
+    </div>
+</div>
+ 
+@section Scripts {
+    <script src="~/js/dynamic-modal.js"></script>
+
+    <script>
+        function updateGroup(groupId) {
+            const groupItem = $(`.group-item[data-group-id="${groupId}"]`);
+            const groupName = groupItem.find('.group-name').val();
+            const description = groupItem.find('.group-description').val();
+
+            $.post('@Url.Action("UpdateGroup")', {
+                groupId: groupId,
+                groupName: groupName,
+                description: description
+            }, function (response) {
+                if (response.success) {
+                    toastr.success('Grup güncellendi');
+                } else {
+                    toastr.error(response.message);
+                }
+            });
+        }
+
+        function deleteGroup(groupId) {
+            if (!confirm('Bu grubu silmek istediğinizden emin misiniz?')) return;
+
+            $.post('@Url.Action("DeleteGroup")', { groupId: groupId }, function (response) {
+                if (response.success) {
+                    $(`.group-item[data-group-id="${groupId}"]`).remove();
+                    toastr.success('Grup silindi');
+                } else {
+                    toastr.error(response.message);
+                }
+            });
+        }
+
+        function filterByGroup(groupId) {
+            // Tüm satırları seç
+            const rows = document.querySelectorAll('.standing-row');
+            // Tüm filtre butonlarını seç
+            const buttons = document.querySelectorAll('.group-filter-btn');
+
+            // Aktif buton stilini güncelle
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Satırları filtrele
+            rows.forEach(row => {
+                if (groupId === 'all' || row.dataset.group === groupId) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Sıra numaralarını güncelle
+            updateRowNumbers();
+        }
+
+        function updateRowNumbers() {
+            let visibleIndex = 1;
+            const rows = document.querySelectorAll('.standing-row');
+            rows.forEach(row => {
+                if (row.style.display !== 'none') {
+                    row.querySelector('td:first-child').textContent = visibleIndex++;
+                }
+            });
+        }
+
+        function showWeekMatches(leagueId, weekId) {
+            // Tüm hafta sekmelerini pasif yap
+            document.querySelectorAll(`.week-tab[data-league="${leagueId}"]`).forEach(tab => {
+                tab.classList.remove('bg-yellow-600', 'text-white');
+                tab.classList.add('bg-gray-700', 'text-gray-300');
+            });
+
+            // Seçilen sekmeyi aktif yap
+            const selectedTab = document.querySelector(`.week-tab[data-league="${leagueId}"][data-week="${weekId}"]`);
+            if (selectedTab) {
+                selectedTab.classList.remove('bg-gray-700', 'text-gray-300');
+                selectedTab.classList.add('bg-yellow-600', 'text-white');
+            }
+
+            // Tüm maç listelerini gizle
+            document.querySelectorAll(`.week-matches[data-league="${leagueId}"]`).forEach(matches => {
+                matches.classList.add('hidden');
+            });
+
+            // Seçilen haftanın maçlarını göster
+            const selectedMatches = document.querySelector(`.week-matches[data-league="${leagueId}"][data-week="${weekId}"]`);
+            if (selectedMatches) {
+                selectedMatches.classList.remove('hidden');
+            }
+
+            loadWeekMatches(leagueId, weekId);
+        }
+
+        function openUpdateScoreModal(matchId) {
+            document.getElementById('scoreMatchId').value = matchId;
+            document.getElementById('scoreHomeTeam').textContent = '';
+            document.getElementById('scoreAwayTeam').textContent = '';
+            document.getElementById('scoreHomeScore').value = '';
+            document.getElementById('scoreAwayScore').value = '';
+            document.getElementById('goalDetails').innerHTML = '';
+
+            // Takım oyuncularını getir
+            fetchMatchPlayers(matchId);
+
+            document.getElementById('scoreModal').classList.remove('hidden');
+        }
+
+        function closeScoreModal() {
+            document.getElementById('scoreModal').classList.add('hidden');
+        }
+
+        let currentMatchId = null;
+
+
+        async function fetchMatchSquad(matchId) {
+            try {
+                const response = await fetch(`/Admin/GetMatchSquad/${matchId}`);
+                const data = await response.json();
+
+                document.getElementById('homeTeamName').textContent = data.homeTeam.name;
+                document.getElementById('awayTeamName').textContent = data.awayTeam.name;
+
+                renderTeamPlayers('home', data.homeTeam.players);
+                renderTeamPlayers('away', data.awayTeam.players);
+            } catch (error) {
+                console.error('Kadro bilgileri yüklenirken hata:', error);
+            }
+        }
+
+        function renderTeamPlayers(side, players) {
+            const container = document.getElementById(`${side}TeamPlayers`);
+            container.innerHTML = '';
+
+            players.forEach(player => {
+                const playerDiv = document.createElement('div');
+                playerDiv.className = 'flex items-center space-x-2 bg-gray-700 p-2 rounded';
+                playerDiv.innerHTML = `
+                                                                                            <input type="number" class="w-16 bg-gray-600 text-white rounded px-2 py-1"
+                                                                                                   placeholder="No" value="${player.shirtNumber || ''}" min="1" max="99">
+                                                                                            <select class="flex-grow bg-gray-600 text-white rounded px-2 py-1">
+                                                                                                <option value="${player.playerId}">${player.firstName} ${player.lastName}</option>
+                                                                                            </select>
+                                                                                            <input type="checkbox" ${player.isStarting11 ? 'checked' : ''}
+                                                                                                   class="form-checkbox text-yellow-600">
+                                                                                            <button onclick="removePlayer(this)" class="text-red-500 hover:text-red-400">
+                                                                                                <i class="fas fa-times"></i>
+                                                                                            </button>
+                                                                                        `;
+                container.appendChild(playerDiv);
+            });
+        }
+
+        async function saveSquad() {
+            const homeSquad = getTeamSquad('home');
+            const awaySquad = getTeamSquad('away');
+
+            try {
+                const response = await fetch('/Admin/SaveMatchSquad', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        matchId: currentMatchId,
+                        homeSquad,
+                        awaySquad
+                    })
+                });
+
+                if (response.ok) {
+                    closeSquadModal();
+                    // Başarı mesajı göster
+                }
+            } catch (error) {
+                console.error('Kadro kaydedilirken hata:', error);
+            }
+        }
+
+        function getTeamSquad(side) {
+            const players = document.getElementById(`${side}TeamPlayers`).children;
+            return Array.from(players).map(player => ({
+                playerId: player.querySelector('select').value,
+                shirtNumber: player.querySelector('input[type="number"]').value,
+                isStarting11: player.querySelector('input[type="checkbox"]').checked
+            }));
+        }
+
+        function removePlayer(button) {
+            button.closest('div').remove();
+        }
+
+        function openDynamicModal(fetchLink) {
+            let modalContainer = document.getElementById("dynamicDashboardModal");
+            let modalContent = document.getElementById("modalContent");
+
+            modalContainer.classList.remove("hidden");
+            modalContent.innerHTML = "<p class='text-center text-white'>Yükleniyor...</p>";
+
+            fetch(fetchLink)
+                .then(response => response.text())
+                .then(data => {
+                    modalContent.innerHTML = data;
+
+                    // 🔍 Sadece LeagueStandings içeriği yüklendiyse tetikle
+                    if (fetchLink.toLowerCase().startsWith("/admin/leaguestandings")) {
+                        initLeagueStandingsEvents();
+                    }
+
+                    if (typeof initDynamicModalScripts === "function") {
+                        initDynamicModalScripts();
+                    }
+
+                    // 🛑 BURADA Validasyonu tekrar çalıştır!
+                    if (typeof $.validator !== "undefined" && typeof $.validator.unobtrusive !== "undefined") {
+                        $.validator.unobtrusive.parse($("#modalContent"));
+                    } else {
+                        console.error("jQuery Validation Unobtrusive yüklenemedi!");
+                    }
+                })
+                .catch(error => {
+                    modalContent.innerHTML = "<p class='text-red-500 text-center'>Veri yüklenirken hata oluştu!</p>";
+                    console.error("Hata:", error);
+                });
+        }
+
+
+        function closedynamicDashboardModal() {
+            document.getElementById("dynamicDashboardModal").classList.add("hidden");
+        }
+
+        // Modal dışına tıklandığında kapatma işlevi ekleyelim
+        document.getElementById('dynamicDashboardModal').addEventListener('click', function (e) {
+            if (e.target === this) {
+                closedynamicDashboardModal();
+            }
+        });
+
+        function loadSeasons(leagueId) {
+            const seasonSelect = document.getElementById('seasonSelect');
+
+            if (!leagueId) {
+                seasonSelect.disabled = true;
+                seasonSelect.innerHTML = '<option value="">Önce Lig Seçin</option>';
+                return;
+            }
+
+            seasonSelect.disabled = false;
+
+            fetch(`@Url.Action("GetSeasons")?leagueId=${leagueId}`)
+                .then(response => response.json())
+                .then(seasons => {
+                    seasonSelect.innerHTML = '<option value="">Sezon Seçin</option>';
+
+                    seasons.forEach(season => {
+                        const option = document.createElement('option');
+                        option.value = season.seasonID;
+                        option.text = season.name + (season.isActive ? ' (Aktif)' : '');
+                        if (season.isActive) {
+                            option.selected = true;
+                        }
+                        seasonSelect.appendChild(option);
+                    });
+                });
+        }
+
+        function loadWeeks(leagueId, seasonId) {
+            if (!leagueId || !seasonId) return;
+
+            fetch(`/Admin/GetWeeks?leagueId=${leagueId}&seasonId=${seasonId}`)
+                .then(response => response.json())
+                .then(weeks => {
+                    const weekContainer = document.querySelector(`.weeks-container[data-league="${leagueId}"]`);
+                    if (!weekContainer) return;
+
+                    weekContainer.innerHTML = '';
+
+                    if (weeks.length === 0) {
+                        weekContainer.innerHTML = '<p class="text-gray-500">Bu sezona ait hafta bulunmamaktadır.</p>';
+                        return;
+                    }
+
+                    // Hafta seçimi için select elementi
+                    let weeksHtml = `
+                        <div class="mb-4">
+                            <div class="w-full mb-4">
+                                <select onchange="handleWeekChange(this, ${leagueId})"
+                                        class="w-full bg-gray-700 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                                    ${weeks.map(week => `
+                                        <option value="${week.value}">${week.text}</option>
+                                    `).join('')}
+                                </select>
+                            </div>
+                        </div>`;
+
+                    // Maç containerları için HTML
+                    let matchContainersHtml = weeks.map(week => `
+                        <div class="week-matches w-full ${week === weeks[0] ? '' : 'hidden'}"
+                             data-league="${leagueId}"
+                             data-week="${week.value}">
+                            <div class="bg-gray-700 p-4 rounded-lg">
+                                <div class="space-y-4">
+                                    <div class="flex justify-between items-center">
+                                        <h4 class="text-lg font-semibold text-white">Hafta ${week.text} Maçları</h4>
+                                        <div class="flex gap-2">
+                                            <button onclick="openDynamicModal('/Admin/CreateMatch?leagueId=${leagueId}&weekId=${week.value}')"
+                                                    class="bg-green-600 text-white px-2 py-1 rounded-md text-xs hover:bg-green-700">
+                                                <i class="fas fa-plus mr-1"></i> Maç Ekle
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="grid gap-4">
+                                        <!-- Maçlar buraya dinamik olarak eklenecek -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+
+                    weeksHtml += matchContainersHtml;
+                    weekContainer.innerHTML = weeksHtml;
+
+                    // Son seçilen haftayı localStorage'dan al
+                    const lastSelectedWeek = localStorage.getItem(`selectedWeek_${leagueId}_${seasonId}`);
+                    const weekToShow = lastSelectedWeek || weeks[0].value;
+
+                    // Select elementini son seçilen haftaya ayarla
+                    const weekSelect = weekContainer.querySelector('select');
+                    if (weekSelect) {
+                        weekSelect.value = weekToShow;
+                    }
+
+                    // Seçilen haftayı göster
+                    showWeekMatches(leagueId, weekToShow);
+                })
+                .catch(error => {
+                    console.error('Haftalar yüklenirken hata:', error);
+                    toastr.error('Haftalar yüklenirken bir hata oluştu');
+                });
+        }
+
+        // Hafta değişikliği için yeni fonksiyon
+        function handleWeekChange(selectElement, leagueId) {
+            const selectedWeekId = selectElement.value;
+            const seasonId = document.querySelector(`[data-league-id="${leagueId}"]`).value;
+
+            // Seçili haftayı localStorage'a kaydet
+            localStorage.setItem(`selectedWeek_${leagueId}_${seasonId}`, selectedWeekId);
+
+            showWeekMatches(leagueId, selectedWeekId);
+        }
+
+        // Haftanın maçlarını yükleyen yeni fonksiyon
+        function loadWeekMatches(leagueId, weekId) {
+            fetch(`/Admin/GetWeekMatches?weekId=${weekId}`)
+                .then(response => response.json())
+                .then(matches => {
+                    const matchesContainer = document.querySelector(`.week-matches[data-league="${leagueId}"][data-week="${weekId}"] .grid`);
+                    if (!matchesContainer) return;
+
+                    // Maçları gruplara göre organize et
+                    const groupedMatches = {};
+                    const ungroupedMatches = [];
+
+                    matches.forEach(match => {
+                        if (match.groupId) {
+                            if (!groupedMatches[match.groupId]) {
+                                groupedMatches[match.groupId] = {
+                                    groupName: match.groupName,
+                                    matches: []
+                                };
+                            }
+                            groupedMatches[match.groupId].matches.push(match);
+                        } else {
+                            ungroupedMatches.push(match);
+                        }
+                    });
+
+                    let html = '';
+
+                    // Gruplu maçları ekle
+                    Object.values(groupedMatches).forEach(group => {
+                        html += `
+                                    <div class="mb-6">
+                                        <h3 class="text-yellow-500 font-semibold mb-3">${group.groupName}</h3>
+                                        <div class="space-y-3">
+                                            ${group.matches.map(match => createMatchHtml(match)).join('')}
+                                        </div>
+                                    </div>
+                                `;
+                    });
+
+                    // Grupsuz maçları ekle
+                    if (ungroupedMatches.length > 0) {
+                        html += `
+                                    <div class="mb-6">
+                                        <h3 class="text-gray-400 font-semibold mb-3">Diğer Maçlar</h3>
+                                        <div class="space-y-3">
+                                            ${ungroupedMatches.map(match => createMatchHtml(match)).join('')}
+                                        </div>
+                                    </div>
+                                `;
+                    }
+
+                    matchesContainer.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Maçlar yüklenirken hata:', error);
+                });
+        }
+
+        function createMatchHtml(match) {
+            const scoreDisplay = match.homeScore !== null && match.awayScore !== null
+                ? `${match.homeScore} - ${match.awayScore}`
+                : ' - ';
+
+            const matchStatusOptions = {
+                0: 'Başlamadı',
+                1:' Başladı',
+                2: 'İlk Yarı',
+                3: 'Devre Arası',
+                4: 'İkinci Yarı',
+                5: 'Bitti'
+            };
+
+            let statusDropdownHtml = `
+                <select class="bg-gray-600 text-white rounded px-2 py-1 text-sm"
+                        onchange="updateMatchStatus(${match.matchId}, this.value)">`;
+
+            for (const [value, text] of Object.entries(matchStatusOptions)) {
+                const selected = parseInt(match.status) === parseInt(value) ? 'selected' : '';
+                statusDropdownHtml += `<option value="${value}" ${selected}>${text}</option>`;
+            }
+            statusDropdownHtml += '</select>';
+
+            return `
+                <div class="bg-gray-800 p-3 sm:p-4 rounded-lg">
+                    <div class="flex flex-col gap-3">
+                        <div class="flex-1 text-center">
+                            <span class="text-white text-sm sm:text-base">${match.homeTeam} ${scoreDisplay} ${match.awayTeam}</span>
+                        </div>
+                        <div class="flex flex-wrap items-center justify-center gap-2">
+                            ${statusDropdownHtml}
+                            <div class="flex flex-wrap justify-center gap-2">
+                                <a href="/Admin/UpdateScore?matchId=${match.matchId}"
+                                   class="bg-yellow-600 text-white px-2 sm:px-3 py-1 rounded-md text-xs sm:text-sm hover:bg-yellow-700 inline-flex items-center">
+                                   <i class="fas fa-edit mr-1"></i> Skor
+                                </a>
+                                <a href="/Admin/MatchSquad?matchId=${match.matchId}"
+                                   class="bg-blue-600 text-white px-2 sm:px-3 py-1 rounded-md text-xs sm:text-sm hover:bg-blue-700 inline-flex items-center">
+                                   <i class="fas fa-users mr-1"></i> Kadro
+                                </a>
+                                <button onclick="openDynamicModal('/Admin/EditMatch?matchId=${match.matchId}')"
+                                        class="bg-blue-500 text-white px-2 sm:px-3 py-1 rounded-md text-xs sm:text-sm hover:bg-blue-600 inline-flex items-center">
+                                    <i class="fas fa-edit mr-1"></i> Düzenle
+                                </button>
+                                <button onclick="deleteMatch(${match.matchId})"
+                                        class="bg-red-600 text-white px-2 sm:px-3 py-1 rounded-md text-xs sm:text-sm hover:bg-red-700 inline-flex items-center">
+                                    <i class="fas fa-trash mr-1"></i> Sil
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function deleteMatch(matchId) {
+            if (!confirm('Bu maçı silmek istediğinizden emin misiniz?')) {
+                return;
+            }
+
+            fetch('/Admin/DeleteMatch', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ MatchId: matchId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    toastr.success('Maç başarıyla silindi');
+                    // Mevcut haftayı yeniden yükle
+                    const weekTab = document.querySelector('.week-tab.bg-yellow-600');
+                    if (weekTab) {
+                        const leagueId = weekTab.dataset.league;
+                        const weekId = weekTab.dataset.week;
+                        loadWeekMatches(leagueId, weekId);
+                    }
+                } else {
+                    toastr.error(data.message || 'Maç silinirken bir hata oluştu');
+                }
+            })
+            .catch(error => {
+                toastr.error('Bir hata oluştu');
+                console.error('Hata:', error);
+            });
+        }
+
+        function createWeek(leagueId) {
+            const weekNumber = document.getElementById('weekNumber').value;
+            const weekStatus = document.getElementById('weekStatus').value;
+            const weekName = document.getElementById('weekName').value;
+            const seasonId = document.querySelector(`[data-league="${leagueId}"] select`).value; // Seçili sezon ID'sini alıyoruz
+
+            if (!weekNumber || !weekStatus || !seasonId) {
+                showAlert('Lütfen tüm alanları doldurun.', 'error');
+                return;
+            }
+
+            fetch('/Admin/CreateWeek', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    leagueId: leagueId,
+                    weekNumber: weekNumber,
+                    weekStatus: weekStatus,
+                    weekName: weekName,
+                    seasonId: seasonId // Sezon ID'sini gönderiyoruz
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert('Hafta başarıyla oluşturuldu', 'success');
+                        loadWeeks(leagueId, seasonId); // Haftaları yeniden yüklüyoruz
+                        closeModal();
+                    } else {
+                        showAlert(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    showAlert('Bir hata oluştu: ' + error, 'error');
+                });
+        }
+
+        // Sayfa yüklendiğinde butonların durumunu ayarla
+        document.addEventListener('DOMContentLoaded', function () {
+            const seasonSelects = document.querySelectorAll('[data-season-select]');
+            seasonSelects.forEach(select => {
+                const leagueId = select.dataset.leagueId;
+                const storedSeasonId = localStorage.getItem(`selectedSeason_${leagueId}`);
+
+                if (storedSeasonId) {
+                    select.value = storedSeasonId;
+                }
+
+                const addWeekBtn = document.querySelector(`[data-add-week-btn="${leagueId}"]`);
+                const addMatchBtn = document.querySelector(`[data-add-match-btn="${leagueId}"]`);
+
+                addWeekBtn.disabled = !select.value;
+
+                if (select.value) {
+                    loadWeeks(leagueId, select.value);
+                }
+            });
+        });
+
+        function teamChanged(selectElement, teamType) {
+            validateTeams();
+        }
+
+        function validateTeams() {
+            const saveButton = document.getElementById("creatematchSaveButton");
+
+
+            if (homeTeamSelect.value && homeTeamSelect.value === awayTeamSelect.value) {
+                saveButton.classList.add("disabled", "opacity-50", "cursor-not-allowed", "bg-gray-500");
+                saveButton.classList.remove("bg-yellow-600", "hover:bg-yellow-500");
+                saveButton.setAttribute("disabled", "true");
+            } else {
+                saveButton.classList.remove("disabled", "opacity-50", "cursor-not-allowed", "bg-gray-500");
+                saveButton.classList.add("bg-yellow-600", "hover:bg-yellow-500");
+                saveButton.removeAttribute("disabled"); // Butonu aktif et
+            }
+        }
+
+        function handleSeasonChange(selectElement, leagueId) {
+            const addWeekBtn = document.querySelector(`[data-add-week-btn="${leagueId}"]`);
+
+            addWeekBtn.disabled = !selectElement.value;
+
+            if (selectElement.value) {
+                // Seçili sezonu localStorage'a kaydet
+                localStorage.setItem(`selectedSeason_${leagueId}`, selectElement.value);
+                loadWeeks(leagueId, selectElement.value);
+            }
+        }
+
+        // Basit bir alert fonksiyonu ekleyelim
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `fixed top-4 right-4 p-4 rounded-lg ${type === 'error' ? 'bg-red-600' :
+                type === 'success' ? 'bg-green-600' :
+                    'bg-blue-600'
+                } text-white`;
+            alertDiv.textContent = message;
+            document.body.appendChild(alertDiv);
+
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 3000);
+        }
+
+        function openLeagueStandings(leagueId, element) {
+            const seasonSelect = element.closest('.league-card').querySelector('select');
+            const selectedSeasonId = seasonSelect.value;
+            openDynamicModal('@Url.Action("LeagueStandings")?leagueId=' + leagueId + '&seasonId=' + selectedSeasonId);
+        }
+
+        function handleMatchAdd(leagueId) {
+            const selectedWeek = document.querySelector(`.week-tab.bg-yellow-600[data-league='${leagueId}']`);
+            const weekId = selectedWeek?.dataset.week;
+
+            if (!weekId) {
+                alert('Lütfen önce bir hafta seçiniz.');
+                return;
+            }
+
+            openDynamicModal('@Url.Action("CreateMatch")?leagueId=' + leagueId + '&weekId=' + weekId);
+        }
+
+        function editSelectedSeason(button) {
+            const select = button.previousElementSibling;
+            const selectedSeasonId = select.value;
+
+            if (!selectedSeasonId) {
+                toastr.warning('Lütfen bir sezon seçin!', 'Uyarı');
+                return;
+            }
+
+            openDynamicModal('@Url.Action("EditSeason")?seasonId=' + selectedSeasonId);
+        }
+
+        function updateMatchStatus(matchId, status) {
+            fetch('/Admin/UpdateMatchStatus', { // Backend endpoint'i (oluşturulması gerekiyor)
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // CSRF token eklemek gerekebilir (eğer kullanılıyorsa)
+                    // 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                body: JSON.stringify({
+                    MatchId: matchId,
+                    Status: parseInt(status) // Status değerini integer olarak gönder
+                 })
+            })
+            .then(response => {
+                // Yanıtın içeriğini kontrol etmeden önce durumunu kontrol et
+                if (!response.ok) {
+                    // Hata durumunda JSON'ı ayrıştırmayı dene (eğer backend hata detayı gönderiyorsa)
+                    return response.json().then(err => { throw err; }).catch(() => {
+                        // JSON ayrıştırma hatası veya backend JSON göndermediyse genel bir hata fırlat
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                     });
+                }
+                 // Başarılı yanıt için JSON'ı ayrıştır
+                return response.json();
+             })
+            .then(data => {
+                if (data.success) {
+                    toastr.success(data.message || 'Maç durumu başarıyla güncellendi.');
+                    // İsteğe bağlı: Başarılı güncelleme sonrası arayüzde ek bir işlem yapılabilir
+                } else {
+                    toastr.error(data.message || 'Maç durumu güncellenirken bir hata oluştu.');
+                }
+            })
+            .catch(error => {
+                 // Hata mesajını göster
+                let errorMessage = 'Maç durumu güncellenirken bir hata oluştu.';
+                // Yakalanan hatanın bir 'message' özelliği varsa onu kullan
+                if (error && error.message) {
+                    // HTTP hatası dışındaki hatalar için veya backend'den gelen mesaj için
+                    if (!error.message.startsWith('HTTP error!')) {
+                         errorMessage = error.message;
+                     }
+                 }
+                console.error('Hata:', error);
+                toastr.error(errorMessage);
+            });
+        }
+
+        function toggleMobileMenu(leagueId) {
+            const menu = document.getElementById(`mobileMenu-${leagueId}`);
+            menu.classList.toggle('hidden');
+        }
+
+        // Ekran boyutu değiştiğinde menüleri kontrol et
+        window.addEventListener('resize', function() {
+            const width = window.innerWidth;
+            const mobileMenus = document.querySelectorAll('[id^="mobileMenu-"]');
+
+            if (width >= 768) { // md breakpoint
+                mobileMenus.forEach(menu => {
+                    menu.classList.add('hidden');
+                });
+            }
+        });
+
+        // Sayfa yüklendiğinde mobil görünümü ayarla
+        document.addEventListener('DOMContentLoaded', function() {
+            const width = window.innerWidth;
+            if (width < 768) {
+                // Mobil görünüm için gerekli ayarlamalar
+            }
+        });
+
+        function filterLeaguesByCity() {
+            const selectedCityId = document.getElementById('cityFilterDropdown').value;
+            const leagueCards = document.querySelectorAll('.league-card');
+
+            leagueCards.forEach(card => {
+                const cityId = card.dataset.cityId;
+                if (selectedCityId === 'all' || cityId === selectedCityId) {
+                    card.style.display = ''; // Kartı göster
+                } else {
+                    card.style.display = 'none'; // Kartı gizle
+                }
+            });
+        }
+
+        function saveSelectedCity() {
+            const cityDropdown = document.getElementById('cityFilterDropdown');
+            if (cityDropdown) {
+                localStorage.setItem('selectedCityId', cityDropdown.value);
+            }
+        }
+
+        function setSelectedCityFromStorage() {
+            const cityDropdown = document.getElementById('cityFilterDropdown');
+            if (cityDropdown) {
+                const storedCityId = localStorage.getItem('selectedCityId');
+                if (storedCityId) {
+                    cityDropdown.value = storedCityId;
+                    filterLeaguesByCity();
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setSelectedCityFromStorage();
+            // ...existing code...
+        });
+
+        function initLeagueStandingsEvents() {
+            console.log('Script yeniden başlatıldı.');
+
+            const buttons = document.querySelectorAll('.group-filter-btn');
+            const standingsTableContainer = document.getElementById('standingsTableContainer');
+            const currentGroupNameSpan = document.getElementById('currentGroupName');
+            const leagueId = document.getElementById("LeagueIDHidden")?.value;
+            const seasonId = document.getElementById("SeasonIDHidden")?.value;
+
+            buttons.forEach(button => {
+                button.addEventListener('click', function () {
+                    const groupId = this.dataset.groupId;
+                    const groupName = this.dataset.groupName;
+
+                    buttons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+
+                    if (currentGroupNameSpan) {
+                        currentGroupNameSpan.textContent = groupName;
+                    }
+
+                    fetch(`/Admin/LeagueStandings?leagueId=${leagueId}&seasonId=${seasonId}&groupId=${groupId}`, {
+                        method: 'GET',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                        .then(res => res.text())
+                        .then(html => {
+                            standingsTableContainer.innerHTML = html;
+                        });
+                });
+            });
+        }
+
+
+    </script>
+}

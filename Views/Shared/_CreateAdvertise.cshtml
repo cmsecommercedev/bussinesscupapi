@@ -1,0 +1,93 @@
+@model CreateAdvertiseViewModel
+
+@* Modal Başlığı ve Kapatma Butonu *@
+<div class="flex justify-between items-center p-4 border-b dark:border-gray-600">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+        Yeni Reklam Ekle
+    </h3>
+    <button type="button" onclick="closeAdvertiseModal()" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
+        <i class="fas fa-times w-5 h-5"></i>
+        <span class="sr-only">Modalı Kapat</span>
+    </button>
+</div>
+
+@* Form İçeriği *@
+<form asp-action="Create" asp-controller="Advertise" method="post" enctype="multipart/form-data"
+      data-ajax="true" data-ajax-method="POST" data-ajax-update="#advertiseModalContainer"
+      data-ajax-mode="replace" data-ajax-failure="onAjaxFailure" data-ajax-success="onAjaxSuccess"
+      class="p-4 md:p-5 space-y-4">
+
+    @Html.AntiForgeryToken() @* CSRF Koruması *@
+    <div asp-validation-summary="ModelOnly" class="text-red-500 text-sm"></div>
+
+    <div>
+        <label asp-for="Name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"></label>
+        <input asp-for="Name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
+        <span asp-validation-for="Name" class="mt-1 text-xs text-red-500"></span>
+    </div>
+
+    <div>
+        <label asp-for="ImageFile" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"></label>
+        <input asp-for="ImageFile" type="file" accept="image/jpeg, image/png, image/gif" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-600 dark:file:text-blue-100 dark:hover:file:bg-blue-700" />
+        <span asp-validation-for="ImageFile" class="mt-1 text-xs text-red-500"></span>
+         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400" id="file_input_help">PNG, JPG veya GIF (MAX. 5MB).</p>
+    </div>
+
+     <div>
+        <label asp-for="AltText" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"></label>
+        <input asp-for="AltText" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
+        <span asp-validation-for="AltText" class="mt-1 text-xs text-red-500"></span>
+    </div>
+
+    <div>
+        <label asp-for="LinkUrl" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"></label>
+        <input asp-for="LinkUrl" type="url" placeholder="https://" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
+        <span asp-validation-for="LinkUrl" class="mt-1 text-xs text-red-500"></span>
+    </div>
+
+     <div class="flex items-center">
+        <input asp-for="IsActive" type="checkbox" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+        <label asp-for="IsActive" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"></label>
+    </div>
+
+
+    @* Modal Footer Butonları *@
+    <div class="flex items-center justify-end pt-4 border-t border-gray-200 rounded-b dark:border-gray-600">
+        <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+            Kaydet
+        </button>
+        <button type="button" onclick="closeAdvertiseModal()" class="ml-3 text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600">
+            İptal
+        </button>
+    </div>
+</form>
+
+@* Client-side validation scriptlerini yükle *@
+@* Bu partial view AJAX ile yüklendiği için scriptlerin burada olması gerekebilir *@
+<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+@* jQuery Unobtrusive AJAX scripti (eğer data-ajax-* özniteliklerini kullanıyorsanız) *@
+@* <script src="~/lib/jquery-ajax-unobtrusive/jquery.unobtrusive-ajax.min.js"></script> *@
+
+<script>
+    // İsteğe bağlı: jQuery Unobtrusive AJAX başarı/hata callback'leri
+    // function onAjaxSuccess(data, status, xhr) {
+    //     // Eğer sunucu sadece başarı mesajı veya boş döndüyse (redirect yerine)
+    //     if (xhr.status === 200 && !data) {
+    //         closeAdvertiseModal();
+    //         window.location.reload(); // Veya listeyi AJAX ile yenile
+    //     } else {
+    //         // Eğer sunucu formu hatalarla geri döndürdüyse,
+    //         // data-ajax-update zaten modal içeriğini güncelleyecektir.
+    //     }
+    // }
+
+    // function onAjaxFailure(xhr, status, error) {
+    //     console.error("AJAX Hatası:", status, error);
+    //     alert("İşlem sırasında bir hata oluştu.");
+    //     // Hata detayını modal içinde gösterebilirsiniz
+    // }
+
+    // Eğer manuel fetch kullanıyorsanız, bu callback'lere gerek yok, handleAjaxFormSubmit içinden yönetilir.
+
+</script> 

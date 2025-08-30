@@ -1,0 +1,6 @@
+@ApiFmLeague_HostAddress = http://localhost:5002
+
+GET {{ApiFmLeague_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

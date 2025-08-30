@@ -1,0 +1,521 @@
+@model PlayerSuspensionViewModel
+@using BussinessCupApi.Models
+@using BussinessCupApi.Extensions
+@{
+    ViewData["Title"] = "Haftalık Cezalar";
+    Layout = "_AdminLayout";
+    var suspensionTypes = Enum.GetValues(typeof(SuspensionType))
+                             .Cast<SuspensionType>()
+                             .Select(e => new SelectListItem
+                                     {
+                                         Value = ((int)e).ToString(), // Değeri int olarak alalım (veya string)
+                                         Text = e.GetDisplayName()    // Extension metot ile DisplayName alalım
+                                     });
+}
+
+<style>
+    /* Select2 görünümünü Tailwind gibi yap */
+    .select2-container--default .select2-selection--single {
+        background-color: #374151; /* bg-gray-700 */
+        color: white;
+        border: none;
+        border-radius: 0.25rem; /* rounded */
+        padding: 0.5rem; /* p-2 */
+        height: auto;
+    }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: white;
+            line-height: normal;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 100%;
+        }
+
+    /* Genişlik ayarı: w-full */
+    .select2-container {
+        width: 100% !important;
+    }
+
+    /* Dropdown stilini de uyumlu hale getir */
+    .select2-dropdown {
+        background-color: #374151;
+        color: white;
+        border: none;
+    }
+
+    .select2-results__option {
+        color: white;
+    }
+
+    .select2-results__option--highlighted {
+        background-color: #4b5563; /* biraz daha açık gri */
+    }
+    /* Arama kutusunu özelleştir */
+    .select2-container--default .select2-search--dropdown .select2-search__field {
+        background-color: #374151; /* bg-gray-700 */
+        color: white; /* text-white */
+        border: none;
+        padding: 0.5rem; /* p-2 */
+        border-radius: 0.25rem; /* rounded */
+    }
+
+</style>
+
+
+<div class="min-h-screen bg-gray-900 p-6">
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-2xl font-bold text-white mb-6">Haftalık Cezalar</h1>
+
+        <!-- Seçim Alanı -->
+        <div class="bg-gray-800 rounded-lg p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div>
+                    <label asp-for="SelectedLeagueId" class="block text-white mb-2">Lig</label>
+                    <select asp-for="SelectedLeagueId" asp-items="Model.Leagues" id="leagueSelect" class="w-full bg-gray-700 text-white rounded p-2">
+                        <option value="">Lig Seçin</option>
+                    </select>
+                </div>
+                <div>
+                    <label asp-for="SelectedSeasonId" class="block text-white mb-2">Sezon</label>
+                    <select asp-for="SelectedSeasonId" id="seasonSelect" class="w-full bg-gray-700 text-white rounded p-2" disabled>
+                        <option value="">Önce Lig Seçin</option>
+                    </select>
+                </div>
+                <div>
+                    <label asp-for="SelectedWeekId" class="block text-white mb-2">Hafta</label>
+                    <select asp-for="SelectedWeekId" id="weekSelect" class="w-full bg-gray-700 text-white rounded p-2" disabled>
+                        <option value="">Önce Sezon Seçin</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ceza Ekleme ve Listeleme Alanı (Hafta Seçilince Görünecek) -->
+        <div id="suspensionManagement" class="hidden mt-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                <!-- Yeni Ceza Ekleme Formu -->
+                <div class="lg:col-span-1 bg-gray-800 rounded-lg p-6">
+                    <h2 class="text-xl font-bold text-white mb-4">Yeni Ceza Ekle</h2>
+                    <form id="addSuspensionForm">
+                        <div class="mb-4">
+                            <label asp-for="SelectedPlayerId" class="block text-white mb-2">Oyuncu</label>
+                            <select asp-for="SelectedPlayerId" id="playerSelect" class="w-full bg-gray-700 text-white rounded p-2">
+                                <option value="">Önce Hafta Seçin</option> 
+                            </select>
+                            <span asp-validation-for="SelectedPlayerId" class="text-red-500 text-sm"></span>
+                        </div>
+                        <div class="mb-4">
+                            <label asp-for="SuspensionType" class="block text-white mb-2">Ceza Türü</label>
+                            <select asp-for="SuspensionType" asp-items="suspensionTypes" id="suspensionTypeSelect" class="w-full bg-gray-700 text-white rounded p-2">
+                                <option value="">Tür Seçin</option>
+                            </select>
+                            <span asp-validation-for="SuspensionType" class="text-red-500 text-sm"></span>
+                        </div>
+                        <div class="mb-4">
+                            <label asp-for="GamesSuspended" class="block text-white mb-2">Ceza Süresi (Maç)</label>
+                            <input asp-for="GamesSuspended" type="number" min="1" id="gamesSuspendedInput" class="w-full bg-gray-700 text-white rounded p-2" value="1">
+                            <span asp-validation-for="GamesSuspended" class="text-red-500 text-sm"></span>
+                        </div>
+                        <div class="mb-4">
+                            <label asp-for="Notes" class="block text-white mb-2">Notlar (Opsiyonel)</label>
+                            <textarea asp-for="Notes" id="notesInput" rows="3" class="w-full bg-gray-700 text-white rounded p-2"></textarea>
+                        </div>
+                        <div class="text-right">
+                            <button type="submit" id="addSuspensionButton" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                                Cezayı Ekle
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Mevcut Cezalar Listesi -->
+                <div class="lg:col-span-2 bg-gray-800 rounded-lg p-6">
+                    <h2 class="text-xl font-bold text-white mb-4">Bu Haftanın Cezalıları</h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-gray-700 text-white">
+                            <thead>
+                                <tr class="bg-gray-600">
+                                    <th class="py-2 px-4 text-left">Oyuncu</th>
+                                    <th class="py-2 px-4 text-left">Ceza Türü</th>
+                                    <th class="py-2 px-4 text-center">Süre (Maç)</th>
+                                    <th class="py-2 px-4 text-left">Notlar</th>
+                                    <th class="py-2 px-4 text-center">İşlem</th>
+                                </tr>
+                            </thead>
+                            <tbody id="suspensionsTableBody">
+                                <!-- Cezalar buraya dinamik olarak eklenecek -->
+                                <tr id="noSuspensionsRow">
+                                    <td colspan="5" class="text-center py-4 text-gray-400">Bu hafta için kayıtlı ceza bulunmamaktadır.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div id="loadingSuspensions" class="text-center py-4 text-gray-400 hidden">Yükleniyor...</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof $.fn.select2 === 'undefined') {
+                console.error('Select2 yüklenmemiş!');
+            } else {
+                $('#playerSelect').select2({
+                    placeholder: "Oyuncu seçin",
+                    allowClear: true
+                });
+            }
+        });
+    </script>
+
+    <script> 
+
+        // --- Element References ---
+        const leagueSelect = document.getElementById('leagueSelect');
+        const seasonSelect = document.getElementById('seasonSelect');
+        const weekSelect = document.getElementById('weekSelect');
+        const playerSelect = document.getElementById('playerSelect');
+        const suspensionManagementDiv = document.getElementById('suspensionManagement');
+        const addSuspensionForm = document.getElementById('addSuspensionForm');
+        const suspensionsTableBody = document.getElementById('suspensionsTableBody');
+        const noSuspensionsRow = document.getElementById('noSuspensionsRow');
+        const loadingSuspensions = document.getElementById('loadingSuspensions');
+        const suspensionTypeSelect = document.getElementById('suspensionTypeSelect');
+        const gamesSuspendedInput = document.getElementById('gamesSuspendedInput');
+        const notesInput = document.getElementById('notesInput');
+        const addSuspensionButton = document.getElementById('addSuspensionButton');
+
+
+        // --- Event Listeners ---
+        leagueSelect.addEventListener('change', function () {
+            const leagueId = this.value;
+            resetSeasonAndWeek();
+            if (leagueId) {
+                loadSeasons(leagueId);
+            }
+        });
+
+        seasonSelect.addEventListener('change', function () {
+            const leagueId = leagueSelect.value;
+            const seasonId = this.value;
+            resetWeek();
+            if (leagueId && seasonId) {
+                loadWeeks(leagueId, seasonId);
+            }
+        });
+
+        weekSelect.addEventListener('change', function () {
+            const weekId = this.value;
+            resetSuspensionData();
+            if (weekId) {
+                suspensionManagementDiv.classList.remove('hidden');
+                loadPlayerDataForWeek(weekId); // Oyuncu dropdown ve mevcut cezaları yükle
+            } else {
+                suspensionManagementDiv.classList.add('hidden');
+            }
+        });
+
+        addSuspensionForm.addEventListener('submit', function (e) {
+            e.preventDefault(); // Formun normal submit olmasını engelle
+            addSuspension();
+        });
+
+        // Delete button event listener (using event delegation)
+        suspensionsTableBody.addEventListener('click', function (e) {
+            if (e.target && e.target.matches('button.delete-suspension-btn')) {
+                const suspensionId = e.target.dataset.id;
+                if (suspensionId && confirm('Bu ceza kaydını silmek istediğinizden emin misiniz?')) {
+                    deleteSuspension(suspensionId, e.target); // Pass button for disabling
+                }
+            }
+        });
+
+
+        // --- Data Loading Functions ---
+        function loadSeasons(leagueId) {
+            disableAndClearSelect(seasonSelect, 'Yükleniyor...');
+            fetch(`/Admin/GetSeasons?leagueId=${leagueId}`)
+                .then(response => response.json())
+                .then(seasons => {
+                    populateSelect(seasonSelect, seasons, 'seasonID', 'name', 'Sezon Seçin');
+                    seasonSelect.disabled = false;
+                })
+                .catch(error => console.error('Sezonlar yüklenirken hata:', error));
+        }
+
+        function loadWeeks(leagueId, seasonId) {
+            disableAndClearSelect(weekSelect, 'Yükleniyor...');
+            fetch(`/Admin/GetSeasonWeeks?leagueId=${leagueId}&seasonId=${seasonId}`)
+                .then(response => response.json())
+                .then(weeks => {
+                    populateSelect(weekSelect, weeks, 'value', 'text', 'Hafta Seçin');
+                    weekSelect.disabled = false;
+                })
+                .catch(error => console.error('Haftalar yüklenirken hata:', error));
+        }
+
+        async function loadPlayerDataForWeek(weekId) {
+            disableAndClearSelect(playerSelect, 'Oyuncular Yükleniyor...');
+            showLoadingMessage(true);
+            suspensionsTableBody.innerHTML = ''; // Clear previous table data
+
+            try {
+                const [playersResponse, suspendedResponse] = await Promise.all([
+                    fetch(`/Admin/GetWeekPlayersForSuspension?weekId=${weekId}`),
+                    fetch(`/Admin/GetSuspendedPlayers?weekId=${weekId}`)
+                ]);
+
+                if (!playersResponse.ok) throw new Error('Oyuncular yüklenemedi');
+                if (!suspendedResponse.ok) throw new Error('Cezalılar yüklenemedi');
+
+                const players = await playersResponse.json();
+                const suspensions = await suspendedResponse.json();
+
+                populateSelect(playerSelect, players, 'value', 'text', 'Oyuncu Seçin');
+                playerSelect.disabled = players.length === 0;
+                renderSuspensionsTable(suspensions);
+
+            } catch (error) {
+                console.error("Hafta oyuncu/ceza verisi yüklenirken hata:", error);
+                toastr.error("Veriler yüklenirken bir hata oluştu.");
+                suspensionsTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-500">Veriler yüklenemedi.</td></tr>`;
+            } finally {
+                showLoadingMessage(false);
+            }
+        }
+
+
+        // --- UI Rendering and Update Functions ---
+        function renderSuspensionsTable(suspensions) {
+            suspensionsTableBody.innerHTML = ''; // Clear previous content including loading/no data message
+
+            if (!suspensions || suspensions.length === 0) {
+                suspensionsTableBody.appendChild(noSuspensionsRow.cloneNode(true)); // Show "no data" row
+                return;
+            }
+
+            suspensions.forEach(susp => {
+                const row = document.createElement('tr');
+                row.dataset.suspensionId = susp.playerSuspensionID; // Store ID on the row
+                row.innerHTML = `
+                             <td class="py-2 px-4 border-b border-gray-600">${susp.playerFullName}</td>
+                             <td class="py-2 px-4 border-b border-gray-600">${susp.suspensionTypeDisplay}</td>
+                             <td class="py-2 px-4 border-b border-gray-600 text-center">${susp.gamesSuspended}</td>
+                             <td class="py-2 px-4 border-b border-gray-600">${susp.notes || '-'}</td>
+                             <td class="py-2 px-4 border-b border-gray-600 text-center">
+                                 <button data-id="${susp.playerSuspensionID}" class="delete-suspension-btn bg-red-600 text-white px-2 py-1 text-xs rounded hover:bg-red-700">
+                                     Sil
+                                 </button>
+                             </td>
+                         `;
+                suspensionsTableBody.appendChild(row);
+            });
+        }
+
+        function addRowToSuspensionTable(susp) {
+            // Remove the "no data" row if it exists
+            const noDataRow = suspensionsTableBody.querySelector('#noSuspensionsRow');
+            if (noDataRow) noDataRow.remove();
+            // Check if row already exists (e.g., quick double submit)
+            if (suspensionsTableBody.querySelector(`tr[data-suspension-id="${susp.playerSuspensionID}"]`)) {
+                return; // Avoid adding duplicates to UI
+            }
+
+
+            const row = document.createElement('tr');
+            row.dataset.suspensionId = susp.playerSuspensionID;
+            row.innerHTML = `
+                         <td class="py-2 px-4 border-b border-gray-600">${susp.playerFullName}</td>
+                         <td class="py-2 px-4 border-b border-gray-600">${susp.suspensionTypeDisplay}</td>
+                         <td class="py-2 px-4 border-b border-gray-600 text-center">${susp.gamesSuspended}</td>
+                         <td class="py-2 px-4 border-b border-gray-600">${susp.notes || '-'}</td>
+                         <td class="py-2 px-4 border-b border-gray-600 text-center">
+                             <button data-id="${susp.playerSuspensionID}" class="delete-suspension-btn bg-red-600 text-white px-2 py-1 text-xs rounded hover:bg-red-700">
+                                 Sil
+                             </button>
+                         </td>
+                     `;
+            suspensionsTableBody.appendChild(row);
+        }
+
+        function removeRowFromSuspensionTable(suspensionId) {
+            const row = suspensionsTableBody.querySelector(`tr[data-suspension-id="${suspensionId}"]`);
+            if (row) {
+                row.remove();
+            }
+            // If table becomes empty, show the "no data" row
+            if (suspensionsTableBody.children.length === 0) {
+                suspensionsTableBody.appendChild(noSuspensionsRow.cloneNode(true));
+            }
+        }
+
+
+        function clearAddSuspensionForm() {
+            // playerSelect.value = ''; // Oyuncu seçimini sıfırlama, yeni ekleme yapmak isteyebilir
+            suspensionTypeSelect.value = '';
+            gamesSuspendedInput.value = '1'; // Default değere dön
+            notesInput.value = '';
+            playerSelect.focus(); // İmleci oyuncu seçimine getir
+        }
+
+        function showLoadingMessage(show) {
+            if (show) {
+                suspensionsTableBody.innerHTML = ''; // Clear table before showing loading
+                loadingSuspensions.classList.remove('hidden');
+                noSuspensionsRow.classList.add('hidden'); // Hide no data row explicitly
+            } else {
+                loadingSuspensions.classList.add('hidden');
+                // If table is still empty after loading, show no data row
+                if (suspensionsTableBody.children.length === 0) {
+                    noSuspensionsRow.classList.remove('hidden');
+                    suspensionsTableBody.appendChild(noSuspensionsRow.cloneNode(true));
+                }
+            }
+        }
+
+        // --- Reset Functions ---
+        function resetSeasonAndWeek() {
+            disableAndClearSelect(seasonSelect, 'Önce Lig Seçin');
+            resetWeek();
+        }
+        function resetWeek() {
+            disableAndClearSelect(weekSelect, 'Önce Sezon Seçin');
+            resetSuspensionData();
+            suspensionManagementDiv.classList.add('hidden'); // Hide management section
+        }
+        function resetSuspensionData() {
+            disableAndClearSelect(playerSelect, 'Önce Hafta Seçin');
+            suspensionsTableBody.innerHTML = ''; // Clear table
+            suspensionsTableBody.appendChild(noSuspensionsRow.cloneNode(true)); // Add back no data row initially
+            clearAddSuspensionForm();
+        }
+
+
+        // --- Action Functions ---
+        function addSuspension() {
+            const weekId = weekSelect.value;
+            const playerId = playerSelect.value;
+            const suspensionType = suspensionTypeSelect.value;
+            const gamesSuspended = gamesSuspendedInput.value;
+            const notes = notesInput.value;
+
+            // Basic Validation
+            if (!weekId || !playerId || suspensionType === "" || !gamesSuspended || gamesSuspended < 1) {
+                toastr.error('Lütfen oyuncu, ceza türü ve geçerli bir ceza süresi girdiğinizden emin olun.');
+                return;
+            }
+
+            const data = {
+                SelectedWeekId: parseInt(weekId),
+                SelectedPlayerId: parseInt(playerId),
+                SuspensionType: parseInt(suspensionType), // Enum int değeri olarak gönderiyoruz
+                GamesSuspended: parseInt(gamesSuspended),
+                Notes: notes
+            };
+
+            addSuspensionButton.disabled = true;
+            addSuspensionButton.textContent = 'Ekleniyor...';
+
+            fetch('/Admin/AddSuspension', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Add AntiForgeryToken if needed
+                },
+                body: JSON.stringify(data)
+            })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        toastr.success(result.message || 'Ceza başarıyla eklendi.');
+                        if (result.newItem) {
+                            addRowToSuspensionTable(result.newItem); // Add new row to table
+                        } else {
+                            // Fallback: reload all data for the week if newItem is not returned
+                            loadPlayerDataForWeek(weekId);
+                        }
+                        clearAddSuspensionForm();
+                        // Ekledikten sonra oyuncuyu listeden kaldır (tekrar eklenmemesi için)
+                        const playerOption = playerSelect.querySelector(`option[value="${playerId}"]`);
+                        if (playerOption) playerOption.remove();
+                    } else {
+                        toastr.error(result.message || 'Ceza eklenirken bir hata oluştu.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Ceza ekleme hatası:', error);
+                    toastr.error('İstek gönderilirken bir hata oluştu.');
+                })
+                .finally(() => {
+                    addSuspensionButton.disabled = false;
+                    addSuspensionButton.textContent = 'Cezayı Ekle';
+                });
+        }
+
+        function deleteSuspension(suspensionId, buttonElement) {
+            buttonElement.disabled = true; // Disable button during request
+            buttonElement.textContent = 'Siliniyor...';
+
+            fetch('/Admin/DeleteSuspension', {
+                method: 'POST', // veya DELETE, controller'daki attribute'a göre
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Add AntiForgeryToken if needed
+                },
+                body: JSON.stringify(parseInt(suspensionId)) // ID'yi JSON body içinde gönder
+            })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        toastr.success(result.message || 'Ceza başarıyla silindi.');
+                        removeRowFromSuspensionTable(suspensionId);
+                        // Silinen oyuncuyu tekrar seçilebilir yapmak için dropdown'a geri ekle (opsiyonel)
+                        // Bu kısım biraz daha karmaşık, oyuncu bilgisini saklamak veya yeniden çekmek gerekebilir.
+                        // Şimdilik basit tutalım. Gerekirse haftanın oyuncu listesini yeniden yükleyebiliriz:
+                        // loadPlayerDataForWeek(weekSelect.value);
+                    } else {
+                        toastr.error(result.message || 'Ceza silinirken bir hata oluştu.');
+                        buttonElement.disabled = false; // Re-enable button on failure
+                        buttonElement.textContent = 'Sil';
+                    }
+                })
+                .catch(error => {
+                    console.error('Ceza silme hatası:', error);
+                    toastr.error('İstek gönderilirken bir hata oluştu.');
+                    buttonElement.disabled = false; // Re-enable button on error
+                    buttonElement.textContent = 'Sil';
+                });
+        }
+
+
+        // --- Utility Functions ---
+        function disableAndClearSelect(selectElement, defaultOptionText) {
+            selectElement.disabled = true;
+            selectElement.innerHTML = `<option value="">${defaultOptionText}</option>`;
+        }
+
+        function populateSelect(selectElement, data, valueKey, textKey, defaultOptionText) {
+            selectElement.innerHTML = `<option value="">${defaultOptionText}</option>`;
+            data.forEach(item => {
+                selectElement.innerHTML += `<option value="${item[valueKey]}">${item[textKey]}</option>`;
+            });
+            // Select'i sadece data varsa enable et
+            selectElement.disabled = data.length === 0;
+            if (data.length === 0 && selectElement.id === 'playerSelect') {
+                selectElement.innerHTML = `<option value="">Uygun oyuncu bulunamadı</option>`;
+            }
+            else if (data.length === 0) {
+                selectElement.innerHTML = `<option value="">Veri bulunamadı</option>`;
+            }
+        }
+
+    </script>
+} 

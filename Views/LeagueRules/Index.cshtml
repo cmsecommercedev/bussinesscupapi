@@ -1,0 +1,162 @@
+﻿@model dynamic
+@using BussinessCupApi.Models
+
+@{
+    ViewData["Title"] = "Lig Ceza Kuralları";
+    if (User.IsInRole("Admin"))
+    {
+        Layout = "_AdminLayout";
+    }
+    else if (User.IsInRole("CityAdmin"))
+    {
+        Layout = "_CityAdminLayout";
+    }
+    var teams = ViewBag.Teams as List<Team>;
+    var leagueId = ViewBag.LeagueId;
+}
+
+<div class="bg-gray-800 rounded-lg p-6">
+    <h2 class="text-2xl font-semibold text-white mb-6">
+        @ViewData["Title"] - @ViewBag.LeagueName (@ViewBag.SeasonName)
+    </h2>
+    <section class="bg-gray-700 p-4 rounded-md mb-6">
+        <h4 class="text-xl font-medium text-white mb-3">Takımlara Ceza Ekle</h4>
+        <form id="addRuleForm" class="space-y-4">
+            <div>
+                <label class="block text-gray-300 mb-1 font-medium">Takım Seç</label>
+                <select id="teamSelect" name="TeamId" class="w-full bg-gray-600 text-white rounded px-3 py-2 border border-gray-500">
+                    <option value="">Takım seçiniz</option>
+                    @foreach (var team in teams)
+                    {
+                        <option value="@team.TeamID">@team.Name</option>
+                    }
+                </select>
+            </div>
+            <div>
+                <label class="block text-gray-300 mb-1 font-medium">Ceza Türü</label>
+                <select id="ruleType" name="RuleType" class="w-full bg-gray-600 text-white rounded px-3 py-2 border border-gray-500">
+                    <option value="">Ceza türü seçiniz</option>
+                    <option value="0">Puan Silme</option>
+                    <option value="1">Küme Düşürme</option>
+                    <option value="2">Diğer</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-gray-300 mb-1 font-medium">Ceza Açıklaması</label>
+                <input type="text" id="ruleDescription" name="Description" class="w-full bg-gray-600 text-white rounded px-3 py-2 border border-gray-500" placeholder="Ceza detayı giriniz..." />
+            </div>
+            <div>
+                <label class="block text-gray-300 mb-1 font-medium">Puan</label>
+                <input type="number" id="rulePoint" name="Point" class="w-full bg-gray-600 text-white rounded px-3 py-2 border border-gray-500" placeholder="Puan giriniz..." />
+            </div>
+            <input type="hidden" id="leagueId" name="LeagueId" value="@leagueId" />
+            <input type="hidden" id="seasonId" name="SeasonId" value="@ViewBag.SeasonId" />
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition duration-150">Ceza Ekle</button>
+        </form>
+    </section>
+    <section class="bg-gray-700 p-4 rounded-md">
+        <h4 class="text-xl font-medium text-white mb-3">Mevcut Ceza Kayıtları</h4>
+        <table class="min-w-full bg-gray-800 text-gray-200 rounded">
+            <thead>
+                <tr>
+                    <th class="px-4 py-2 text-left">Takım</th>
+                    <th class="px-4 py-2 text-left">Ceza Türü</th>
+                    <th class="px-4 py-2 text-left">Ceza Açıklaması</th>
+                    <th class="px-4 py-2 text-left">Puan</th>
+                    <th class="px-4 py-2 text-left">İşlem</th>
+                </tr>
+            </thead>
+            <tbody id="rulesTableBody">
+            </tbody>
+        </table>
+    </section>
+</div>
+
+@section Scripts {
+    <script>
+               function loadRules() {
+            const leagueId = document.getElementById('leagueId').value;
+            const seasonId = document.getElementById('seasonId').value;
+            fetch(`/LeagueRules/GetRules?leagueId=${leagueId}&seasonId=${seasonId}`)
+                .then(res => res.json())
+                .then(data => {
+                    const tbody = document.getElementById('rulesTableBody');
+                    tbody.innerHTML = '';
+                    data.forEach(rule => {
+                         tbody.innerHTML += `
+                            <tr>
+                                <td class="px-4 py-2 text-left">${rule.name || ''}</td>
+                                <td class="px-4 py-2 text-left">${getRuleTypeText(rule.ruleType)}</td>
+                                <td class="px-4 py-2 text-left">${rule.description || ''}</td>
+                                <td class="px-4 py-2 text-left">${rule.point || ''}</td>
+                                <td class="px-4 py-2 text-left">
+                                    <button onclick="deleteRule(${rule.id})" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded">Sil</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                });
+        }
+
+        document.getElementById('addRuleForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const teamId = document.getElementById('teamSelect').value;
+            const description = document.getElementById('ruleDescription').value;
+            const leagueId = document.getElementById('leagueId').value;
+            const seasonId = document.getElementById('seasonId').value;
+            const point = document.getElementById('rulePoint').value;
+            const ruleType = document.getElementById('ruleType').value;
+
+            if (!teamId || !description) {
+                alert('Takım ve ceza açıklaması zorunludur.');
+                return;
+            }
+
+            fetch('/LeagueRules/AddRule', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    TeamId: parseInt(teamId),
+                    Description: description,
+                    LeagueId: parseInt(leagueId),
+                    SeasonId: parseInt(seasonId),
+                    Point: point ? parseInt(point) : null,
+                    RuleType: parseInt(ruleType)
+                })
+            })
+            .then(res => res.json())
+            .then(() => {
+                loadRules();
+                document.getElementById('addRuleForm').reset();
+            });
+        });
+
+        function deleteRule(id) {
+            fetch('/LeagueRules/DeleteRule', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            })
+            .then(res => res.json())
+            .then(() => loadRules());
+        }
+
+        function getRuleTypeText(value) {
+            switch (value) {
+                case 0:
+                case "PointDeduction":
+                    return "Puan Silme";
+                case 1:
+                case "Relegation":
+                    return "Küme Düşürme";
+                case 2:
+                case "Other":
+                    return "Diğer";
+                default:
+                    return "";
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadRules);
+    </script>
+}

@@ -1,0 +1,708 @@
+@model WeekBestTeamViewModel
+@{
+    ViewData["Title"] = "Haftanın Kadrosu";
+    Layout = "_AdminLayout";
+}
+
+<div class="min-h-screen bg-gray-900 p-6">
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-2xl font-bold text-white mb-6">Haftanın 11'i</h1>
+
+        <div class="bg-gray-800 rounded-lg p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div>
+                    <label class="block text-white mb-2">Lig</label>
+                    <select id="leagueSelect" class="w-full bg-gray-700 text-white rounded p-2">
+                        <option value="">Lig Seçin</option>
+                        @foreach (var item in ViewBag.Leagues)
+                        {
+                            <option value="@item.Value">@item.Text</option>
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-white mb-2">Sezon</label>
+                    <select id="seasonSelect" class="w-full bg-gray-700 text-white rounded p-2" disabled>
+                        <option value="">Önce Lig Seçin</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-white mb-2">Hafta</label>
+                    <select id="weekSelect" class="w-full bg-gray-700 text-white rounded p-2" disabled>
+                        <option value="">Önce Sezon Seçin</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div id="playerSelection" class="hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-gray-800 rounded-lg p-6">
+                    <h2 class="text-xl font-bold text-white mb-4">Mevcut Oyuncular</h2>
+                    <input type="text" id="playerSearch" placeholder="Oyuncu Ara..." class="w-full bg-gray-700 text-white rounded p-2 mb-4">
+                    <div id="availablePlayers" class="space-y-2 max-h-96 overflow-y-auto">
+                        <!-- Oyuncular buraya dinamik olarak eklenecek -->
+                    </div>
+                </div>
+                <div class="bg-gray-800 rounded-lg p-6">
+                    <h2 class="text-xl font-bold text-white mb-4">Seçilen <span id="selectedPlayerCount">0</span></h2>
+                    <div id="selectedPlayers" class="space-y-2 max-h-96 overflow-y-auto">
+                        <!-- Seçilen oyuncular buraya eklenecek -->
+                    </div>
+                    <div class="mt-4">
+                        <h3 class="text-lg font-bold text-white mb-2">Haftanın En İyisi</h3>
+                        <div id="bestPlayer" class="bg-gray-700 p-3 rounded-lg hidden">
+                            <!-- Haftanın en iyi oyuncusu kartı buraya eklenecek -->
+                        </div>
+                        <p id="noBestPlayer" class="text-gray-400">Henüz seçilmedi.</p>
+                    </div>
+                    <div class="mt-4">
+                        <h3 class="text-lg font-bold text-white mb-2">Haftanın Takımı</h3>
+                        <select id="teamSelect" class="w-full bg-gray-700 text-white rounded p-2">
+                            <option value="">Takım Seçin</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-6 text-center">
+                <button id="saveButton" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50" disabled>
+                    Kaydet
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+                let allPlayersData = []; // Tüm oyuncu verilerini saklamak için
+                let selectedPlayers = [];
+                let bestPlayerId = null;
+                let bestTeamId = null;
+                let isLoadingData = false; // Veri yüklenirken mükerrer işlemleri engelle
+
+                // Liglerin squad count bilgisi (Controller'dan ViewBag ile geliyor)
+                const LEAGUE_SQUAD_COUNTS = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.LeagueSquadCounts ?? new Dictionary<int, int>()));
+
+                // --- Event Listeners ---
+                document.getElementById('leagueSelect').addEventListener('change', function() {
+                    const leagueId = this.value;
+                    updateSelectedPlayerCount();
+                    updateSaveButtonState();
+                    resetSelectionsAndUI(); // Lig değiştiğinde her şeyi sıfırla
+                    if (leagueId) {
+                        loadSeasons(leagueId);
+                    } else {
+                         disableAndClearSelect(document.getElementById('seasonSelect'), 'Önce Lig Seçin');
+                         disableAndClearSelect(document.getElementById('weekSelect'), 'Önce Sezon Seçin');
+                         document.getElementById('playerSelection').classList.add('hidden');
+                    }
+                });
+
+                document.getElementById('seasonSelect').addEventListener('change', function() {
+                    const leagueId = document.getElementById('leagueSelect').value;
+                    const seasonId = this.value;
+                     resetSelectionsAndUI(false); // Sezon değiştiğinde sadece seçimleri sıfırla, oyuncu listesini değil
+                     disableAndClearSelect(document.getElementById('weekSelect'), 'Önce Sezon Seçin');
+                     document.getElementById('playerSelection').classList.add('hidden');
+                    if (seasonId) {
+                        loadWeeks(leagueId, seasonId);
+                    }
+                });
+
+                document.getElementById('weekSelect').addEventListener('change', function() {
+                    const weekId = this.value;
+                     resetSelectionsAndUI(false); // Hafta değiştiğinde sadece seçimleri sıfırla
+                     document.getElementById('playerSelection').classList.add('hidden'); // Önce gizle
+                    if (weekId) {
+                        document.getElementById('playerSelection').classList.remove('hidden');
+                        loadWeekData(weekId); // Oyuncuları, takımları ve mevcut seçimleri yükle
+                    }
+                });
+
+                 document.getElementById('playerSearch').addEventListener('input', function(e) {
+                    filterAvailablePlayers(e.target.value);
+                });
+
+                document.getElementById('teamSelect').addEventListener('change', function() {
+                    bestTeamId = this.value;
+                    updateSaveButtonState();
+                });
+
+                document.getElementById('saveButton').addEventListener('click', saveBestTeam);
+
+                // --- Data Loading Functions ---
+                function loadSeasons(leagueId) {
+                    const seasonSelect = document.getElementById('seasonSelect');
+                    disableAndClearSelect(seasonSelect, 'Yükleniyor...');
+
+                    fetch(`/Admin/GetSeasons?leagueId=${leagueId}`)
+                        .then(response => response.json())
+                        .then(seasons => {
+                            populateSelect(seasonSelect, seasons, 'seasonID', 'name', 'Sezon Seçin');
+                            seasonSelect.disabled = false;
+                             disableAndClearSelect(document.getElementById('weekSelect'), 'Önce Sezon Seçin'); // Hafta seçimini sıfırla
+                        })
+                        .catch(error => console.error('Sezonlar yüklenirken hata:', error));
+                }
+
+                function loadWeeks(leagueId, seasonId) {
+                    const weekSelect = document.getElementById('weekSelect');
+                     disableAndClearSelect(weekSelect, 'Yükleniyor...');
+
+                    fetch(`/Admin/GetSeasonWeeks?leagueId=${leagueId}&seasonId=${seasonId}`)
+                        .then(response => response.json())
+                        .then(weeks => {
+                            populateSelect(weekSelect, weeks, 'value', 'text', 'Hafta Seçin');
+                            weekSelect.disabled = false;
+                        })
+                        .catch(error => console.error('Haftalar yüklenirken hata:', error));
+                }
+
+                async function loadWeekData(weekId) {
+                     if (isLoadingData) return; // Zaten yükleniyorsa tekrar başlatma
+                    isLoadingData = true; // Yükleme başladı
+                     resetSelectionsAndUI(false); // Yeni hafta için seçimleri temizle
+                     document.getElementById('availablePlayers').innerHTML = '<p class="text-gray-400">Oyuncular yükleniyor...</p>'; // Yükleniyor mesajı
+                     try {
+                        // Oyuncuları ve takımları paralel olarak yükle
+                        const [playersResponse, teamsResponse] = await Promise.all([
+                            fetch(`/Admin/GetWeekPlayers?weekId=${weekId}`),
+                            fetch(`/Admin/GetWeekTeams?weekId=${weekId}`)
+                        ]);
+
+                        if (!playersResponse.ok) throw new Error(`Oyuncular yüklenemedi (${playersResponse.status})`);
+                        if (!teamsResponse.ok) throw new Error(`Takımlar yüklenemedi (${teamsResponse.status})`);
+
+                        allPlayersData = await playersResponse.json(); // Oyuncuları global değişkene ata
+                        const teams = await teamsResponse.json();
+
+                        renderAvailablePlayers(allPlayersData); // Tüm oyuncuları göster
+                         populateSelect(document.getElementById('teamSelect'), teams, 'teamID', 'teamName', 'Takım Seçin');
+
+                        // Mevcut Haftanın 11'i verilerini yükle
+                        const bestTeamDataResponse = await fetch(`/Admin/GetWeekBestTeamData?weekId=${weekId}`);
+                         if (bestTeamDataResponse.ok) {
+                            const bestTeamData = await bestTeamDataResponse.json();
+                             console.log("Fetched Best Team Data:", bestTeamData);
+                            if (bestTeamData.found) {
+                                await populateExistingSelections(bestTeamData); // await ekle
+                            } else {
+                                 console.log("Bu hafta için kaydedilmiş veri bulunamadı.");
+                            }
+                         } else {
+                              console.error("Haftanın 11'i verisi alınırken hata:", bestTeamDataResponse.status);
+                         }
+
+                    } catch (error) {
+                         console.error('Hafta verileri yüklenirken hata:', error);
+                         toastr.error(`Hafta verileri yüklenirken bir hata oluştu: ${error.message}`);
+                         resetSelectionsAndUI(true); // Hata durumunda UI'ı tamamen sıfırla
+                         document.getElementById('availablePlayers').innerHTML = '<p class="text-red-500">Oyuncular yüklenemedi.</p>';
+                    } finally {
+                         isLoadingData = false; // Yükleme bitti
+                         updateSaveButtonState(); // Kaydet butonunun durumunu güncelle
+                    }
+                }
+
+                 async function populateExistingSelections(data) { // async ekle
+                     console.log("Mevcut veri yükleniyor:", data);
+                     const populationLoadingFlag = true; // Geçici flag
+
+                    // Clear previous selections visually first
+                    document.getElementById('selectedPlayers').innerHTML = '';
+                    selectedPlayers = []; // Clear the array too
+                    removeBestPlayer(true); // Clear best player UI
+                    document.getElementById('teamSelect').value = ''; // Clear team select
+
+
+                    // Best Team (Needs to be set first)
+                    if (data.bestTeamID) {
+                         console.log(`Populate: Setting best team ${data.bestTeamID}`);
+                        bestTeamId = data.bestTeamID;
+                        document.getElementById('teamSelect').value = bestTeamId;
+                    }
+
+                     // Selected Players (Needs to be processed before Best Player UI update)
+                    if (data.selectedPlayerIDs && data.selectedPlayerIDs.length > 0) {
+                        console.log("Populate: Selecting players:", data.selectedPlayerIDs);
+                        // Use Promise.all if you want potential parallel DOM updates, though likely unnecessary
+                        for (const playerId of data.selectedPlayerIDs) {
+                            // Ensure player exists in the currently loaded list
+                            const playerExists = allPlayersData.some(p => p.playerID === playerId);
+                            const playerCardOnLeft = document.getElementById('availablePlayers').querySelector(`[data-player-id="${playerId}"]`);
+
+                            if(playerExists && playerCardOnLeft) {
+                                 console.log(`Populate: Calling selectPlayer for ${playerId}`);
+                                 selectPlayer(playerId, populationLoadingFlag); // Use the flag
+                            } else {
+                                console.warn(`Populate: Oyuncu ${playerId} mevcut oyuncular listesinde (${playerExists}) veya DOM'da (${!!playerCardOnLeft}) bulunamadı, seçilemiyor.`);
+                            }
+                         // End forEach
+                        }
+                        console.log("Populate: Finished selecting players loop.");
+                    } else {
+                         console.log("Populate: No selected players in data.");
+                    }
+
+                    // Best Player (Set UI after selected players are processed)
+                    if (data.bestPlayerID) {
+                         console.log(`Populate: Setting best player UI for ${data.bestPlayerID}`);
+                         // Ensure the best player is actually in the loaded player list
+                         if (allPlayersData.some(p => p.playerID === data.bestPlayerID)) {
+                            setBestPlayer(data.bestPlayerID, populationLoadingFlag); // Use the flag
+                         } else {
+                             console.warn(`Populate: Best player ID ${data.bestPlayerID} found in data but not in loaded player list.`);
+                         }
+                    }
+
+
+                    // Final UI updates after population
+                    updateSelectedPlayerCount();
+                    updateSaveButtonState();
+                    console.log("Populate: Finished populating selections.");
+                 }
+
+                // --- UI Rendering and Manipulation ---
+                 function renderAvailablePlayers(players) {
+                    const container = document.getElementById('availablePlayers');
+                     if (!players || players.length === 0) {
+                         container.innerHTML = '<p class="text-gray-400">Bu hafta için oyuncu bulunamadı.</p>';
+                         return;
+                     }
+                    container.innerHTML = players.map(player => createPlayerCard(player, false)).join(''); // 'false' -> isSelectedCard
+                }
+
+                function filterAvailablePlayers(searchTerm) {
+                    const term = searchTerm.toLowerCase().trim();
+                    const availablePlayersContainer = document.getElementById('availablePlayers');
+                    const playerCards = availablePlayersContainer.querySelectorAll('.player-card');
+
+                    let foundCount = 0;
+                    playerCards.forEach(card => {
+                         const name = card.dataset.playerName?.toLowerCase() || '';
+                         const team = card.dataset.teamName?.toLowerCase() || '';
+                         const position = card.dataset.position?.toLowerCase() || '';
+                         const isSelected = selectedPlayers.includes(parseInt(card.dataset.playerId));
+
+                         if (!isSelected && (name.includes(term) || team.includes(term) || position.includes(term))) {
+                             card.style.display = 'flex'; // Show matching non-selected players
+                             foundCount++;
+                         } else if (!isSelected) {
+                             card.style.display = 'none'; // Hide non-matching non-selected players
+                         }
+                         // Keep selected (and thus hidden/opacified) players as they are
+                     });
+
+                     // Show message if no players match the filter
+                     let noResultMessage = availablePlayersContainer.querySelector('.no-result-message');
+                     if (foundCount === 0 && term !== '') {
+                         if (!noResultMessage) {
+                             noResultMessage = document.createElement('p');
+                             noResultMessage.className = 'text-gray-400 no-result-message';
+                             availablePlayersContainer.appendChild(noResultMessage);
+                         }
+                         noResultMessage.textContent = 'Aramayla eşleşen oyuncu bulunamadı.';
+                         noResultMessage.style.display = 'block';
+                     } else if (noResultMessage) {
+                         noResultMessage.style.display = 'none';
+                     }
+                }
+
+
+                 function createPlayerCard(player, cardType) {
+                     // cardType can be 'available', 'selected', or 'best'
+                     let buttonsHtml = '';
+                     switch (cardType) {
+                         case 'selected':
+                             buttonsHtml = `
+                                 <button onclick="removePlayer(${player.playerID})"
+                                        class="bg-red-600 text-white px-2 py-1 text-xs rounded hover:bg-red-700 remove-player-btn">
+                                    Çıkar
+                                </button>
+                             `;
+                             break;
+                         case 'best': // Special button for the best player display
+                             buttonsHtml = `
+                                 <button onclick="removeBestPlayer()"
+                                        class="bg-red-600 text-white px-2 py-1 text-xs rounded hover:bg-red-700 remove-best-btn">
+                                    Çıkar
+                                </button>
+                             `;
+                             break;
+                         case 'available':
+                         default:
+                              buttonsHtml = `
+                                 <button onclick="selectPlayer(${player.playerID})"
+                                        class="bg-blue-600 text-white px-2 py-1 text-xs rounded hover:bg-blue-700 select-player-btn">
+                                    Seç
+                                </button>
+                                <button onclick="setBestPlayer(${player.playerID})"
+                                        class="bg-yellow-500 text-black px-2 py-1 text-xs rounded hover:bg-yellow-600 ml-1 set-best-btn">
+                                    En İyi
+                                </button>`;
+                              break;
+                     }
+
+
+                    // Base64 check and default image
+                     let imgSrc = '/images/default-player.png'; // Default image path
+                     if (player.playerImage && player.playerImage.startsWith('data:image')) {
+                         imgSrc = player.playerImage;
+                     } else if (player.playerImage) {
+                          console.warn(`Oyuncu ${player.playerID} için geçersiz resim formatı: ${player.playerImage.substring(0, 30)}...`);
+                     }
+
+
+                    return `
+                        <div class="player-card bg-gray-700 p-3 rounded-lg flex items-center justify-between"
+                             data-player-id="${player.playerID}"
+                             data-player-name="${player.fullName}"
+                             data-team-name="${player.teamName}"
+                             data-position="${player.position}">
+                            <div class="flex items-center space-x-3 overflow-hidden mr-2">
+                                <img src="${imgSrc}"
+                                     alt="${player.fullName}"
+                                     class="w-10 h-10 rounded-full object-cover bg-gray-600 flex-shrink-0">
+                                <div class="overflow-hidden whitespace-nowrap">
+                                    <h3 class="text-white text-sm font-semibold truncate" title="${player.fullName}">${player.fullName}</h3>
+                                    <p class="text-gray-400 text-xs truncate" title="${player.position} - ${player.teamName}">${player.position} - ${player.teamName}</p>
+                                </div>
+                            </div>
+                            <div class="space-x-1 flex-shrink-0 button-container">
+                                ${buttonsHtml}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                function applyCardStateStyles(playerId) {
+                     // Applies styles to BOTH left and right cards based on current state
+                     const isSelected = selectedPlayers.includes(playerId);
+                     const isBest = bestPlayerId === playerId;
+
+                     const availableCard = document.getElementById('availablePlayers').querySelector(`[data-player-id="${playerId}"]`);
+                     const selectedCards = document.querySelectorAll(`#selectedPlayers [data-player-id="${playerId}"]`); // Only in selected list
+
+                     // Style Available Card (Left)
+                     if (availableCard) {
+                         const selectBtn = availableCard.querySelector('.select-player-btn');
+                         const bestBtn = availableCard.querySelector('.set-best-btn');
+
+                         if (isSelected) {
+                             availableCard.classList.add('opacity-50', 'pointer-events-none');
+                             if (selectBtn) selectBtn.style.display = 'none'; // Hide select button if selected
+                         } else {
+                             availableCard.classList.remove('opacity-50', 'pointer-events-none');
+                             if (selectBtn) selectBtn.style.display = 'inline-block'; // Show select button if not selected
+                         }
+
+                         if (isBest) {
+                             availableCard.classList.add('border-2', 'border-yellow-400');
+                             if (bestBtn) bestBtn.classList.add('ring-2', 'ring-yellow-300');
+                         } else {
+                             availableCard.classList.remove('border-2', 'border-yellow-400');
+                              if (bestBtn) bestBtn.classList.remove('ring-2', 'ring-yellow-300');
+                         }
+                     }
+
+                     // Style Selected Card(s) (Right) - Highlight if best
+                     selectedCards.forEach(card => {
+                          if(isBest) {
+                              card.classList.add('border-2', 'border-green-400'); // Example: Highlight best player card in selected list
+                          } else {
+                              card.classList.remove('border-2', 'border-green-400');
+                          }
+                     });
+
+                     // Style Best Player Card (Dedicated section)
+                      const bestPlayerCardContainer = document.getElementById('bestPlayer');
+                      if (isBest) {
+                          bestPlayerCardContainer.classList.add('border-2', 'border-yellow-400', 'bg-gray-600'); // Style the container itself
+                      } else {
+                          // This case shouldn't happen if bestPlayerId is cleared correctly,
+                          // but for safety:
+                          bestPlayerCardContainer.classList.remove('border-2', 'border-yellow-400', 'bg-gray-600');
+                      }
+
+                }
+
+
+                 function selectPlayer(playerId, isDuringPopulation = false) {
+                      if (isLoadingData && !isDuringPopulation) {
+                         console.log(`selectPlayer(${playerId}): Aborted, isLoadingData is true.`);
+                         return;
+                     }
+
+                    if (selectedPlayers.includes(playerId)) {
+                         if (!isDuringPopulation) {
+                             toastr.warning('Bu oyuncu zaten seçili!');
+                             return;
+                         }
+                    }
+
+                    const player = allPlayersData.find(p => p.playerID === playerId);
+                     if (!player) {
+                         console.error(`selectPlayer(${playerId}): Player data not found in allPlayersData.`);
+                         return;
+                     }
+
+                    // Add to array only if not already present
+                     if (!selectedPlayers.includes(playerId)) {
+                        selectedPlayers.push(playerId);
+                         console.log(`selectPlayer(${playerId}, populating=${isDuringPopulation}): Added to selectedPlayers array. New count: ${selectedPlayers.length}`);
+                     }
+
+
+                    // Add card to the right side IF NOT ALREADY THERE
+                     const selectedPlayersContainer = document.getElementById('selectedPlayers');
+                     if (!selectedPlayersContainer.querySelector(`[data-player-id="${playerId}"]`)) {
+                        const cardHtml = createPlayerCard(player, 'selected'); // Use 'selected' type
+                        selectedPlayersContainer.insertAdjacentHTML('beforeend', cardHtml);
+                         console.log(`selectPlayer(${playerId}, populating=${isDuringPopulation}): Added card HTML to right container.`);
+                     } else {
+                          console.log(`selectPlayer(${playerId}, populating=${isDuringPopulation}): Card already exists in right container.`);
+                     }
+
+
+                     // Apply styles to both left and right cards
+                     applyCardStateStyles(playerId);
+
+                     if (!isDuringPopulation) {
+                        updateSelectedPlayerCount();
+                        updateSaveButtonState();
+                     }
+                }
+
+                function removePlayer(playerId) {
+                     // Removes player from the selected list (right side) and makes them available again (left side).
+                     // If they were the best player, it also clears the best player status.
+                     if (isLoadingData) return;
+
+                     const initialBestPlayerId = bestPlayerId;
+                     selectedPlayers = selectedPlayers.filter(id => id !== playerId);
+
+                    // Remove card from the "Selected 11" container (right side)
+                    const selectedCard = document.getElementById('selectedPlayers').querySelector(`[data-player-id="${playerId}"]`);
+                    if (selectedCard) {
+                         selectedCard.remove();
+                         console.log(`removePlayer(${playerId}): Removed card from 'selectedPlayers' container.`);
+                    }
+
+                     // If this player was the best player, clear the best player state AND UI
+                     if (initialBestPlayerId === playerId) {
+                         console.log(`removePlayer(${playerId}): Player was also best player, calling removeBestPlayer(true).`);
+                         removeBestPlayer(true); // suppressMessage = true
+                     }
+
+                     // Apply styles (will make left card visible/interactive again and remove highlights)
+                     applyCardStateStyles(playerId);
+
+                    updateSelectedPlayerCount();
+                    updateSaveButtonState();
+                }
+
+                 function setBestPlayer(playerId, isDuringPopulation = false) {
+                      if (isLoadingData && !isDuringPopulation) return;
+
+            const player = allPlayersData.find(p => p.playerID === playerId);
+            if (!player) {
+                console.error(`setBestPlayer(${playerId}): Player data not found.`);
+                return;
+            }
+
+            const previousBestPlayerId = bestPlayerId;
+            bestPlayerId = playerId; // Set new best player ID
+
+            // Sadece haftanın en iyisi olarak göster, seçilen 11'e ekleme!
+            const bestPlayerContainer = document.getElementById('bestPlayer');
+            bestPlayerContainer.innerHTML = createPlayerCard(player, 'best');
+            bestPlayerContainer.classList.remove('hidden');
+            document.getElementById('noBestPlayer').classList.add('hidden');
+
+            // Stil güncelle
+            if (previousBestPlayerId && previousBestPlayerId !== playerId) {
+                applyCardStateStyles(previousBestPlayerId);
+            }
+            applyCardStateStyles(playerId);
+
+            if (!isDuringPopulation) {
+                toastr.info(`${player.fullName} haftanın en iyisi olarak seçildi.`);
+                updateSaveButtonState();
+            }
+            console.log(`setBestPlayer(${playerId}, populating=${isDuringPopulation}): Set best player.`);
+        }
+                function removeBestPlayer(suppressMessage = false) {
+                     // This function ONLY removes the 'best player' designation and updates the UI for it.
+                     // It does NOT remove the player from the selected list.
+                     if (isLoadingData && !suppressMessage) return; // Allow during population reset
+                     if (!bestPlayerId) return; // Nothing to remove
+
+                      const previousBestPlayerId = bestPlayerId;
+                      const player = allPlayersData.find(p => p.playerID === previousBestPlayerId); // Find player data for message
+                     bestPlayerId = null; // Clear the state
+
+                     // Clear Best Player container UI (Right)
+                     const bestPlayerContainer = document.getElementById('bestPlayer');
+                     bestPlayerContainer.innerHTML = ''; // Remove the card
+                     bestPlayerContainer.classList.add('hidden'); // Hide the container
+                     bestPlayerContainer.classList.remove('border-2', 'border-yellow-400', 'bg-gray-600'); // Remove container styling
+                     document.getElementById('noBestPlayer').classList.remove('hidden'); // Show placeholder text
+
+
+                     // Update styles for the player who is no longer best (removes highlights etc.)
+                     if (previousBestPlayerId) {
+                         applyCardStateStyles(previousBestPlayerId);
+                     }
+
+                    if (!suppressMessage && player) {
+                         toastr.info(`${player.fullName} en iyi oyuncu seçiminden çıkarıldı.`);
+                    }
+                     if (!suppressMessage) {
+                        updateSaveButtonState(); // Update save button as best player changed
+                     }
+                     console.log(`removeBestPlayer: Removed best player designation from ${previousBestPlayerId}.`);
+                }
+
+                // --- Utility and State Update Functions ---
+                // (updateSelectedPlayerCount, updateSaveButtonState, disableAndClearSelect, populateSelect, resetSelectionsAndUI)
+                // (Önceki versiyondaki bu fonksiyonlar burada olmalı)
+                 function updateSelectedPlayerCount() {
+                    document.getElementById('selectedPlayerCount').textContent = selectedPlayers.length;
+                }
+
+                 function updateSaveButtonState() {
+                     const saveButton = document.getElementById('saveButton');
+                     const teamSelected = bestTeamId !== null && bestTeamId !== "";
+                     const isReady = selectedPlayers.length > 0 && bestPlayerId !== null && teamSelected;
+                     saveButton.disabled = !isReady;
+                      console.log(`Save button state update: ${selectedPlayers.length}, BestP: ${!!bestPlayerId}, BestT: ${teamSelected} -> Disabled: ${!isReady}`);
+                 }
+
+                // --- Utility Functions ---
+                function disableAndClearSelect(selectElement, defaultOptionText) {
+                    selectElement.disabled = true;
+                    selectElement.innerHTML = `<option value="">${defaultOptionText}</option>`;
+                }
+
+                function populateSelect(selectElement, data, valueKey, textKey, defaultOptionText) {
+                    selectElement.innerHTML = `<option value="">${defaultOptionText}</option>`;
+                    data.forEach(item => {
+                        selectElement.innerHTML += `<option value="${item[valueKey]}">${item[textKey]}</option>`;
+                    });
+                    selectElement.disabled = data.length === 0;
+                }
+
+                function resetSelectionsAndUI(fullReset = true) {
+                     console.log(`Resetting selections and UI (fullReset: ${fullReset})`);
+                     // Reset selections state
+                     selectedPlayers = [];
+                     // bestPlayerId = null; // removeBestPlayer handles this and UI
+                     bestTeamId = null;
+                     removeBestPlayer(true); // Clear best player UI and state
+
+                     // Clear UI elements related to selections
+                     document.getElementById('selectedPlayers').innerHTML = '';
+                     // document.getElementById('bestPlayer').innerHTML = ''; // removeBestPlayer handles this
+                     // document.getElementById('bestPlayer').classList.add('hidden'); // removeBestPlayer handles this
+                     // document.getElementById('noBestPlayer').classList.remove('hidden'); // removeBestPlayer handles this
+                     document.getElementById('teamSelect').value = '';
+                     document.getElementById('playerSearch').value = '';
+                     updateSelectedPlayerCount(); // Reset count display
+                     updateSaveButtonState(); // Reset save button state
+
+
+                     if (fullReset) {
+                         // Clear available players list only on full reset (e.g., league change)
+                          allPlayersData = [];
+                         document.getElementById('availablePlayers').innerHTML = '';
+                         disableAndClearSelect(document.getElementById('seasonSelect'), 'Önce Lig Seçin');
+                         disableAndClearSelect(document.getElementById('weekSelect'), 'Önce Sezon Seçin');
+                         disableAndClearSelect(document.getElementById('teamSelect'), 'Takım Seçin');
+                     } else {
+                         // If not full reset (e.g., week change), restore visibility/styles of all available players
+                         const availablePlayersContainer = document.getElementById('availablePlayers');
+                         availablePlayersContainer.querySelectorAll('.player-card').forEach(card => {
+                              // Make visible and interactive
+                             card.style.display = 'flex';
+                             card.classList.remove('opacity-50', 'pointer-events-none');
+                             // Remove specific best/selected styles
+                             card.classList.remove('border-2', 'border-yellow-400', 'border-green-400');
+                             const selectBtn = card.querySelector('.select-player-btn');
+                             const bestBtn = card.querySelector('.set-best-btn');
+                             if (selectBtn) selectBtn.style.display = 'inline-block';
+                             if (bestBtn) bestBtn.classList.remove('ring-2', 'ring-yellow-300');
+                         });
+                     }
+                }
+
+
+                // --- Save Function ---
+                function saveBestTeam() {
+                    // Validation checks
+                    if (selectedPlayers.length === 0) {
+                        toastr.error('En az 1 oyuncu seçmelisiniz!'); return;
+                    }
+                    if (!bestPlayerId) {
+                        toastr.error('Haftanın en iyi oyuncusunu seçmelisiniz!'); return;
+                    }
+                    const selectedTeamIdValue = document.getElementById('teamSelect').value;
+                     if (!selectedTeamIdValue || selectedTeamIdValue === "") {
+                         toastr.error('Haftanın takımını seçmelisiniz!'); return;
+                     }
+                     bestTeamId = parseInt(selectedTeamIdValue); // Ensure it's integer
+
+
+                    const data = {
+                        LeagueID: parseInt(document.getElementById('leagueSelect').value),
+                        SeasonID: parseInt(document.getElementById('seasonSelect').value),
+                        WeekID: parseInt(document.getElementById('weekSelect').value),
+                        BestPlayerID: bestPlayerId,
+                        BestTeamID: bestTeamId,
+                        SelectedPlayers: selectedPlayers // Array of player IDs
+                    };
+
+                    console.log("Kaydedilecek Veri:", data);
+                    document.getElementById('saveButton').disabled = true; // Disable button during save
+                    document.getElementById('saveButton').textContent = 'Kaydediliyor...';
+
+                    fetch('/Admin/SaveWeekBestTeam', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            // Add CSRF token header if needed
+                        },
+                        body: JSON.stringify(data)
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(err => {
+                                 throw new Error(err.message || `Sunucu hatası (${response.status})`);
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(result => {
+                         if (result.success) {
+                            toastr.success(result.message || 'Haftanın 11\'i başarıyla kaydedildi/güncellendi!');
+                             // Optional: Maybe reload the week data to reflect the saved state
+                             // loadWeekData(data.WeekID);
+                        } else {
+                             toastr.error(result.message || 'Bir hata oluştu!');
+                        }
+                    })
+                    .catch(error => {
+                        toastr.error('İstek gönderilirken bir hata oluştu: ' + error.message);
+                        console.error('Kaydetme Hatası:', error);
+                    })
+                     .finally(() => {
+                         // Re-enable button regardless of success/failure
+                          document.getElementById('saveButton').disabled = false;
+                          document.getElementById('saveButton').textContent = 'Kaydet';
+                          // Re-check button state based on current selections
+                          updateSaveButtonState();
+                     });
+                }
+
+    </script>
+}
