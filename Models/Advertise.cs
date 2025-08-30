@@ -10,7 +10,7 @@ namespace BussinessCupApi.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "Reklam adı zorunludur.")]
+        [Required(ErrorMessage = "Reklam adı zorunludur")]
         [StringLength(100)]
         [Display(Name = "Reklam Adı/Başlığı")]
         public string Name { get; set; }
