@@ -1,0 +1,45 @@
+name: .NET Core CI/CD - Test Branch
+
+on:
+  push:
+    branches: [ "test" ]
+  pull_request:
+    branches: [ "test" ]
+
+jobs:
+  build-and-deploy:
+    runs-on: self-hosted
+
+    steps:
+      # Kodları çek
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # .NET SDK kur
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # NuGet paketlerini restore et
+      - name: Restore dependencies
+        run: dotnet restore
+
+      # Build yap
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      # Testleri çalıştır
+      - name: Run Tests
+        run: dotnet test --no-build --verbosity normal
+
+      # Publish hazırla
+      - name: Publish
+        run: dotnet publish --configuration Release --output ./publish
+
+      # IIS dizinine kopyala
+      - name: Copy to IIS
+        run: |
+          Remove-Item "C:\inetpub\wwwroot\YourApp\*" -Recurse -Force
+          Copy-Item ./publish/* "C:\inetpub\wwwroot\YourApp\" -Recurse
+          Restart-WebAppPool -Name "YourAppPool"
