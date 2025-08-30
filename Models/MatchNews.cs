@@ -1,48 +1,28 @@
-﻿using System; // DateTime için
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel; // DefaultValue için
 
 namespace BussinessCupApi.Models
 {
     public class MatchNews
     {
-        // Birincil anahtar (Primary Key)
         public int Id { get; set; }
 
-        // Haber Başlığı
-        public string Title { get; set; } = string.Empty; // Null olmaması için
+        // Ana fotoğraf
+        public string? MatchNewsMainPhoto { get; set; } = string.Empty;
 
-        // Haber Alt Başlığı
-        public string Subtitle { get; set; } = string.Empty; // Null olmaması için
-        public string? MatchNewsMainPhoto { get; set; } = string.Empty; // Null olmaması için
-
-        // Detay Başlığı
-        public string DetailsTitle { get; set; } = string.Empty; // Null olmaması için
-
-        // Detay İçeriği
-        public string Details { get; set; } = string.Empty; // Null olmaması için
-
-        public int? MatchID { get; set; }
-
-        // Şehir bilgisi
-        public int? CityID { get; set; }
-        public virtual City City { get; set; }
-
-        // Takım bilgisi
-        public int? TeamID { get; set; }
-        public virtual Team Team { get; set; }
-
+        // Ana haber mi?
         public bool IsMainNews { get; set; }
 
-        // Yayınlanma Durumu
-        [DefaultValue(true)] // Varsayılan olarak true
+        // Yayınlanma durumu
         public bool Published { get; set; } = true;
 
-        // Oluşturulma Tarihi
-        public DateTime CreatedDate { get; set; } = DateTime.UtcNow; // Varsayılan olarak şu anki UTC zamanı
+        // Oluşturulma tarihi
+        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
-        // İlişkili fotoğraflar için navigation property
-        // Bir haberin birden fazla fotoğrafı olabilir (One-to-Many ilişki)
+        // Fotoğraflar
         public virtual ICollection<MatchNewsPhoto> Photos { get; set; } = new List<MatchNewsPhoto>();
+
+        // Çok dilli içerikler
+        public virtual ICollection<MatchNewsContent> Contents { get; set; } = new List<MatchNewsContent>();
     }
 }
