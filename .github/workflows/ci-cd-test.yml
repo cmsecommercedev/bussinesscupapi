@@ -40,6 +40,6 @@ jobs:
       # IIS dizinine kopyala
       - name: Copy to IIS
         run: |
-          Remove-Item "C:\inetpub\wwwroot\YourApp\*" -Recurse -Force
-          Copy-Item ./publish/* "C:\inetpub\wwwroot\YourApp\" -Recurse
-          Restart-WebAppPool -Name "YourAppPool"
+          Remove-Item "C:\inetpub\wwwroot\eurobussinesscup_test\*" -Recurse -Force
+          Copy-Item ./publish/* "C:\inetpub\wwwroot\eurobussinesscup_test\" -Recurse
+          Restart-WebAppPool -Name "eurobc-test"
