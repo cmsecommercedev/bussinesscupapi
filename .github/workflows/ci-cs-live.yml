@@ -2,9 +2,9 @@ name: .NET Core CI/CD - Test Branch
 
 on:
   push:
-    branches: [ "test" ]
+    branches: [ "master" ]
   pull_request:
-    branches: [ "test" ]
+    branches: [ "master" ]
 
 jobs:
   build-and-deploy:
@@ -33,6 +33,6 @@ jobs:
       # IIS dizinine kopyala
       - name: Copy to IIS
         run: |
-          Remove-Item "C:\inetpub\wwwroot\eurobussinesscup_test\*" -Recurse -Force
-          Copy-Item ./publish/* "C:\inetpub\wwwroot\eurobussinesscup_test\" -Recurse
-          Restart-WebAppPool -Name "eurobc-test"
+          Remove-Item "C:\inetpub\wwwroot\eurobussinesscup\*" -Recurse -Force
+          Copy-Item ./publish/* "C:\inetpub\wwwroot\eurobussinesscup\" -Recurse
+          Restart-WebAppPool -Name "eurobc"
