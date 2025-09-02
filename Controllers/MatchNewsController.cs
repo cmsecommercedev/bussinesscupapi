@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using BussinessCupApi.Data;
 using BussinessCupApi.Managers;
 using BussinessCupApi.Models;
+using BussinessCupApi.Models.Api;
 using BussinessCupApi.ViewModels;
 using System;
 using System.Collections.Generic; // List için
@@ -22,24 +23,36 @@ namespace BussinessCupApi.Controllers
         private readonly ApplicationDbContext _context;
         private readonly CloudflareR2Manager _r2Manager;
         private readonly CustomUserManager _customUserManager;
+        private readonly OpenAiManager _openAIManager;
+        private readonly ILogger<MatchNewsController> _logger;
 
-        // Dependency Injection ile DbContext ve IWebHostEnvironment'ı alıyoruz
+        // Dependency Injection ile gerekli servisleri alıyoruz
         public MatchNewsController(
             ApplicationDbContext context,
             CloudflareR2Manager r2Manager,
-            CustomUserManager customUserManager)
+            CustomUserManager customUserManager,
+            OpenAiManager openAIManager,
+            ILogger<MatchNewsController> logger)
         {
             _context = context;
             _r2Manager = r2Manager;
             _customUserManager = customUserManager;
+            _openAIManager = openAIManager;
+            _logger = logger;
         }
 
-        // GET: MatchNews veya MatchNews/Index
+                // GET: MatchNews veya MatchNews/Index
         // Hem listeyi hem de ekleme formunu gösterir
         public async Task<IActionResult> Index(string culture = "tr")
         {
-            var user = await _customUserManager.GetUserAsync(User); 
+            var user = await _customUserManager.GetUserAsync(User);
 
+            var viewModel = await GetMatchNewsIndexViewModelAsync(culture);
+            return View(viewModel);
+        }
+
+        private async Task<MatchNewsIndexViewModel> GetMatchNewsIndexViewModelAsync(string culture = "tr")
+        {
             // Admin ise tüm şehirler ve haberler
             var matchNewsList = await _context.MatchNews
                 .Include(m => m.Photos)
@@ -48,24 +61,52 @@ namespace BussinessCupApi.Controllers
                 .ToListAsync();
 
             var newsWithContent = matchNewsList
-                .Select(m => new
+                .Select(m => new MatchNewsWithContentDto
                 {
                     MatchNews = m,
                     Content = m.Contents.FirstOrDefault(c => c.Culture == culture)
                 })
                 .ToList();
 
-            ViewBag.MatchNewsList = newsWithContent; 
- 
-            ViewBag.Culture = culture;
-
-            return View(new MatchNews()); // Ekleme formu için boş bir model gönderiyoruz
+            return new MatchNewsIndexViewModel
+            {
+                NewMatchNews = new MatchNewsInputModel(),
+                MatchNewsList = newsWithContent,
+                Culture = culture
+            };
         }
+        // AJAX ile haber listesi getirme
+        [HttpGet]
+        public async Task<IActionResult> GetMatchNewsList(string culture = "tr")
+        {
+            var matchNewsList = await _context.MatchNews
+                .Include(m => m.Photos)
+                .Include(m => m.Contents)
+                .OrderByDescending(m => m.CreatedDate)
+                .ToListAsync();
+
+            var newsWithContent = matchNewsList
+                .Select(m => new MatchNewsWithContentDto
+                {
+                    MatchNews = m,
+                    Content = m.Contents.FirstOrDefault(c => c.Culture == culture)
+                })
+                .ToList();
+
+            return PartialView("_MatchNewsListPartial", new MatchNewsIndexViewModel
+            {
+                MatchNewsList = newsWithContent,
+                Culture = culture
+            });
+        }
+
         // ...existing code...
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(MatchNewsInputModel input, IFormFile MainPhoto, List<IFormFile> ImageFiles)
+        public async Task<IActionResult> Create(MatchNewsIndexViewModel model, IFormFile MainPhoto, List<IFormFile> ImageFiles)
         {
+            var input = model.NewMatchNews;
+
             if (ModelState.IsValid)
             {
                 var matchNews = new MatchNews
@@ -121,13 +162,23 @@ namespace BussinessCupApi.Controllers
                 _context.Add(matchNews);
                 await _context.SaveChangesAsync();
 
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return Json(new { success = true, message = "Haber başarıyla eklendi." });
+                }
+                
                 TempData["SuccessMessage"] = "Haber başarıyla eklendi.";
                 return RedirectToAction(nameof(Index));
             }
 
-            ViewBag.Cities = await _context.City.OrderBy(c => c.Name).ToListAsync();
-            ViewBag.Teams = await _context.Teams.OrderBy(t => t.Name).ToListAsync();
-            return View("Index", input);
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success = false, message = "Form validation hatası", errors = ModelState });
+            }
+
+            var viewModel = await GetMatchNewsIndexViewModelAsync();
+            viewModel.NewMatchNews = input;
+            return View("Index", viewModel);
         }
         // ...existing code...
         // GET: MatchNews/Edit/5
@@ -189,6 +240,11 @@ namespace BussinessCupApi.Controllers
             _context.Update(matchNews);
             await _context.SaveChangesAsync();
 
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success = true, message = $"Haber durumu başarıyla güncellendi: {(matchNews.Published ? "Yayında" : "Yayında Değil")}." });
+            }
+
             TempData["SuccessMessage"] = $"Haber durumu başarıyla güncellendi: {(matchNews.Published ? "Yayında" : "Yayında Değil")}.";
             return RedirectToAction(nameof(Index));
         }
@@ -234,6 +290,64 @@ namespace BussinessCupApi.Controllers
                 .Select(t => new { t.TeamID, t.Name })
                 .ToList();
             return Json(teams);
+        }
+
+        /// <summary>
+        /// Maç haberini belirtilen dile çevirir
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> TranslateMatchNews([FromBody] TranslateMatchNewsRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(request.Text) || string.IsNullOrEmpty(request.TargetLanguage))
+                {
+                    return BadRequest(new { success = false, message = "Metin ve hedef dil gereklidir." });
+                }
+
+                var translatedText = await _openAIManager.TranslateMatchNewsAsync(
+                    request.Text, 
+                    request.TargetLanguage, 
+                    request.SourceLanguage ?? "Türkçe"
+                );
+
+                return Json(new { success = true, translatedText = translatedText });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Çeviri işlemi başarısız");
+                return StatusCode(500, new { success = false, message = "Çeviri işlemi sırasında bir hata oluştu." });
+            }
+        }
+
+        /// <summary>
+        /// Maç haberini birden fazla dile çevirir
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> TranslateMatchNewsToMultipleLanguages([FromBody] TranslateMatchNewsMultipleRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(request.Text) || request.TargetLanguages == null || !request.TargetLanguages.Any())
+                {
+                    return BadRequest(new { success = false, message = "Metin ve hedef diller gereklidir." });
+                }
+
+                var translations = await _openAIManager.TranslateMatchNewsToMultipleLanguagesAsync(
+                    request.Text, 
+                    request.TargetLanguages, 
+                    request.SourceLanguage ?? "Türkçe"
+                );
+
+                return Json(new { success = true, translations = translations });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Çoklu dil çevirisi başarısız");
+                return StatusCode(500, new { success = false, message = "Çeviri işlemi sırasında bir hata oluştu." });
+            }
         }
         // TODO: Gerçek bir Delete Action'ı (istenirse) veya resim silme/yönetme eklenebilir.
     }

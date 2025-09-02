@@ -142,6 +142,22 @@ namespace BussinessCupApi.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "MatchNews",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    MatchNewsMainPhoto = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsMainNews = table.Column<bool>(type: "bit", nullable: false),
+                    Published = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MatchNews", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "MatchSquadFormations",
                 columns: table => new
                 {
@@ -370,6 +386,50 @@ namespace BussinessCupApi.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "MatchNewsContent",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    MatchNewsId = table.Column<int>(type: "int", nullable: false),
+                    Culture = table.Column<string>(type: "nvarchar(5)", maxLength: 5, nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Subtitle = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DetailsTitle = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Details = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MatchNewsContent", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_MatchNewsContent_MatchNews_MatchNewsId",
+                        column: x => x.MatchNewsId,
+                        principalTable: "MatchNews",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "MatchNewsPhotos",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    PhotoUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    MatchNewsId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MatchNewsPhotos", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_MatchNewsPhotos_MatchNews_MatchNewsId",
+                        column: x => x.MatchNewsId,
+                        principalTable: "MatchNews",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Season",
                 columns: table => new
                 {
@@ -469,39 +529,6 @@ namespace BussinessCupApi.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "MatchNews",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Subtitle = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    MatchNewsMainPhoto = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    DetailsTitle = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Details = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    MatchID = table.Column<int>(type: "int", nullable: true),
-                    CityID = table.Column<int>(type: "int", nullable: true),
-                    TeamID = table.Column<int>(type: "int", nullable: true),
-                    IsMainNews = table.Column<bool>(type: "bit", nullable: false),
-                    Published = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_MatchNews", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_MatchNews_City_CityID",
-                        column: x => x.CityID,
-                        principalTable: "City",
-                        principalColumn: "CityID");
-                    table.ForeignKey(
-                        name: "FK_MatchNews_Teams_TeamID",
-                        column: x => x.TeamID,
-                        principalTable: "Teams",
-                        principalColumn: "TeamID");
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Players",
                 columns: table => new
                 {
@@ -542,26 +569,6 @@ namespace BussinessCupApi.Migrations
                         column: x => x.TeamID,
                         principalTable: "Teams",
                         principalColumn: "TeamID",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "MatchNewsPhotos",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    PhotoUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    MatchNewsId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_MatchNewsPhotos", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_MatchNewsPhotos_MatchNews_MatchNewsId",
-                        column: x => x.MatchNewsId,
-                        principalTable: "MatchNews",
-                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -1001,14 +1008,9 @@ namespace BussinessCupApi.Migrations
                 column: "WeekID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_MatchNews_CityID",
-                table: "MatchNews",
-                column: "CityID");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_MatchNews_TeamID",
-                table: "MatchNews",
-                column: "TeamID");
+                name: "IX_MatchNewsContent_MatchNewsId",
+                table: "MatchNewsContent",
+                column: "MatchNewsId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_MatchNewsPhotos_MatchNewsId",
@@ -1184,6 +1186,9 @@ namespace BussinessCupApi.Migrations
 
             migrationBuilder.DropTable(
                 name: "LeagueRules");
+
+            migrationBuilder.DropTable(
+                name: "MatchNewsContent");
 
             migrationBuilder.DropTable(
                 name: "MatchNewsPhotos");

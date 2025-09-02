@@ -1,1 +1,440 @@
-﻿
+﻿@model MatchNewsIndexViewModel
+@{
+    ViewData["Title"] = "Maç Haberleri";
+    Layout = "_AdminLayout";
+}
+
+<div class="min-h-screen bg-gray-900">
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="mb-4 p-4 bg-green-600 text-white rounded-lg">
+                @TempData["SuccessMessage"]
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="mb-4 p-4 bg-red-600 text-white rounded-lg">
+                @TempData["ErrorMessage"]
+            </div>
+        }
+
+        <!-- Haber Ekleme Formu -->
+        <div class="bg-gray-800 rounded-lg shadow-lg overflow-hidden mb-6">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-yellow-500">Yeni Haber Ekle</h2>
+                    <div class="flex items-center space-x-2">
+                        <label for="cultureSelect" class="text-sm font-medium text-gray-300">Dil:</label>
+                        <select id="cultureSelect" class="bg-gray-700 text-white rounded-md px-3 py-1 border border-gray-600 focus:outline-none focus:border-yellow-500">
+                            <option value="tr" selected>Türkçe</option>
+                        </select>
+                    </div>
+                </div>
+
+                <form id="matchNewsForm" asp-action="Create" method="post" enctype="multipart/form-data" class="space-y-6">
+                    <div asp-validation-summary="ModelOnly" class="text-red-500 mb-4"></div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Sol Taraf - Form Alanları -->
+                        <div class="space-y-4">
+                            <div>
+                                <label asp-for="NewMatchNews.Title" class="block text-sm font-medium text-gray-300">Başlık *</label>
+                                <input asp-for="NewMatchNews.Title" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500" required>
+                                <span asp-validation-for="NewMatchNews.Title" class="text-red-500 text-sm"></span>
+                            </div>
+
+                            <div>
+                                <label asp-for="NewMatchNews.Subtitle" class="block text-sm font-medium text-gray-300">Alt Başlık</label>
+                                <input asp-for="NewMatchNews.Subtitle" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                                <span asp-validation-for="NewMatchNews.Subtitle" class="text-red-500 text-sm"></span>
+                            </div>
+
+                            <div>
+                                <label asp-for="NewMatchNews.DetailsTitle" class="block text-sm font-medium text-gray-300">Detay Başlığı</label>
+                                <input asp-for="NewMatchNews.DetailsTitle" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                                <span asp-validation-for="NewMatchNews.DetailsTitle" class="text-red-500 text-sm"></span>
+                            </div>
+
+                            <div>
+                                <label asp-for="NewMatchNews.Details" class="block text-sm font-medium text-gray-300">Detaylar</label>
+                                <textarea asp-for="NewMatchNews.Details" rows="4" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500"></textarea>
+                                <span asp-validation-for="NewMatchNews.Details" class="text-red-500 text-sm"></span>
+                            </div>
+
+                            <div class="flex items-center space-x-4">
+                                <label class="flex items-center">
+                                    <input asp-for="NewMatchNews.IsMainNews" type="checkbox" class="form-checkbox h-4 w-4 text-yellow-600 bg-gray-700 border-gray-600 rounded focus:ring-yellow-500">
+                                    <span class="ml-2 text-sm text-gray-300">Ana Haber</span>
+                                </label>
+                            </div>
+
+                            <!-- Çeviri Butonları -->
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-300">Hızlı Çeviri</label>
+                                <div class="flex flex-wrap gap-2">
+                                                                    <button type="button" onclick="translateToLanguage('English', event)" class="bg-blue-600 text-white px-3 py-1 rounded-md text-xs hover:bg-blue-700 transition-colors">
+                                    <i class="fas fa-language mr-1"></i>İngilizce
+                                </button>
+                                <button type="button" onclick="translateToLanguage('Deutsch', event)" class="bg-green-600 text-white px-3 py-1 rounded-md text-xs hover:bg-green-700 transition-colors">
+                                    <i class="fas fa-language mr-1"></i>Almanca
+                                </button>
+                                <button type="button" onclick="translateToLanguage('Français', event)" class="bg-purple-600 text-white px-3 py-1 rounded-md text-xs hover:bg-purple-700 transition-colors">
+                                    <i class="fas fa-language mr-1"></i>Fransızca
+                                </button>
+                                <button type="button" onclick="translateToLanguage('Español', event)" class="bg-orange-600 text-white px-3 py-1 rounded-md text-xs hover:bg-orange-700 transition-colors">
+                                    <i class="fas fa-language mr-1"></i>İspanyolca
+                                </button>
+                                <button type="button" onclick="translateToLanguage('Italiano', event)" class="bg-red-600 text-white px-3 py-1 rounded-md text-xs hover:bg-red-700 transition-colors">
+                                    <i class="fas fa-language mr-1"></i>İtalyanca
+                                </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sağ Taraf - Fotoğraf Yükleme -->
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Ana Fotoğraf</label>
+                                <div class="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-yellow-500 transition-colors">
+                                    <div class="space-y-2">
+                                        <i class="fas fa-cloud-upload-alt text-3xl text-gray-400"></i>
+                                        <div>
+                                            <label for="MainPhoto" class="cursor-pointer">
+                                                <span class="text-yellow-500 hover:text-yellow-400">Ana fotoğraf seçin</span>
+                                                <input type="file" name="MainPhoto" id="MainPhoto" class="hidden" accept="image/*" onchange="previewMainImage(event)">
+                                            </label>
+                                        </div>
+                                        <p class="text-xs text-gray-500">PNG, JPG, GIF maksimum 10MB</p>
+                                    </div>
+                                    <div id="mainPhotoPreview" class="mt-4 hidden">
+                                        <img id="mainPhotoImg" class="max-h-32 mx-auto rounded-lg" alt="Ana fotoğraf önizleme">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Ek Fotoğraflar</label>
+                                <div class="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-yellow-500 transition-colors">
+                                    <div class="space-y-2">
+                                        <i class="fas fa-images text-3xl text-gray-400"></i>
+                                        <div>
+                                            <label for="ImageFiles" class="cursor-pointer">
+                                                <span class="text-yellow-500 hover:text-yellow-400">Ek fotoğraflar seçin</span>
+                                                <input type="file" name="ImageFiles" id="ImageFiles" class="hidden" accept="image/*" multiple onchange="previewImages(event)">
+                                            </label>
+                                        </div>
+                                        <p class="text-xs text-gray-500">Birden fazla fotoğraf seçebilirsiniz</p>
+                                    </div>
+                                    <div id="imagesPreview" class="mt-4 grid grid-cols-2 gap-2 hidden"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-3 pt-4 border-t border-gray-700">
+                        <button type="reset" class="bg-gray-700 text-white px-6 py-2 rounded-md hover:bg-gray-600 transition-colors">
+                            Temizle
+                        </button>
+                        <button type="submit" class="bg-yellow-600 text-white px-6 py-2 rounded-md hover:bg-yellow-700 transition-colors">
+                            <i class="fas fa-plus mr-2"></i>Haber Ekle
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Haber Listesi -->
+        <div class="bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-yellow-500">Mevcut Haberler</h2>
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center space-x-2">
+                            <label for="listCultureSelect" class="text-sm font-medium text-gray-300">Dil:</label>
+                            <select id="listCultureSelect" class="bg-gray-700 text-white rounded-md px-3 py-1 border border-gray-600 focus:outline-none focus:border-yellow-500" onchange="changeListLanguage(this.value)">
+                                <option value="tr" selected="@(Model.Culture == "tr")">Türkçe</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="matchNewsListContainer">
+                    @await Html.PartialAsync("_MatchNewsListPartial", Model)
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        function previewMainImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('mainPhotoImg').src = e.target.result;
+                    document.getElementById('mainPhotoPreview').classList.remove('hidden');
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function previewImages(event) {
+            const files = event.target.files;
+            const preview = document.getElementById('imagesPreview');
+            preview.innerHTML = '';
+            
+            if (files.length > 0) {
+                preview.classList.remove('hidden');
+                
+                Array.from(files).forEach((file, index) => {
+                    if (index < 6) { // Maksimum 6 önizleme göster
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const img = document.createElement('img');
+                            img.src = e.target.result;
+                            img.className = 'w-full h-20 object-cover rounded-md';
+                            preview.appendChild(img);
+                        }
+                        reader.readAsDataURL(file);
+                    }
+                });
+                
+                if (files.length > 6) {
+                    const moreDiv = document.createElement('div');
+                    moreDiv.className = 'w-full h-20 bg-gray-600 rounded-md flex items-center justify-center';
+                    moreDiv.innerHTML = `<span class="text-xs text-gray-300">+${files.length - 6} daha</span>`;
+                    preview.appendChild(moreDiv);
+                }
+            } else {
+                preview.classList.add('hidden');
+            }
+        }
+
+        function changeListLanguage(culture) {
+            loadMatchNewsList(culture);
+        }
+
+        function loadMatchNewsList(culture = 'tr') {
+            fetch('@Url.Action("GetMatchNewsList")?culture=' + culture)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('matchNewsListContainer').innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Haber listesi yüklenirken hata:', error);
+                    toastr.error('Haber listesi yüklenirken bir hata oluştu');
+                });
+        }
+
+        // Form submit AJAX
+        document.getElementById('matchNewsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            
+            // Buton disable
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Kaydediliyor...';
+            
+            fetch('@Url.Action("Create")', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    toastr.success(data.message);
+                    // Formu temizle
+                    this.reset();
+                    clearPreviews();
+                    // Liste'yi yenile
+                    loadMatchNewsList(document.getElementById('listCultureSelect').value);
+                } else {
+                    toastr.error(data.message || 'Haber eklenirken bir hata oluştu');
+                    if (data.errors) {
+                        console.error('Validation errors:', data.errors);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                toastr.error('Bir hata oluştu');
+            })
+            .finally(() => {
+                // Buton'u tekrar aktif et
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalText;
+            });
+        });
+
+        function clearPreviews() {
+            document.getElementById('mainPhotoPreview').classList.add('hidden');
+            document.getElementById('imagesPreview').classList.add('hidden');
+            document.getElementById('imagesPreview').innerHTML = '';
+        }
+
+        // Yayın durumunu değiştir
+        function togglePublishStatus(id, publish) {
+            fetch('@Url.Action("TogglePublish")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: `id=${id}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    toastr.success(data.message);
+                    loadMatchNewsList(document.getElementById('listCultureSelect').value);
+                } else {
+                    toastr.error(data.message || 'Durum değiştirilirken bir hata oluştu');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                toastr.error('Bir hata oluştu');
+            });
+        }
+
+        // Çeviri fonksiyonları
+        function translateToLanguage(targetLanguage, event) {
+            const detailsText = document.getElementById('NewMatchNews_Details').value;
+            const titleText = document.getElementById('NewMatchNews_Title').value;
+            const subtitleText = document.getElementById('NewMatchNews_Subtitle').value;
+            const detailsTitleText = document.getElementById('NewMatchNews_DetailsTitle').value;
+
+            if (!detailsText && !titleText) {
+                toastr.warning('Çeviri yapmak için en az bir metin alanı doldurulmalıdır.');
+                return;
+            }
+
+            // Çevrilecek metni birleştir
+            const textToTranslate = [titleText, subtitleText, detailsTitleText, detailsText]
+                .filter(text => text && text.trim())
+                .join('\n\n');
+
+            if (!textToTranslate.trim()) {
+                toastr.warning('Çeviri yapmak için metin giriniz.');
+                return;
+            }
+
+            // Çeviri butonunu disable et
+            const button = event.currentTarget;
+            const originalText = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Çevriliyor...';
+
+            fetch('@Url.Action("TranslateMatchNews")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: JSON.stringify({
+                    text: textToTranslate,
+                    targetLanguage: targetLanguage,
+                    sourceLanguage: 'Türkçe'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Çeviriyi modal'da göster
+                    showTranslationModal(targetLanguage, data.translatedText, textToTranslate);
+                    toastr.success(`${targetLanguage} çevirisi tamamlandı!`);
+                } else {
+                    toastr.error(data.message || 'Çeviri yapılamadı');
+                }
+            })
+            .catch(error => {
+                console.error('Çeviri hatası:', error);
+                toastr.error('Çeviri sırasında bir hata oluştu');
+            })
+            .finally(() => {
+                // Butonu tekrar aktif et
+                button.disabled = false;
+                button.innerHTML = originalText;
+            });
+        }
+
+        function showTranslationModal(targetLanguage, translatedText, originalText) {
+            // Modal HTML'ini oluştur
+            const modalHtml = `
+                <div id="translationModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex justify-center items-center p-4 z-50">
+                    <div class="bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                        <div class="p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-xl font-bold text-yellow-500">${targetLanguage} Çevirisi</h3>
+                                <button onclick="closeTranslationModal()" class="text-gray-400 hover:text-white">
+                                    <i class="fas fa-times text-xl"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Orijinal Metin (Türkçe)</label>
+                                    <textarea readonly class="w-full h-32 bg-gray-700 text-white rounded-md p-3 border border-gray-600 resize-none">${originalText}</textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Çeviri (${targetLanguage})</label>
+                                    <textarea id="translatedTextArea" class="w-full h-32 bg-gray-700 text-white rounded-md p-3 border border-gray-600 resize-none">${translatedText}</textarea>
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-700">
+                                <button onclick="closeTranslationModal()" class="bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors">
+                                    Kapat
+                                </button>
+                                <button onclick="applyTranslation()" class="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 transition-colors">
+                                    <i class="fas fa-check mr-2"></i>Çeviriyi Uygula
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Modal'ı sayfaya ekle
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+
+        function closeTranslationModal() {
+            const modal = document.getElementById('translationModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function applyTranslation() {
+            const translatedText = document.getElementById('translatedTextArea').value;
+            
+            // Çeviriyi form alanlarına uygula
+            document.getElementById('NewMatchNews_Title').value = translatedText;
+            document.getElementById('NewMatchNews_Subtitle').value = translatedText;
+            document.getElementById('NewMatchNews_DetailsTitle').value = translatedText;
+            document.getElementById('NewMatchNews_Details').value = translatedText;
+            
+            toastr.success('Çeviri form alanlarına uygulandı!');
+            closeTranslationModal();
+        }
+
+        // Form reset olduğunda önizlemeleri temizle
+        document.querySelector('button[type="reset"]').addEventListener('click', function() {
+            clearPreviews();
+        });
+    </script>
+}

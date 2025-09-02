@@ -347,11 +347,35 @@ namespace BussinessCupApi.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("CityID")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsMainNews")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MatchNewsMainPhoto")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Published")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("MatchNews");
+                });
+
+            modelBuilder.Entity("BussinessCupApi.Models.MatchNewsContent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Culture")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("nvarchar(5)");
 
                     b.Property<string>("Details")
                         .IsRequired()
@@ -361,24 +385,12 @@ namespace BussinessCupApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("IsMainNews")
-                        .HasColumnType("bit");
-
-                    b.Property<int?>("MatchID")
+                    b.Property<int>("MatchNewsId")
                         .HasColumnType("int");
-
-                    b.Property<string>("MatchNewsMainPhoto")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("Published")
-                        .HasColumnType("bit");
 
                     b.Property<string>("Subtitle")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("TeamID")
-                        .HasColumnType("int");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -386,11 +398,9 @@ namespace BussinessCupApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CityID");
+                    b.HasIndex("MatchNewsId");
 
-                    b.HasIndex("TeamID");
-
-                    b.ToTable("MatchNews");
+                    b.ToTable("MatchNewsContent");
                 });
 
             modelBuilder.Entity("BussinessCupApi.Models.MatchNewsPhoto", b =>
@@ -1288,19 +1298,15 @@ namespace BussinessCupApi.Migrations
                     b.Navigation("Week");
                 });
 
-            modelBuilder.Entity("BussinessCupApi.Models.MatchNews", b =>
+            modelBuilder.Entity("BussinessCupApi.Models.MatchNewsContent", b =>
                 {
-                    b.HasOne("BussinessCupApi.Models.City", "City")
-                        .WithMany()
-                        .HasForeignKey("CityID");
+                    b.HasOne("BussinessCupApi.Models.MatchNews", "MatchNews")
+                        .WithMany("Contents")
+                        .HasForeignKey("MatchNewsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.HasOne("BussinessCupApi.Models.Team", "Team")
-                        .WithMany()
-                        .HasForeignKey("TeamID");
-
-                    b.Navigation("City");
-
-                    b.Navigation("Team");
+                    b.Navigation("MatchNews");
                 });
 
             modelBuilder.Entity("BussinessCupApi.Models.MatchNewsPhoto", b =>
@@ -1681,6 +1687,8 @@ namespace BussinessCupApi.Migrations
 
             modelBuilder.Entity("BussinessCupApi.Models.MatchNews", b =>
                 {
+                    b.Navigation("Contents");
+
                     b.Navigation("Photos");
                 });
 
