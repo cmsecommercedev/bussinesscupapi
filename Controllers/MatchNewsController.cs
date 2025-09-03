@@ -286,8 +286,7 @@ namespace BussinessCupApi.Controllers
                         var matchNewsPhoto = new MatchNewsPhoto
                         {
                             PhotoUrl = relativePath,
-                            MatchNews = matchNews,
-                            MatchNewsId = matchNews.Id
+                            MatchNews = matchNews
                         };
                         matchNews.Photos.Add(matchNewsPhoto);
                     }
@@ -439,8 +438,10 @@ namespace BussinessCupApi.Controllers
                     return BadRequest(new { success = false, message = "Metin ve hedef dil gereklidir." });
                 }
 
-                // Her zaman Türkçe'den çevir
-                var translatedText = await _openAIManager.TranslateFromTurkishAsync(request.Text, request.TargetLanguage);
+                var translatedText = await _openAIManager.TranslateFromTurkishAsync(
+                    request.Text, 
+                    request.SourceLanguage ?? "Türkçe"
+                );
 
                 return Json(new { success = true, translatedText });
             }
