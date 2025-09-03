@@ -392,14 +392,13 @@ namespace BussinessCupApi.Controllers
                 var photo = await _context.MatchNewsPhotos.FindAsync(id);
                 if (photo == null)
                 {
-                    return NotFound();
+                    return Json(new { success = false, message = "Fotoğraf bulunamadı" });
                 }
 
                 // Cloudflare R2'den dosyayı sil
                 if (!string.IsNullOrEmpty(photo.PhotoUrl))
                 {
                     var path = new Uri(photo.PhotoUrl).AbsolutePath;
-
                     await _r2Manager.DeleteFileAsync(path);
                 }
 
@@ -407,12 +406,11 @@ namespace BussinessCupApi.Controllers
                 _context.MatchNewsPhotos.Remove(photo);
                 await _context.SaveChangesAsync();
 
-                return Ok();
+                return Json(new { success = true });
             }
             catch (Exception ex)
             {
-                // Hata durumunda 500 dön
-                return StatusCode(500, ex.Message);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 

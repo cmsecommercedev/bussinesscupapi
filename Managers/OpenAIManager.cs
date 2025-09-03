@@ -128,13 +128,14 @@ namespace BussinessCupApi.Managers
             {
                 model = "gpt-3.5-turbo",
                 messages = new object[]
-                {
-                    new { role = "system", content = $"Sen profesyonel bir spor çevirmenisin. Verilen metni Türkçe'den {targetLanguage} diline çevir. Futbol temalı, doğal ve akıcı bir dil kullan; anlamı koru, abartı ekleme, haberleşme dili tutarlı kalsın." },
-                    new { role = "user", content = text }
-                },
-                temperature = 0.7,
+     {
+        new { role = "system", content = $"Sen sadece çeviri yapan bir modelsin. Verilen Türkçe metni doğrudan {targetLanguage} diline çevir. Hiçbir yorum, başlık, açıklama veya ek bilgi ekleme. Sadece metni çevir." },
+        new { role = "user", content = text }
+     },
+                temperature = 0,
                 max_tokens = 1200
             };
+
 
             var requestJson = JsonSerializer.Serialize(requestBody);
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, "https://api.openai.com/v1/chat/completions");

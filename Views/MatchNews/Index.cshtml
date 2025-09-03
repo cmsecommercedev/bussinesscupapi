@@ -41,41 +41,46 @@
                 <form id="matchNewsForm" asp-action="Create" method="post" enctype="multipart/form-data" class="space-y-6">
                     <div asp-validation-summary="ModelOnly" class="text-red-500 mb-4"></div>
                     <div class="grid grid-cols-1 gap-6">
-                        <!-- Fotoğraf Yükleme -->
-                        <div class="space-y-4">
+                        <div class="space-y-6">
+                            <!-- Ana Fotoğraf -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-300 mb-2">Ana Fotoğraf</label>
-                                <div class="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-yellow-500 transition-colors">
-                                    <div class="space-y-2">
-                                        <i class="fas fa-cloud-upload-alt text-3xl text-gray-400"></i>
-                                        <div>
-                                            <label for="MainPhoto" class="cursor-pointer">
-                                                <span class="text-yellow-500 hover:text-yellow-400">Ana fotoğraf seçin</span>
-                                                <input type="file" name="MainPhoto" id="MainPhoto" class="hidden" accept="image/*" onchange="previewMainImage(event)">
-                                            </label>
-                                        </div>
-                                        <p class="text-xs text-gray-500">PNG, JPG, GIF maksimum 10MB</p>
+                                <div class="border-2 border-dashed border-gray-600 rounded-lg p-4 hover:border-yellow-500 transition-colors flex items-start gap-4">
+
+                                    <!-- Upload alanı -->
+                                    <div class="flex flex-col items-center text-center">
+                                        <i class="fas fa-cloud-upload-alt text-2xl text-gray-400 mb-2"></i>
+                                        <label for="MainPhoto" class="cursor-pointer">
+                                            <span class="text-yellow-500 hover:text-yellow-400">Ana fotoğraf seçin</span>
+                                            <input type="file" name="MainPhoto" id="MainPhoto" class="hidden" accept="image/*" onchange="previewMainImage(event)">
+                                        </label>
+                                        <p class="text-xs text-gray-500 mt-1">PNG, JPG, GIF maksimum 10MB</p>
                                     </div>
-                                    <div id="mainPhotoPreview" class="mt-4 hidden fixed-image-frame">
-                                        <img id="mainPhotoImg" alt="Ana fotoğraf önizleme">
+
+                                    <!-- Preview -->
+                                    <div id="mainPhotoPreview" class="hidden">
+                                        <img id="mainPhotoImg" alt="Ana fotoğraf önizleme" class="w-24 h-24 object-cover rounded-md border border-gray-500">
                                     </div>
                                 </div>
                             </div>
 
+                            <!-- Ek Fotoğraflar -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-300 mb-2">Ek Fotoğraflar</label>
-                                <div class="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-yellow-500 transition-colors">
-                                    <div class="space-y-2">
-                                        <i class="fas fa-images text-3xl text-gray-400"></i>
-                                        <div>
-                                            <label for="ImageFiles" class="cursor-pointer">
-                                                <span class="text-yellow-500 hover:text-yellow-400">Ek fotoğraflar seçin</span>
-                                                <input type="file" name="ImageFiles" id="ImageFiles" class="hidden" accept="image/*" multiple onchange="previewImages(event)">
-                                            </label>
-                                        </div>
-                                        <p class="text-xs text-gray-500">Birden fazla fotoğraf seçebilirsiniz</p>
+                                <div class="border-2 border-dashed border-gray-600 rounded-lg p-4 hover:border-yellow-500 transition-colors">
+
+                                    <!-- Upload alanı -->
+                                    <div class="flex flex-col items-center text-center">
+                                        <i class="fas fa-images text-2xl text-gray-400 mb-2"></i>
+                                        <label for="ImageFiles" class="cursor-pointer">
+                                            <span class="text-yellow-500 hover:text-yellow-400">Ek fotoğraflar seçin</span>
+                                            <input type="file" name="ImageFiles" id="ImageFiles" class="hidden" accept="image/*" multiple onchange="previewImages(event)">
+                                        </label>
+                                        <p class="text-xs text-gray-500 mt-1">Birden fazla seçebilirsiniz (maks. 10MB/fotoğraf)</p>
                                     </div>
-                                    <div id="imagesPreview" class="mt-4 grid grid-cols-2 gap-2 hidden"></div>
+
+                                    <!-- Çoklu Preview -->
+                                    <div id="imagesPreview" class="mt-4 flex flex-wrap gap-2 hidden"></div>
                                 </div>
                             </div>
                         </div>
@@ -103,7 +108,26 @@
                                 <label class="block text-sm font-medium text-gray-300 mt-3">Detaylar</label>
                                 <textarea asp-for="NewMatchNews.Details_tr" id="Details_tr" rows="4" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500"></textarea>
                                 <span asp-validation-for="NewMatchNews.Details_tr" class="text-red-500 text-sm"></span>
+
+                                <div class="mt-4 flex gap-2">
+                                    <button type="button" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                                            onclick="translateAllFields('en')">
+                                        Türkçe → İngilizce
+                                    </button>
+                                    <button type="button" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                                            onclick="translateAllFields('ro')">
+                                        Türkçe → Rumence
+                                    </button>
+                                    <button type="button" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                                            onclick="translateAllFields('ru')">
+                                        Türkçe → Rusça
+                                    </button>
+                                </div>
+
                             </div>
+
+                        
+
 
                             <div>
                                 <h3 class="text-lg font-semibold text-yellow-500 mb-2">English (en)</h3>
@@ -195,7 +219,7 @@
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script>
-        function translateTrTo(target, sourceText) {
+                async function translateTrTo(target, sourceText) {
             return fetch('@Url.Action("TranslateField")', {
                 method: 'POST',
                 headers: {
@@ -206,7 +230,7 @@
             }).then(r => r.json());
         }
 
-        function autoTranslateFromTr() {
+        async function translateAllFields(targetLang) {
             const parts = [
                 { tr: 'Title_tr', en: 'Title_en', ro: 'Title_ro', ru: 'Title_ru' },
                 { tr: 'Subtitle_tr', en: 'Subtitle_en', ro: 'Subtitle_ro', ru: 'Subtitle_ru' },
@@ -214,32 +238,31 @@
                 { tr: 'Details_tr', en: 'Details_en', ro: 'Details_ro', ru: 'Details_ru' }
             ];
 
-            parts.forEach(async p => {
-                const trVal = document.getElementById(p.tr).value;
-                if (!trVal || !trVal.trim()) return;
+            for (const part of parts) {
+                const trVal = document.getElementById(part.tr)?.value;
+                if (!trVal || !trVal.trim()) continue;
 
                 try {
-                    const [en, ro, ru] = await Promise.all([
-                        translateTrTo('English', trVal),
-                        translateTrTo('Romanian', trVal),
-                        translateTrTo('Russian', trVal)
-                    ]);
+                    const result = await translateTrTo(
+                        targetLang === 'en' ? 'English' :
+                        targetLang === 'ro' ? 'Romanian' : 'Russian',
+                        trVal
+                    );
 
-                    if (en.success) document.getElementById(p.en).value = en.translatedText;
-                    if (ro.success) document.getElementById(p.ro).value = ro.translatedText;
-                    if (ru.success) document.getElementById(p.ru).value = ru.translatedText;
+                    if (result.success) {
+                        if (targetLang === 'en') document.getElementById(part.en).value = result.translatedText;
+                        else if (targetLang === 'ro') document.getElementById(part.ro).value = result.translatedText;
+                        else if (targetLang === 'ru') document.getElementById(part.ru).value = result.translatedText;
+                    }
                 } catch (e) {
-                    console.error('Auto translate error', e);
+                    console.error('Translate error', e);
                 }
-            });
+            }
         }
 
-        ['Title_tr','Subtitle_tr','DetailsTitle_tr','Details_tr'].forEach(id => {
-            const el = document.getElementById(id);
-            el && el.addEventListener('blur', autoTranslateFromTr);
-        });
+         
 
-        function previewMainImage(event) {
+                function previewMainImage(event) {
             const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();
@@ -255,33 +278,34 @@
             const files = event.target.files;
             const preview = document.getElementById('imagesPreview');
             preview.innerHTML = '';
-            
+
             if (files.length > 0) {
                 preview.classList.remove('hidden');
-                
+
                 Array.from(files).forEach((file, index) => {
-                    if (index < 6) { // Maksimum 6 önizleme göster
+                    if (index < 6) { // Max 6 önizleme
                         const reader = new FileReader();
                         reader.onload = function(e) {
                             const img = document.createElement('img');
                             img.src = e.target.result;
-                            img.className = 'w-full h-20 object-cover rounded-md';
+                            img.className = 'w-20 h-20 object-cover rounded-md border border-gray-500';
                             preview.appendChild(img);
                         }
                         reader.readAsDataURL(file);
                     }
                 });
-                
+
                 if (files.length > 6) {
                     const moreDiv = document.createElement('div');
-                    moreDiv.className = 'w-full h-20 bg-gray-600 rounded-md flex items-center justify-center';
-                    moreDiv.innerHTML = `<span class="text-xs text-gray-300">+${files.length - 6} daha</span>`;
+                    moreDiv.className = 'w-20 h-20 bg-gray-600 rounded-md flex items-center justify-center text-xs text-gray-300';
+                    moreDiv.innerText = `+${files.length - 6} daha`;
                     preview.appendChild(moreDiv);
                 }
             } else {
                 preview.classList.add('hidden');
             }
         }
+
 
         function changeListLanguage(culture) {
             loadMatchNewsList(culture);
