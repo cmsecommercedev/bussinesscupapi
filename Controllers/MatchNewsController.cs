@@ -336,7 +336,7 @@ namespace BussinessCupApi.Controllers
             await _context.SaveChangesAsync();
 
             TempData["SuccessMessage"] = "Haber güncellendi.";
-            return RedirectToAction(nameof(Edit), new { id = matchNews.Id });
+            return RedirectToAction(nameof(Index));
         }
 
         private bool MatchNewsExists(int id)
@@ -440,7 +440,7 @@ namespace BussinessCupApi.Controllers
 
                 var translatedText = await _openAIManager.TranslateFromTurkishAsync(
                     request.Text, 
-                    request.SourceLanguage ?? "Türkçe"
+                    request.TargetLanguage ?? "Türkçe"
                 );
 
                 return Json(new { success = true, translatedText });
