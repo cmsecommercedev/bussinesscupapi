@@ -5,6 +5,11 @@
 }
 
 <div class="min-h-screen bg-gray-900">
+    <style>
+        .fixed-image-frame { height: 12rem; }
+        @@media (min-width: 1024px) { .fixed-image-frame { height: 16rem; } }
+        .fixed-image-frame img { width: 100%; height: 100%; object-fit: contain; }
+    </style>
     <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         
         @if (TempData["SuccessMessage"] != null)
@@ -35,65 +40,8 @@
 
                 <form id="matchNewsForm" asp-action="Create" method="post" enctype="multipart/form-data" class="space-y-6">
                     <div asp-validation-summary="ModelOnly" class="text-red-500 mb-4"></div>
-
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <!-- Sol Taraf - Form Alanları -->
-                        <div class="space-y-4">
-                            <div>
-                                <label asp-for="NewMatchNews.Title" class="block text-sm font-medium text-gray-300">Başlık *</label>
-                                <input asp-for="NewMatchNews.Title" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500" required>
-                                <span asp-validation-for="NewMatchNews.Title" class="text-red-500 text-sm"></span>
-                            </div>
-
-                            <div>
-                                <label asp-for="NewMatchNews.Subtitle" class="block text-sm font-medium text-gray-300">Alt Başlık</label>
-                                <input asp-for="NewMatchNews.Subtitle" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                                <span asp-validation-for="NewMatchNews.Subtitle" class="text-red-500 text-sm"></span>
-                            </div>
-
-                            <div>
-                                <label asp-for="NewMatchNews.DetailsTitle" class="block text-sm font-medium text-gray-300">Detay Başlığı</label>
-                                <input asp-for="NewMatchNews.DetailsTitle" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
-                                <span asp-validation-for="NewMatchNews.DetailsTitle" class="text-red-500 text-sm"></span>
-                            </div>
-
-                            <div>
-                                <label asp-for="NewMatchNews.Details" class="block text-sm font-medium text-gray-300">Detaylar</label>
-                                <textarea asp-for="NewMatchNews.Details" rows="4" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500"></textarea>
-                                <span asp-validation-for="NewMatchNews.Details" class="text-red-500 text-sm"></span>
-                            </div>
-
-                            <div class="flex items-center space-x-4">
-                                <label class="flex items-center">
-                                    <input asp-for="NewMatchNews.IsMainNews" type="checkbox" class="form-checkbox h-4 w-4 text-yellow-600 bg-gray-700 border-gray-600 rounded focus:ring-yellow-500">
-                                    <span class="ml-2 text-sm text-gray-300">Ana Haber</span>
-                                </label>
-                            </div>
-
-                            <!-- Çeviri Butonları -->
-                            <div class="space-y-2">
-                                <label class="block text-sm font-medium text-gray-300">Hızlı Çeviri</label>
-                                <div class="flex flex-wrap gap-2">
-                                                                    <button type="button" onclick="translateToLanguage('English', event)" class="bg-blue-600 text-white px-3 py-1 rounded-md text-xs hover:bg-blue-700 transition-colors">
-                                    <i class="fas fa-language mr-1"></i>İngilizce
-                                </button>
-                                <button type="button" onclick="translateToLanguage('Deutsch', event)" class="bg-green-600 text-white px-3 py-1 rounded-md text-xs hover:bg-green-700 transition-colors">
-                                    <i class="fas fa-language mr-1"></i>Almanca
-                                </button>
-                                <button type="button" onclick="translateToLanguage('Français', event)" class="bg-purple-600 text-white px-3 py-1 rounded-md text-xs hover:bg-purple-700 transition-colors">
-                                    <i class="fas fa-language mr-1"></i>Fransızca
-                                </button>
-                                <button type="button" onclick="translateToLanguage('Español', event)" class="bg-orange-600 text-white px-3 py-1 rounded-md text-xs hover:bg-orange-700 transition-colors">
-                                    <i class="fas fa-language mr-1"></i>İspanyolca
-                                </button>
-                                <button type="button" onclick="translateToLanguage('Italiano', event)" class="bg-red-600 text-white px-3 py-1 rounded-md text-xs hover:bg-red-700 transition-colors">
-                                    <i class="fas fa-language mr-1"></i>İtalyanca
-                                </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Sağ Taraf - Fotoğraf Yükleme -->
+                    <div class="grid grid-cols-1 gap-6">
+                        <!-- Fotoğraf Yükleme -->
                         <div class="space-y-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-300 mb-2">Ana Fotoğraf</label>
@@ -108,8 +56,8 @@
                                         </div>
                                         <p class="text-xs text-gray-500">PNG, JPG, GIF maksimum 10MB</p>
                                     </div>
-                                    <div id="mainPhotoPreview" class="mt-4 hidden">
-                                        <img id="mainPhotoImg" class="max-h-32 mx-auto rounded-lg" alt="Ana fotoğraf önizleme">
+                                    <div id="mainPhotoPreview" class="mt-4 hidden fixed-image-frame">
+                                        <img id="mainPhotoImg" alt="Ana fotoğraf önizleme">
                                     </div>
                                 </div>
                             </div>
@@ -130,6 +78,82 @@
                                     <div id="imagesPreview" class="mt-4 grid grid-cols-2 gap-2 hidden"></div>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Kategori ve Diller - Alt Alta, Aynı Boyut ve Responsive -->
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300">Kategori</label>
+                                <select asp-for="NewMatchNews.Category" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                                    <option value="News">News</option>
+                                    <option value="Story">Story</option>
+                                </select>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-yellow-500 mb-2">Türkçe (tr)</h3>
+                                <label class="block text-sm font-medium text-gray-300">Başlık *</label>
+                                <input asp-for="NewMatchNews.Title_tr" id="Title_tr" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500" required>
+                                <span asp-validation-for="NewMatchNews.Title_tr" class="text-red-500 text-sm"></span>
+                                <label class="block text-sm font-medium text-gray-300 mt-3">Alt Başlık</label>
+                                <input asp-for="NewMatchNews.Subtitle_tr" id="Subtitle_tr" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                                <span asp-validation-for="NewMatchNews.Subtitle_tr" class="text-red-500 text-sm"></span>
+                                <label class="block text-sm font-medium text-gray-300 mt-3">Detay Başlığı</label>
+                                <input asp-for="NewMatchNews.DetailsTitle_tr" id="DetailsTitle_tr" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                                <span asp-validation-for="NewMatchNews.DetailsTitle_tr" class="text-red-500 text-sm"></span>
+                                <label class="block text-sm font-medium text-gray-300 mt-3">Detaylar</label>
+                                <textarea asp-for="NewMatchNews.Details_tr" id="Details_tr" rows="4" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500"></textarea>
+                                <span asp-validation-for="NewMatchNews.Details_tr" class="text-red-500 text-sm"></span>
+                            </div>
+
+                            <div>
+                                <h3 class="text-lg font-semibold text-yellow-500 mb-2">English (en)</h3>
+                                <label class="block text-sm font-medium text-gray-300">Title *</label>
+                                <input asp-for="NewMatchNews.Title_en" id="Title_en" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500" required>
+                                <span asp-validation-for="NewMatchNews.Title_en" class="text-red-500 text-sm"></span>
+                                <label class="block text-sm font-medium text-gray-300 mt-3">Subtitle</label>
+                                <input asp-for="NewMatchNews.Subtitle_en" id="Subtitle_en" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                                <span asp-validation-for="NewMatchNews.Subtitle_en" class="text-red-500 text-sm"></span>
+                                <label class="block text-sm font-medium text-gray-300 mt-3">Details Title</label>
+                                <input asp-for="NewMatchNews.DetailsTitle_en" id="DetailsTitle_en" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                                <span asp-validation-for="NewMatchNews.DetailsTitle_en" class="text-red-500 text-sm"></span>
+                                <label class="block text-sm font-medium text-gray-300 mt-3">Details</label>
+                                <textarea asp-for="NewMatchNews.Details_en" id="Details_en" rows="4" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500"></textarea>
+                                <span asp-validation-for="NewMatchNews.Details_en" class="text-red-500 text-sm"></span>
+                            </div>
+
+                            <div>
+                                <h3 class="text-lg font-semibold text-yellow-500 mb-2">Română (ro)</h3>
+                                <label class="block text-sm font-medium text-gray-300">Titlu *</label>
+                                <input asp-for="NewMatchNews.Title_ro" id="Title_ro" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500" required>
+                                <span asp-validation-for="NewMatchNews.Title_ro" class="text-red-500 text-sm"></span>
+                                <label class="block text-sm font-medium text-gray-300 mt-3">Subtitlu</label>
+                                <input asp-for="NewMatchNews.Subtitle_ro" id="Subtitle_ro" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                                <span asp-validation-for="NewMatchNews.Subtitle_ro" class="text-red-500 text-sm"></span>
+                                <label class="block text-sm font-medium text-gray-300 mt-3">Titlul detaliilor</label>
+                                <input asp-for="NewMatchNews.DetailsTitle_ro" id="DetailsTitle_ro" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                                <span asp-validation-for="NewMatchNews.DetailsTitle_ro" class="text-red-500 text-sm"></span>
+                                <label class="block text-sm font-medium text-gray-300 mt-3">Detalii</label>
+                                <textarea asp-for="NewMatchNews.Details_ro" id="Details_ro" rows="4" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500"></textarea>
+                                <span asp-validation-for="NewMatchNews.Details_ro" class="text-red-500 text-sm"></span>
+                            </div>
+
+                            <div>
+                                <h3 class="text-lg font-semibold text-yellow-500 mb-2">Русский (ru)</h3>
+                                <label class="block text-sm font-medium text-gray-300">Заголовок *</label>
+                                <input asp-for="NewMatchNews.Title_ru" id="Title_ru" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500" required>
+                                <span asp-validation-for="NewMatchNews.Title_ru" class="text-red-500 text-sm"></span>
+                                <label class="block text-sm font-medium text-gray-300 mt-3">Подзаголовок</label>
+                                <input asp-for="NewMatchNews.Subtitle_ru" id="Subtitle_ru" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                                <span asp-validation-for="NewMatchNews.Subtitle_ru" class="text-red-500 text-sm"></span>
+                                <label class="block text-sm font-medium text-gray-300 mt-3">Заголовок деталей</label>
+                                <input asp-for="NewMatchNews.DetailsTitle_ru" id="DetailsTitle_ru" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                                <span asp-validation-for="NewMatchNews.DetailsTitle_ru" class="text-red-500 text-sm"></span>
+                                <label class="block text-sm font-medium text-gray-300 mt-3">Детали</label>
+                                <textarea asp-for="NewMatchNews.Details_ru" id="Details_ru" rows="4" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500"></textarea>
+                                <span asp-validation-for="NewMatchNews.Details_ru" class="text-red-500 text-sm"></span>
+                            </div>
+
+                            <!-- Ana Haber kaldırıldı; her zaman true -->
                         </div>
                     </div>
 
@@ -171,6 +195,50 @@
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script>
+        function translateTrTo(target, sourceText) {
+            return fetch('@Url.Action("TranslateField")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: JSON.stringify({ text: sourceText, targetLanguage: target, sourceLanguage: 'Türkçe' })
+            }).then(r => r.json());
+        }
+
+        function autoTranslateFromTr() {
+            const parts = [
+                { tr: 'Title_tr', en: 'Title_en', ro: 'Title_ro', ru: 'Title_ru' },
+                { tr: 'Subtitle_tr', en: 'Subtitle_en', ro: 'Subtitle_ro', ru: 'Subtitle_ru' },
+                { tr: 'DetailsTitle_tr', en: 'DetailsTitle_en', ro: 'DetailsTitle_ro', ru: 'DetailsTitle_ru' },
+                { tr: 'Details_tr', en: 'Details_en', ro: 'Details_ro', ru: 'Details_ru' }
+            ];
+
+            parts.forEach(async p => {
+                const trVal = document.getElementById(p.tr).value;
+                if (!trVal || !trVal.trim()) return;
+
+                try {
+                    const [en, ro, ru] = await Promise.all([
+                        translateTrTo('English', trVal),
+                        translateTrTo('Romanian', trVal),
+                        translateTrTo('Russian', trVal)
+                    ]);
+
+                    if (en.success) document.getElementById(p.en).value = en.translatedText;
+                    if (ro.success) document.getElementById(p.ro).value = ro.translatedText;
+                    if (ru.success) document.getElementById(p.ru).value = ru.translatedText;
+                } catch (e) {
+                    console.error('Auto translate error', e);
+                }
+            });
+        }
+
+        ['Title_tr','Subtitle_tr','DetailsTitle_tr','Details_tr'].forEach(id => {
+            const el = document.getElementById(id);
+            el && el.addEventListener('blur', autoTranslateFromTr);
+        });
+
         function previewMainImage(event) {
             const file = event.target.files[0];
             if (file) {
@@ -310,127 +378,7 @@
             });
         }
 
-        // Çeviri fonksiyonları
-        function translateToLanguage(targetLanguage, event) {
-            const detailsText = document.getElementById('NewMatchNews_Details').value;
-            const titleText = document.getElementById('NewMatchNews_Title').value;
-            const subtitleText = document.getElementById('NewMatchNews_Subtitle').value;
-            const detailsTitleText = document.getElementById('NewMatchNews_DetailsTitle').value;
-
-            if (!detailsText && !titleText) {
-                toastr.warning('Çeviri yapmak için en az bir metin alanı doldurulmalıdır.');
-                return;
-            }
-
-            // Çevrilecek metni birleştir
-            const textToTranslate = [titleText, subtitleText, detailsTitleText, detailsText]
-                .filter(text => text && text.trim())
-                .join('\n\n');
-
-            if (!textToTranslate.trim()) {
-                toastr.warning('Çeviri yapmak için metin giriniz.');
-                return;
-            }
-
-            // Çeviri butonunu disable et
-            const button = event.currentTarget;
-            const originalText = button.innerHTML;
-            button.disabled = true;
-            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Çevriliyor...';
-
-            fetch('@Url.Action("TranslateMatchNews")', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                },
-                body: JSON.stringify({
-                    text: textToTranslate,
-                    targetLanguage: targetLanguage,
-                    sourceLanguage: 'Türkçe'
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Çeviriyi modal'da göster
-                    showTranslationModal(targetLanguage, data.translatedText, textToTranslate);
-                    toastr.success(`${targetLanguage} çevirisi tamamlandı!`);
-                } else {
-                    toastr.error(data.message || 'Çeviri yapılamadı');
-                }
-            })
-            .catch(error => {
-                console.error('Çeviri hatası:', error);
-                toastr.error('Çeviri sırasında bir hata oluştu');
-            })
-            .finally(() => {
-                // Butonu tekrar aktif et
-                button.disabled = false;
-                button.innerHTML = originalText;
-            });
-        }
-
-        function showTranslationModal(targetLanguage, translatedText, originalText) {
-            // Modal HTML'ini oluştur
-            const modalHtml = `
-                <div id="translationModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex justify-center items-center p-4 z-50">
-                    <div class="bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                        <div class="p-6">
-                            <div class="flex justify-between items-center mb-4">
-                                <h3 class="text-xl font-bold text-yellow-500">${targetLanguage} Çevirisi</h3>
-                                <button onclick="closeTranslationModal()" class="text-gray-400 hover:text-white">
-                                    <i class="fas fa-times text-xl"></i>
-                                </button>
-                            </div>
-                            
-                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-300 mb-2">Orijinal Metin (Türkçe)</label>
-                                    <textarea readonly class="w-full h-32 bg-gray-700 text-white rounded-md p-3 border border-gray-600 resize-none">${originalText}</textarea>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-300 mb-2">Çeviri (${targetLanguage})</label>
-                                    <textarea id="translatedTextArea" class="w-full h-32 bg-gray-700 text-white rounded-md p-3 border border-gray-600 resize-none">${translatedText}</textarea>
-                                </div>
-                            </div>
-                            
-                            <div class="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-700">
-                                <button onclick="closeTranslationModal()" class="bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors">
-                                    Kapat
-                                </button>
-                                <button onclick="applyTranslation()" class="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 transition-colors">
-                                    <i class="fas fa-check mr-2"></i>Çeviriyi Uygula
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            // Modal'ı sayfaya ekle
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-        }
-
-        function closeTranslationModal() {
-            const modal = document.getElementById('translationModal');
-            if (modal) {
-                modal.remove();
-            }
-        }
-
-        function applyTranslation() {
-            const translatedText = document.getElementById('translatedTextArea').value;
-            
-            // Çeviriyi form alanlarına uygula
-            document.getElementById('NewMatchNews_Title').value = translatedText;
-            document.getElementById('NewMatchNews_Subtitle').value = translatedText;
-            document.getElementById('NewMatchNews_DetailsTitle').value = translatedText;
-            document.getElementById('NewMatchNews_Details').value = translatedText;
-            
-            toastr.success('Çeviri form alanlarına uygulandı!');
-            closeTranslationModal();
-        }
+        // AI çeviri fonksiyonları kaldırıldı
 
         // Form reset olduğunda önizlemeleri temizle
         document.querySelector('button[type="reset"]').addEventListener('click', function() {

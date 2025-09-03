@@ -57,6 +57,7 @@ namespace BussinessCupApi.Controllers
         {
             try
             {
+
                 var leagues = await _context.Leagues
                     .Select(l => new
                     {

@@ -3,6 +3,12 @@ using System.Collections.Generic;
 
 namespace BussinessCupApi.Models
 {
+    public enum NewsCategory
+    {
+        Story = 0,
+        News = 1
+    }
+
     public class MatchNews
     {
         public int Id { get; set; }
@@ -15,6 +21,9 @@ namespace BussinessCupApi.Models
 
         // Yayınlanma durumu
         public bool Published { get; set; } = true;
+
+        // Kategori
+        public NewsCategory Category { get; set; } = NewsCategory.News;
 
         // Oluşturulma tarihi
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;

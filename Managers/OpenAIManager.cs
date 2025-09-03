@@ -121,6 +121,48 @@ namespace BussinessCupApi.Managers
             }
         }
 
+        // Türkçe kaynak alınarak hedef dile çeviri (basit, futbol temalı ton)
+        public async Task<string> TranslateFromTurkishAsync(string text, string targetLanguage)
+        {
+            var requestBody = new
+            {
+                model = "gpt-3.5-turbo",
+                messages = new object[]
+                {
+                    new { role = "system", content = $"Sen profesyonel bir spor çevirmenisin. Verilen metni Türkçe'den {targetLanguage} diline çevir. Futbol temalı, doğal ve akıcı bir dil kullan; anlamı koru, abartı ekleme, haberleşme dili tutarlı kalsın." },
+                    new { role = "user", content = text }
+                },
+                temperature = 0.7,
+                max_tokens = 1200
+            };
+
+            var requestJson = JsonSerializer.Serialize(requestBody);
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, "https://api.openai.com/v1/chat/completions");
+            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
+            requestMessage.Content = new StringContent(requestJson, Encoding.UTF8, "application/json");
+
+            try
+            {
+                var response = await _httpClient.SendAsync(requestMessage);
+                response.EnsureSuccessStatusCode();
+
+                var jsonResponse = await response.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(jsonResponse);
+                var content = doc.RootElement
+                                 .GetProperty("choices")[0]
+                                 .GetProperty("message")
+                                 .GetProperty("content")
+                                 .GetString();
+
+                return content ?? string.Empty;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "OpenAI basit çeviri isteği başarısız.");
+                return "";
+            }
+        }
+
         /// <summary>
         /// Maç haberi metnini birden fazla dile çevirir
         /// </summary>

@@ -23,22 +23,22 @@ namespace BussinessCupApi.Controllers
         private readonly ApplicationDbContext _context;
         private readonly CloudflareR2Manager _r2Manager;
         private readonly CustomUserManager _customUserManager;
-        private readonly OpenAiManager _openAIManager;
         private readonly ILogger<MatchNewsController> _logger;
+        private readonly OpenAiManager _openAIManager;
 
         // Dependency Injection ile gerekli servisleri alıyoruz
         public MatchNewsController(
             ApplicationDbContext context,
             CloudflareR2Manager r2Manager,
             CustomUserManager customUserManager,
-            OpenAiManager openAIManager,
-            ILogger<MatchNewsController> logger)
+            ILogger<MatchNewsController> logger,
+            OpenAiManager openAIManager)
         {
             _context = context;
             _r2Manager = r2Manager;
             _customUserManager = customUserManager;
-            _openAIManager = openAIManager;
             _logger = logger;
+            _openAIManager = openAIManager;
         }
 
                 // GET: MatchNews veya MatchNews/Index
@@ -111,7 +111,8 @@ namespace BussinessCupApi.Controllers
             {
                 var matchNews = new MatchNews
                 {
-                    IsMainNews = input.IsMainNews,
+                    IsMainNews = true,
+                    Category = input.Category,
                     CreatedDate = DateTime.UtcNow,
                     Published = true
                 };
@@ -148,16 +149,46 @@ namespace BussinessCupApi.Controllers
                     }
                 }
 
-                // Çok dilli içerik ekle (varsayılan culture: "tr")
-                var content = new MatchNewsContent
+                // Çok dilli içerik ekle (tr, en, ro, ru)
+                var trContent = new MatchNewsContent
                 {
                     Culture = "tr",
-                    Title = input.Title,
-                    Subtitle = input.Subtitle,
-                    DetailsTitle = input.DetailsTitle,
-                    Details = input.Details
+                    Title = input.Title_tr,
+                    Subtitle = input.Subtitle_tr,
+                    DetailsTitle = input.DetailsTitle_tr,
+                    Details = input.Details_tr
                 };
-                matchNews.Contents.Add(content);
+                matchNews.Contents.Add(trContent);
+
+                var enContent = new MatchNewsContent
+                {
+                    Culture = "en",
+                    Title = input.Title_en,
+                    Subtitle = input.Subtitle_en,
+                    DetailsTitle = input.DetailsTitle_en,
+                    Details = input.Details_en
+                };
+                matchNews.Contents.Add(enContent);
+
+                var roContent = new MatchNewsContent
+                {
+                    Culture = "ro",
+                    Title = input.Title_ro,
+                    Subtitle = input.Subtitle_ro,
+                    DetailsTitle = input.DetailsTitle_ro,
+                    Details = input.Details_ro
+                };
+                matchNews.Contents.Add(roContent);
+
+                var ruContent = new MatchNewsContent
+                {
+                    Culture = "ru",
+                    Title = input.Title_ru,
+                    Subtitle = input.Subtitle_ru,
+                    DetailsTitle = input.DetailsTitle_ru,
+                    Details = input.Details_ru
+                };
+                matchNews.Contents.Add(ruContent);
 
                 _context.Add(matchNews);
                 await _context.SaveChangesAsync();
@@ -203,6 +234,110 @@ namespace BussinessCupApi.Controllers
 
             // View'a tüm içerikleri gönder
             return View(matchNews);
+        }
+
+        // POST: MatchNews/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, IFormFile MainPhoto, List<IFormFile> ImageFiles)
+        {
+            var matchNews = await _context.MatchNews
+                .Include(m => m.Photos)
+                .Include(m => m.Contents)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (matchNews == null)
+            {
+                TempData["ErrorMessage"] = "Haber bulunamadı.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Category güncelle
+            if (Request.Form.TryGetValue("Category", out var catVal))
+            {
+                if (Enum.TryParse<NewsCategory>(catVal.ToString(), out var cat))
+                {
+                    matchNews.Category = cat;
+                }
+            }
+
+            // Ana fotoğraf güncelle
+            if (MainPhoto != null && MainPhoto.Length > 0)
+            {
+                var key = $"matchnewsimages/{Guid.NewGuid()}{Path.GetExtension(MainPhoto.FileName)}";
+                using var stream = MainPhoto.OpenReadStream();
+                await _r2Manager.UploadFileAsync(key, stream, MainPhoto.ContentType);
+                string relativePath = _r2Manager.GetFileUrl(key);
+                matchNews.MatchNewsMainPhoto = relativePath;
+            }
+
+            // Yeni ek fotoğrafları ekle
+            if (ImageFiles != null && ImageFiles.Count > 0)
+            {
+                foreach (var file in ImageFiles)
+                {
+                    if (file.Length > 0)
+                    {
+                        var key = $"matchnewsimages/{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+                        using var stream = file.OpenReadStream();
+                        await _r2Manager.UploadFileAsync(key, stream, file.ContentType);
+                        string relativePath = _r2Manager.GetFileUrl(key);
+
+                        var matchNewsPhoto = new MatchNewsPhoto
+                        {
+                            PhotoUrl = relativePath,
+                            MatchNews = matchNews,
+                            MatchNewsId = matchNews.Id
+                        };
+                        matchNews.Photos.Add(matchNewsPhoto);
+                    }
+                }
+            }
+
+            // Çok dilliler: helper
+            void UpsertContent(string culture, string title, string subtitle, string detailsTitle, string details)
+            {
+                var existing = matchNews.Contents.FirstOrDefault(c => c.Culture == culture);
+                if (existing == null)
+                {
+                    existing = new MatchNewsContent { Culture = culture, MatchNews = matchNews };
+                    matchNews.Contents.Add(existing);
+                }
+                existing.Title = title;
+                existing.Subtitle = subtitle;
+                existing.DetailsTitle = detailsTitle;
+                existing.Details = details;
+            }
+
+            UpsertContent("tr",
+                Request.Form["Title_tr"],
+                Request.Form["Subtitle_tr"],
+                Request.Form["DetailsTitle_tr"],
+                Request.Form["Details_tr"]);
+
+            UpsertContent("en",
+                Request.Form["Title_en"],
+                Request.Form["Subtitle_en"],
+                Request.Form["DetailsTitle_en"],
+                Request.Form["Details_en"]);
+
+            UpsertContent("ro",
+                Request.Form["Title_ro"],
+                Request.Form["Subtitle_ro"],
+                Request.Form["DetailsTitle_ro"],
+                Request.Form["Details_ro"]);
+
+            UpsertContent("ru",
+                Request.Form["Title_ru"],
+                Request.Form["Subtitle_ru"],
+                Request.Form["DetailsTitle_ru"],
+                Request.Form["Details_ru"]);
+
+            _context.Update(matchNews);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Haber güncellendi.";
+            return RedirectToAction(nameof(Edit), new { id = matchNews.Id });
         }
 
         private bool MatchNewsExists(int id)
@@ -292,63 +427,31 @@ namespace BussinessCupApi.Controllers
             return Json(teams);
         }
 
-        /// <summary>
-        /// Maç haberini belirtilen dile çevirir
-        /// </summary>
+        // Alan bazlı çeviri (TR -> hedef dil)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> TranslateMatchNews([FromBody] TranslateMatchNewsRequest request)
+        public async Task<IActionResult> TranslateField([FromBody] TranslateMatchNewsRequest request)
         {
             try
             {
-                if (string.IsNullOrEmpty(request.Text) || string.IsNullOrEmpty(request.TargetLanguage))
+                if (string.IsNullOrWhiteSpace(request.Text) || string.IsNullOrWhiteSpace(request.TargetLanguage))
                 {
                     return BadRequest(new { success = false, message = "Metin ve hedef dil gereklidir." });
                 }
 
-                var translatedText = await _openAIManager.TranslateMatchNewsAsync(
-                    request.Text, 
-                    request.TargetLanguage, 
-                    request.SourceLanguage ?? "Türkçe"
-                );
+                // Her zaman Türkçe'den çevir
+                var translatedText = await _openAIManager.TranslateFromTurkishAsync(request.Text, request.TargetLanguage);
 
-                return Json(new { success = true, translatedText = translatedText });
+                return Json(new { success = true, translatedText });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Çeviri işlemi başarısız");
-                return StatusCode(500, new { success = false, message = "Çeviri işlemi sırasında bir hata oluştu." });
+                _logger.LogError(ex, "Alan çevirisi başarısız");
+                return StatusCode(500, new { success = false, message = "Çeviri sırasında bir hata oluştu." });
             }
         }
-
-        /// <summary>
-        /// Maç haberini birden fazla dile çevirir
-        /// </summary>
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> TranslateMatchNewsToMultipleLanguages([FromBody] TranslateMatchNewsMultipleRequest request)
-        {
-            try
-            {
-                if (string.IsNullOrEmpty(request.Text) || request.TargetLanguages == null || !request.TargetLanguages.Any())
-                {
-                    return BadRequest(new { success = false, message = "Metin ve hedef diller gereklidir." });
-                }
-
-                var translations = await _openAIManager.TranslateMatchNewsToMultipleLanguagesAsync(
-                    request.Text, 
-                    request.TargetLanguages, 
-                    request.SourceLanguage ?? "Türkçe"
-                );
-
-                return Json(new { success = true, translations = translations });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Çoklu dil çevirisi başarısız");
-                return StatusCode(500, new { success = false, message = "Çeviri işlemi sırasında bir hata oluştu." });
-            }
-        }
+        
+        
         // TODO: Gerçek bir Delete Action'ı (istenirse) veya resim silme/yönetme eklenebilir.
     }
 }
