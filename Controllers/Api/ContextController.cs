@@ -10,13 +10,13 @@ namespace BussinessCupApi.Controllers.Api // Namespace'i kontrol edin
     [ApiKeyAuth]
     [Route("api/[controller]")]
     [ApiController]
-    public class NewsController : ControllerBase
+    public class ContextController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        private readonly ILogger<FavouritesController> _logger;
+        private readonly ILogger<ContextController> _logger;
         private readonly IMemoryCache _cache;
 
-        public NewsController(ApplicationDbContext context, ILogger<FavouritesController> logger, IMemoryCache cache)
+        public ContextController(ApplicationDbContext context, ILogger<ContextController> logger, IMemoryCache cache)
         {
             _context = context;
             _logger = logger;
@@ -52,6 +52,57 @@ namespace BussinessCupApi.Controllers.Api // Namespace'i kontrol edin
                             PhotoUrl = p.PhotoUrl
                         })
                         .ToList()
+                })
+                .ToListAsync();
+
+            return Ok(items);
+        }
+
+        // GET: /api/context/static?key=someKey
+        [HttpGet("static")]
+        public async Task<ActionResult> GetStatic([FromQuery] string? key = null)
+        {
+            var query = _context.StaticKeyValues.AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(key))
+            {
+                var item = await query
+                    .Where(s => s.Key == key)
+                    .Select(s => new { s.Key, s.Value, s.UpdatedAt })
+                    .FirstOrDefaultAsync();
+
+                if (item == null) return NotFound();
+                return Ok(item);
+            }
+
+            var items = await query
+                .OrderByDescending(s => s.UpdatedAt)
+                .Select(s => new { s.Key, s.Value, s.UpdatedAt })
+                .ToListAsync();
+
+            return Ok(items);
+        }
+
+        // GET: /api/context/photos?category=2024
+        [HttpGet("photos")]
+        public async Task<ActionResult> GetPhotos([FromQuery] string? category = null)
+        {
+            var query = _context.PhotoGalleries.AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(category))
+            {
+                query = query.Where(p => p.Category == category);
+            }
+
+            var items = await query
+                .OrderByDescending(p => p.UploadedAt)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.Category,
+                    p.FileName,
+                    p.FilePath,
+                    p.UploadedAt
                 })
                 .ToListAsync();
 

@@ -1,0 +1,72 @@
+@model IEnumerable<BussinessCupApi.Models.StaticKeyValue>
+@{
+    ViewData["Title"] = "Statik İçerikler";
+    Layout = "_AdminLayout";
+}
+<div class="max-w-6xl mx-auto p-6">
+    <h2 class="text-2xl font-bold text-gray-200 mb-6">Statik İçerikler</h2>
+
+    <div class="overflow-x-auto bg-gray-800 shadow-md rounded-lg">
+        <table class="min-w-full text-sm text-left text-gray-300 align-top">
+            <thead class="bg-gray-700 text-gray-200">
+                <tr>
+                    <th class="px-6 py-3 w-1/6">Key</th>
+                    <th class="px-6 py-3 w-4/6">Value (HTML destekli)</th>
+                    <th class="px-6 py-3 w-1/6 text-right">İşlem</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr class="border-b border-gray-700 hover:bg-gray-700/40">
+                        <td class="px-6 py-4 font-mono text-yellow-400">@item.Key</td>
+                        <td class="px-6 py-4">
+                            <textarea id="value-@item.Key"
+                                      rows="4"
+                                      class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:border-yellow-500">@item.Value</textarea>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <button onclick="updateValue('@item.Key')"
+                                    class="px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-semibold rounded-lg shadow transition">
+                                Güncelle
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Success/Error mesaj alanı -->
+    <div id="messageBox" class="hidden mt-4 p-3 rounded-lg text-sm"></div>
+</div>
+
+@section Scripts {
+<script>
+    async function updateValue(key) {
+        const input = document.getElementById(`value-${key}`);
+        const value = input.value;
+
+        const response = await fetch(`/StaticContent/Edit?key=${encodeURIComponent(key)}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "RequestVerificationToken": document.querySelector('input[name="__RequestVerificationToken"]').value
+            },
+            body: JSON.stringify({ key, value })
+        });
+
+        const msgBox = document.getElementById("messageBox");
+
+        if (response.ok) {
+            msgBox.textContent = `'${key}' güncellendi ✅`;
+            msgBox.className = "mt-4 p-3 rounded-lg text-sm bg-green-600 text-white";
+            msgBox.classList.remove("hidden");
+        } else {
+            msgBox.textContent = `'${key}' güncellenemedi ❌`;
+            msgBox.className = "mt-4 p-3 rounded-lg text-sm bg-red-600 text-white";
+            msgBox.classList.remove("hidden");
+        }
+    }
+</script>
+}

@@ -36,7 +36,9 @@ namespace BussinessCupApi.Data
         public DbSet<MatchSquadSubstitution> MatchSquadSubstitutions { get; set; }
         public DbSet<LeagueRule> LeagueRules { get; set; }
         public DbSet<CityRestriction> CityRestrictions { get; set; }
-        public DbSet<LeagueRankingStatus> LeagueRankingStatus { get; set; }
+      		public DbSet<LeagueRankingStatus> LeagueRankingStatus { get; set; }
+		public DbSet<PhotoGallery> PhotoGalleries { get; set; }
+		public DbSet<StaticKeyValue> StaticKeyValues { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -254,6 +256,14 @@ namespace BussinessCupApi.Data
             {
 
                 entity.ToTable("City", tb => tb.HasTrigger("trg_AfterInsert_City"));
+            });
+
+            modelBuilder.Entity<PhotoGallery>(entity =>
+            {
+                entity.Property(p => p.Category).IsRequired();
+                entity.Property(p => p.FileName).IsRequired();
+                entity.Property(p => p.FilePath).IsRequired();
+                entity.Property(p => p.UploadedAt).HasDefaultValueSql("GETUTCDATE()");
             });
         }
     }

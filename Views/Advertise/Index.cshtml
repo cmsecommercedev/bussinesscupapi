@@ -1,7 +1,7 @@
 @model IEnumerable<BussinessCupApi.Models.Advertise>
 
 @{
-    ViewData["Title"] = "Reklam Yönetimi";
+    ViewData["Title"] = "Sponsor Yönetimi";
     Layout = "_AdminLayout";
 }
 
@@ -21,9 +21,9 @@
         </div>
     }
 
-    @* --- Yeni Reklam Ekleme Formu --- *@
+    @* --- Sponsor Ekleme Formu --- *@
     <div class="bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
-        <h2 class="text-2xl font-bold text-yellow-500 mb-6">Yeni Reklam Ekle</h2>
+        <h2 class="text-2xl font-bold text-yellow-500 mb-6">Sponsor Ekle</h2>
 
         <form asp-action="Create" asp-controller="Advertise" method="post" enctype="multipart/form-data">
             @Html.AntiForgeryToken()
