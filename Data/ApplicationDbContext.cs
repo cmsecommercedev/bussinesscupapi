@@ -39,6 +39,8 @@ namespace BussinessCupApi.Data
       		public DbSet<LeagueRankingStatus> LeagueRankingStatus { get; set; }
 		public DbSet<PhotoGallery> PhotoGalleries { get; set; }
 		public DbSet<StaticKeyValue> StaticKeyValues { get; set; }
+        		public DbSet<RichStaticContent> RichStaticContents { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -120,7 +122,7 @@ namespace BussinessCupApi.Data
                 .HasForeignKey(w => w.SeasonID)
                 .OnDelete(DeleteBehavior.Restrict);
 
-         
+
 
 
             modelBuilder.Entity<Card>()

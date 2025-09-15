@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using BussinessCupApi.Attributes; // Kullanıcının kimliğini almak için (opsiyonel)
+using System;
 
 namespace BussinessCupApi.Controllers.Api // Namespace'i kontrol edin
 {
@@ -103,6 +104,44 @@ namespace BussinessCupApi.Controllers.Api // Namespace'i kontrol edin
                     p.FileName,
                     p.FilePath,
                     p.UploadedAt
+                })
+                .ToListAsync();
+
+            return Ok(items);
+        }
+
+        // GET: /api/context/richstatic?category=flags&culture=tr
+        [HttpGet("richstatic")]
+        public async Task<ActionResult> GetRichStatic([FromQuery] string? category = null, [FromQuery] string? culture = null, [FromQuery] bool? published = true)
+        {
+            var query = _context.RichStaticContents.AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(category))
+            {
+                query = query.Where(x => x.CategoryCode == category);
+            }
+            if (!string.IsNullOrWhiteSpace(culture))
+            {
+                query = query.Where(x => x.Culture == culture);
+            }
+            if (published.HasValue)
+            {
+                query = query.Where(x => x.Published == published.Value);
+            }
+
+            var items = await query
+                .OrderByDescending(x => x.UpdatedAt)
+                .Select(x => new
+                {
+                    x.Id,
+                    x.CategoryCode,
+                    x.Culture,
+                    x.ImageUrl,
+                    x.VideoUrl,
+                    x.Text,
+                    x.AltText,
+                    x.Published,
+                    x.UpdatedAt
                 })
                 .ToListAsync();
 

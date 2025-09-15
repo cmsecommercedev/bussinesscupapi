@@ -1,0 +1,173 @@
+@model BussinessCupApi.Models.RichStaticContent
+@{
+	ViewData["Title"] = "Rich Static Content";
+	Layout = "_AdminLayout";
+
+	var items = ViewBag.Items as System.Collections.Generic.List<BussinessCupApi.Models.RichStaticContent>;
+	var categories = new[] { "home_hero", "flags", "sponsors", "about", "contact", "rules", "terms", "privacy" };
+}
+
+<div class="max-w-6xl mx-auto p-6">
+	<h2 class="text-2xl font-bold text-gray-200 mb-6">Rich Static Content</h2>
+
+	@if (TempData["SuccessMessage"] != null)
+	{
+		<div class="mb-4 p-3 rounded-lg text-sm bg-green-600 text-white">@TempData["SuccessMessage"]</div>
+	}
+
+	<form asp-action="RichStatic" method="post" enctype="multipart/form-data" class="mb-6">
+		@Html.AntiForgeryToken()
+				<div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+			<div class="md:col-span-3">
+				<label class="block text-gray-300 mb-1">Category</label>
+				<select asp-for="CategoryCode" required class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:border-yellow-500">
+					<option value="">-- seçin --</option>
+					@foreach (var cat in categories)
+					{
+						<option value="@cat" selected="@(Model?.CategoryCode == cat ? "selected" : null)">@cat</option>
+					}
+					@if (!string.IsNullOrWhiteSpace(Model?.CategoryCode) && !categories.Contains(Model.CategoryCode))
+					{
+						<option value="@Model.CategoryCode" selected="selected">@Model.CategoryCode</option>
+					}
+				</select>
+				<span asp-validation-for="CategoryCode" class="text-sm text-red-400"></span>
+			</div>
+			<div class="md:col-span-2">
+				<label class="block text-gray-300 mb-1">Culture</label>
+				<select asp-for="Culture" class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:border-yellow-500">
+					<option value="tr">tr</option>
+					<option value="en">en</option>
+					<option value="ru">ru</option>
+					<option value="ro">ro</option>
+				</select>
+			</div>
+
+			<div class="md:col-span-3">
+				<label class="block text-gray-300 mb-1">Image Upload</label>
+				<input asp-for="ImageFile" type="file" accept="image/*" class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:border-yellow-500" />
+				@if (!string.IsNullOrWhiteSpace(Model?.ImageUrl))
+				{
+					<div class="mt-2 text-xs text-gray-400 break-all">
+						<span>Current:</span>
+						<a href="@Model.ImageUrl" target="_blank" class="text-yellow-400 hover:underline">@Model.ImageUrl</a>
+					</div>
+					<input type="hidden" asp-for="ImageUrl" />
+				}
+			</div>
+
+			<div class="md:col-span-4">
+				<label class="block text-gray-300 mb-1">Video Url (optional)</label>
+				<input asp-for="VideoUrl" class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:border-yellow-500" placeholder="https://..." />
+			</div>
+
+			<div class="md:col-span-12">
+				<label class="block text-gray-300 mb-1">Text</label>
+				<textarea asp-for="Text" rows="6" class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:border-yellow-500"></textarea>
+			</div>
+
+			<div class="md:col-span-6">
+				<label class="block text-gray-300 mb-1">Alt Text (optional)</label>
+				<input asp-for="AltText" class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:border-yellow-500" />
+			</div>
+
+			<div class="md:col-span-2 flex items-end">
+				<label class="inline-flex items-center gap-2 text-gray-300">
+					<input asp-for="Published" type="checkbox" class="h-4 w-4 text-yellow-500 bg-gray-900 border-gray-600 rounded focus:ring-yellow-500" />
+					<span>Published</span>
+				</label>
+			</div>
+
+			<div class="md:col-span-2 md:col-start-11 flex items-end">
+				<button type="submit" class="w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-semibold rounded-lg shadow transition">
+					Kaydet
+				</button>
+			</div>
+		</div>
+	</form>
+
+	<h4 class="text-xl font-semibold text-gray-200 mb-3">Mevcut Kayıtlar</h4>
+
+	@foreach (var grp in (items ?? new System.Collections.Generic.List<BussinessCupApi.Models.RichStaticContent>())
+		.GroupBy(x => x.CategoryCode)
+		.OrderBy(g => g.Key))
+	{
+		<div class="mb-6">
+			<div class="px-6 py-2 bg-gray-700 text-gray-100 rounded-t-lg font-semibold">@grp.Key</div>
+			<div class="overflow-x-auto bg-gray-800 shadow-md rounded-b-lg">
+				<table class="min-w-full text-sm text-left text-gray-300 align-top">
+										<thead class="bg-gray-700 text-gray-200">
+						<tr>
+							<th class="px-6 py-3">Culture</th>
+							<th class="px-6 py-3">Image</th>
+							<th class="px-6 py-3">Video</th>
+							<th class="px-6 py-3">Text</th>
+							<th class="px-6 py-3">Alt</th>
+							<th class="px-6 py-3">Published</th>
+							<th class="px-6 py-3">Updated</th>
+-							<th class="px-6 py-3 text-right">İşlem</th> 
+						</tr>
+					</thead>
+					<tbody>
+						@foreach (var x in grp.OrderByDescending(x => x.UpdatedAt))
+						{
+							<tr class="border-b border-gray-700 hover:bg-gray-700/40">
+								<td class="px-6 py-3">@x.Culture</td>
+								<td class="px-6 py-3">
+									@if (!string.IsNullOrWhiteSpace(x.ImageUrl))
+									{
+										<a href="@x.ImageUrl" target="_blank" class="inline-block">
+											<img src="@x.ImageUrl" alt="@x.AltText" class="h-10 w-10 object-cover rounded border border-gray-600" />
+										</a>
+									}
+									else
+									{
+										<span class="text-gray-500">-</span>
+									}
+								</td>
+								<td class="px-6 py-3 truncate max-w-[220px]">@x.VideoUrl</td>
+								<td class="px-6 py-3 whitespace-pre-line max-w-[420px]">@x.Text</td>
+								<td class="px-6 py-3 whitespace-pre-line max-w-[260px]">@x.AltText</td>
+								<td class="px-6 py-3">@(x.Published ? "Yes" : "No")</td>
+								<td class="px-6 py-3">@x.UpdatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+								<td class="px-6 py-3">
+									<div class="flex gap-2 justify-end"> 
+									<form asp-action="DeleteRichStatic" method="post" onsubmit="return confirm('Silinsin mi?')">
+											@Html.AntiForgeryToken()
+											<input type="hidden" name="id" value="@x.Id" />
+											<button type="submit" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white rounded-lg transition">Sil</button>
+										</form>
+									</div>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	}
+</div>
+@section Scripts {
+    <script>
+        function loadToForm(category, culture, imageUrl, videoUrl, text, altText, published) {
+            var sel = document.getElementById('CategoryCode');
+            // Eğer dropdown'da yoksa ekle
+            if (category && !Array.from(sel.options).some(o => o.value === category)) {
+                var opt = document.createElement('option');
+                opt.value = category;
+                opt.text = category;
+                sel.add(opt);
+            }
+            sel.value = category || '';
+
+            document.getElementById('Culture').value = culture || 'tr';
+            if (document.getElementById('ImageUrl')) {
+                document.getElementById('ImageUrl').value = imageUrl || '';
+            }
+            document.getElementById('VideoUrl').value = videoUrl || '';
+            document.getElementById('Text').value = text || '';
+            document.getElementById('AltText').value = altText || '';
+            document.getElementById('Published').checked = !!published;
+        }
+    </script>
+}
