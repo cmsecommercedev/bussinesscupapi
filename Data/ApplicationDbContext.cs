@@ -39,6 +39,10 @@ namespace BussinessCupApi.Data
       		public DbSet<LeagueRankingStatus> LeagueRankingStatus { get; set; }
 		public DbSet<PhotoGallery> PhotoGalleries { get; set; }
 		public DbSet<StaticKeyValue> StaticKeyValues { get; set; }
+        		public DbSet<RichStaticContent> RichStaticContents { get; set; }
+        public DbSet<Story> Stories { get; set; }
+        public DbSet<StoryContent> StoryContents { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -120,7 +124,7 @@ namespace BussinessCupApi.Data
                 .HasForeignKey(w => w.SeasonID)
                 .OnDelete(DeleteBehavior.Restrict);
 
-         
+
 
 
             modelBuilder.Entity<Card>()
@@ -265,6 +269,26 @@ namespace BussinessCupApi.Data
                 entity.Property(p => p.FilePath).IsRequired();
                 entity.Property(p => p.UploadedAt).HasDefaultValueSql("GETUTCDATE()");
             });
+
+			modelBuilder.Entity<Story>(entity =>
+			{
+				entity.Property(s => s.Title).IsRequired().HasMaxLength(200);
+				entity.Property(s => s.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+				entity.Property(s => s.UpdatedAt).HasDefaultValueSql("GETUTCDATE()");
+			});
+
+			modelBuilder.Entity<StoryContent>(entity =>
+			{
+				entity.Property(sc => sc.MediaUrl).IsRequired().HasMaxLength(500);
+				entity.Property(sc => sc.ContentType).HasMaxLength(100);
+				entity.Property(sc => sc.DisplayOrder).HasDefaultValue(0);
+				entity.Property(sc => sc.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+				entity
+					.HasOne(sc => sc.Story)
+					.WithMany(s => s.Contents)
+					.HasForeignKey(sc => sc.StoryId)
+					.OnDelete(DeleteBehavior.Cascade);
+			});
         }
     }
 }
