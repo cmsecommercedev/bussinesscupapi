@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using BussinessCupApi.Attributes; // Kullanıcının kimliğini almak için (opsiyonel)
 using System;
+using BussinessCupApi.Models;
 
 namespace BussinessCupApi.Controllers.Api // Namespace'i kontrol edin
 {
@@ -109,6 +110,60 @@ namespace BussinessCupApi.Controllers.Api // Namespace'i kontrol edin
 
             return Ok(items);
         }
+
+        [HttpGet("stories")]
+        public async Task<ActionResult<List<StoryDto>>> GetStories([FromQuery] string? type = null)
+        {
+            // type: null | "image" | "video"
+            string? normType = type?.Trim().ToLower();
+            if (!string.IsNullOrEmpty(normType) && normType != "image" && normType != "video")
+            {
+                return BadRequest(new { message = "type 'image' veya 'video' olmalıdır." });
+            }
+
+            IQueryable<Story> query = _context.Stories
+     .AsNoTracking()
+     .Where(s => s.Published)
+     .Include(s => s.Contents);
+
+            if (!string.IsNullOrEmpty(normType))
+            {
+                query = query.Where(s => s.Contents.Any(c =>
+                    !string.IsNullOrEmpty(c.ContentType) &&
+                    c.ContentType.StartsWith(normType)));
+            }
+
+            query = query.OrderByDescending(s => s.UpdatedAt);
+
+
+            var items = await query
+                .Select(s => new StoryDto
+                {
+                    Id = s.Id,
+                    Title = s.Title,
+                    Published = s.Published,
+                    UpdatedAt = s.UpdatedAt,
+                    Contents = s.Contents
+                        .Where(c => string.IsNullOrEmpty(normType) ||
+                            (!string.IsNullOrEmpty(c.ContentType) && c.ContentType.StartsWith(normType)))
+                        .OrderBy(c => c.DisplayOrder)
+                        .Select(c => new StoryContentDto
+                        {
+                            Id = c.Id,
+                            MediaUrl = c.MediaUrl,
+                            ContentType = c.ContentType,
+                            DisplayOrder = c.DisplayOrder
+                        })
+                        .ToList(),
+                    Type = s.Contents.Any(c => c.ContentType.StartsWith("video"))
+                                ? "video"
+                                : "image"
+                })
+                .ToListAsync();
+
+            return Ok(items);
+        }
+
 
         // GET: /api/context/richstatic?category=flags&culture=tr
         [HttpGet("richstatic")]

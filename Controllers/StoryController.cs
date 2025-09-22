@@ -107,6 +107,51 @@ namespace BussinessCupApi.Controllers
 			}
 			return RedirectToAction(nameof(Index));
 		}
+
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public async Task<IActionResult> AddFiles(int id, List<IFormFile> files)
+		{
+			if (files == null || files.Count == 0)
+			{
+				TempData["SuccessMessage"] = "Eklenecek dosya seçilmedi.";
+				return RedirectToAction(nameof(Index));
+			}
+
+			var story = await _context.Stories
+				.Include(s => s.Contents)
+				.FirstOrDefaultAsync(s => s.Id == id);
+
+			if (story == null)
+			{
+				return NotFound();
+			}
+
+			int order = (story.Contents?.OrderByDescending(c => c.DisplayOrder).FirstOrDefault()?.DisplayOrder ?? -1) + 1;
+
+			foreach (var file in files.Where(f => f != null && f.Length > 0))
+			{
+				var ext = Path.GetExtension(file.FileName);
+				var key = $"stories/{story.Id}/{Guid.NewGuid()}{ext}";
+				using var stream = file.OpenReadStream();
+				await _r2Manager.UploadFileAsync(key, stream, file.ContentType);
+				var url = _r2Manager.GetFileUrl(key);
+
+				_context.StoryContents.Add(new StoryContent
+				{
+					StoryId = story.Id,
+					MediaUrl = url,
+					ContentType = file.ContentType,
+					DisplayOrder = order++,
+					CreatedAt = DateTime.UtcNow
+				});
+			}
+
+			story.UpdatedAt = DateTime.UtcNow;
+			await _context.SaveChangesAsync();
+			TempData["SuccessMessage"] = "Dosyalar eklendi.";
+			return RedirectToAction(nameof(Index));
+		}
 	}
 }
 
