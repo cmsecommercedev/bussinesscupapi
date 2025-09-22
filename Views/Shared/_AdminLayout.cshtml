@@ -68,11 +68,19 @@
                 <a href="@Url.Action("Dashboard", "Admin")" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-all duration-300 group">
                     <i class="fas fa-home text-lg group-hover:text-yellow-400"></i>
                     <span class="hidden md:inline text-sm font-medium group-hover:text-yellow-400">Anasayfa</span>
-                </a> 
-              <a href="@Url.Action("Index", "PhotoGallery")" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-all duration-300 group">
-                    <i class="fas fa-city text-lg group-hover:text-yellow-400"></i>
+                </a>
+                <a href="@Url.Action("Index", "PhotoGallery")"
+                   class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-all duration-300 group">
+                    <i class="fas fa-images text-lg group-hover:text-yellow-400"></i>
                     <span class="hidden md:inline text-sm font-medium group-hover:text-yellow-400">Fotoğraflar</span>
                 </a>
+
+                <a href="@Url.Action("Index", "StaticContent")"
+                   class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-all duration-300 group">
+                    <i class="fas fa-file-alt text-lg group-hover:text-yellow-400"></i>
+                    <span class="hidden md:inline text-sm font-medium group-hover:text-yellow-400">Statik İçerikler</span>
+                </a>
+
                 @*
                 <a href="@Url.Action("CreateLeague", "League")" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-all duration-300 group">
                     <i class="fas fa-calendar text-lg group-hover:text-yellow-400"></i>
