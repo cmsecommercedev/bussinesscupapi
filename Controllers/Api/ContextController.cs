@@ -202,5 +202,29 @@ namespace BussinessCupApi.Controllers.Api // Namespace'i kontrol edin
 
             return Ok(items);
         }
+
+        [HttpGet("app-settings")]
+        public async Task<ActionResult<Settings>> GetAppSettings()
+        { 
+            try
+            { 
+                var settings = await _context.Settings
+                    .OrderByDescending(s => s.LastUpdated)
+                    .FirstOrDefaultAsync();
+
+                if (settings == null)
+                {
+                    _logger.LogWarning("Ayarlar bulunamadı");
+                    return NotFound(new { error = "Ayarlar bulunamadı" });
+                }
+
+                return Ok(settings);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Uygulama ayarları yüklenirken hata oluştu");
+                return StatusCode(500, new { error = "Uygulama ayarları yüklenirken bir hata oluştu" });
+            }
+        }
     }
 }
