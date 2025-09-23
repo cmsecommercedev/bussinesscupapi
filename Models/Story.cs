@@ -12,6 +12,9 @@ namespace BussinessCupApi.Models
 		[MaxLength(200)]
 		public string Title { get; set; } = string.Empty;
 
+		// Story ana görseli
+		public string? StoryImage { get; set; }
+
 		public bool Published { get; set; } = true;
 
 		public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

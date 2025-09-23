@@ -43,7 +43,7 @@ namespace BussinessCupApi.Controllers
 
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> Create([FromForm] string title, [FromForm] bool published, List<IFormFile> files)
+		public async Task<IActionResult> Create([FromForm] string title, [FromForm] bool published, [FromForm] IFormFile? storyImage, List<IFormFile> files)
 		{
 			if (string.IsNullOrWhiteSpace(title))
 			{
@@ -62,6 +62,16 @@ namespace BussinessCupApi.Controllers
 				CreatedAt = DateTime.UtcNow,
 				UpdatedAt = DateTime.UtcNow
 			};
+
+			// Story ana görselini yükle
+			if (storyImage != null && storyImage.Length > 0)
+			{
+				var ext = Path.GetExtension(storyImage.FileName);
+				var key = $"stories/images/{Guid.NewGuid()}{ext}";
+				using var stream = storyImage.OpenReadStream();
+				await _r2Manager.UploadFileAsync(key, stream, storyImage.ContentType);
+				story.StoryImage = _r2Manager.GetFileUrl(key);
+			}
 
 			_context.Stories.Add(story);
 			await _context.SaveChangesAsync();

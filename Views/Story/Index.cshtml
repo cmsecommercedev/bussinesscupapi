@@ -22,6 +22,10 @@
 				<input name="title" required class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:border-yellow-500" />
 			</div>
 			<div>
+				<label class="block text-gray-300 mb-1">Ana Görsel</label>
+				<input name="storyImage" type="file" accept="image/*" class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:border-yellow-500" />
+			</div>
+			<div>
 				<label class="block text-gray-300 mb-1">Medya Dosyaları (birden fazla, resim veya mp4)</label>
 				<input name="files" type="file" accept="image/*,video/mp4" multiple class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:border-yellow-500" />
 			</div>
@@ -42,9 +46,15 @@
 		{
 			<div class="bg-gray-800 rounded-lg p-4">
 				<div class="flex items-center justify-between">
-					<div>
-						<div class="text-lg font-semibold text-gray-100">@s.Title</div>
-						<div class="text-xs text-gray-400">@s.UpdatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm") • @(s.Published ? "Published" : "Draft")</div>
+					<div class="flex items-center gap-4">
+						@if (!string.IsNullOrEmpty(s.StoryImage))
+						{
+							<img src="@s.StoryImage" alt="Story Image" class="w-16 h-16 object-cover rounded-lg" />
+						}
+						<div>
+							<div class="text-lg font-semibold text-gray-100">@s.Title</div>
+							<div class="text-xs text-gray-400">@s.UpdatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm") • @(s.Published ? "Published" : "Draft")</div>
+						</div>
 					</div>
 					<form asp-action="Delete" method="post" onsubmit="return confirm('Silinsin mi?')">
 						@Html.AntiForgeryToken()

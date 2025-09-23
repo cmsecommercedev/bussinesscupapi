@@ -141,6 +141,7 @@ namespace BussinessCupApi.Controllers.Api // Namespace'i kontrol edin
                 {
                     Id = s.Id,
                     Title = s.Title,
+                    StoryImage = s.StoryImage,
                     Published = s.Published,
                     UpdatedAt = s.UpdatedAt,
                     Contents = s.Contents
