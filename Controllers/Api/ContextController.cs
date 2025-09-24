@@ -114,17 +114,18 @@ namespace BussinessCupApi.Controllers.Api // Namespace'i kontrol edin
         [HttpGet("stories")]
         public async Task<ActionResult<List<StoryDto>>> GetStories([FromQuery] string? type = null)
         {
-            // type: null | "image" | "video"
             string? normType = type?.Trim().ToLower();
             if (!string.IsNullOrEmpty(normType) && normType != "image" && normType != "video")
             {
                 return BadRequest(new { message = "type 'image' veya 'video' olmalıdır." });
             }
 
+            var last24Hours = DateTime.UtcNow.AddHours(-24);
+
             IQueryable<Story> query = _context.Stories
-     .AsNoTracking()
-     .Where(s => s.Published)
-     .Include(s => s.Contents);
+                .AsNoTracking()
+                .Where(s => s.Published && s.UpdatedAt >= last24Hours) // Son 24 saat filtresi
+                .Include(s => s.Contents);
 
             if (!string.IsNullOrEmpty(normType))
             {
@@ -134,7 +135,6 @@ namespace BussinessCupApi.Controllers.Api // Namespace'i kontrol edin
             }
 
             query = query.OrderByDescending(s => s.UpdatedAt);
-
 
             var items = await query
                 .Select(s => new StoryDto
