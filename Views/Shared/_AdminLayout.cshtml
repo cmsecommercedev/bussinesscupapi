@@ -63,45 +63,50 @@
 
     <main>
         <div class="flex flex-col md:flex-row min-h-screen">
+    <div class="w-full md:w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white p-4 
+                flex flex-row md:flex-col fixed bottom-0 md:static z-50 shadow-2xl 
+                rounded-t-xl md:rounded-xl space-x-2 md:space-x-0 md:space-y-2">
 
-            <div class="w-full md:w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white p-4 flex flex-row md:flex-col fixed bottom-0 md:static z-50 shadow-2xl rounded-t-xl md:rounded-xl space-x-2 md:space-x-0 md:space-y-2">
-                <a href="@Url.Action("Dashboard", "Admin")" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-all duration-300 group">
-                    <i class="fas fa-home text-lg group-hover:text-yellow-400"></i>
-                    <span class="hidden md:inline text-sm font-medium group-hover:text-yellow-400">Anasayfa</span>
-                </a> 
-                <a href="@Url.Action("Create", "City")" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-all duration-300 group">
-                    <i class="fas fa-city text-lg group-hover:text-yellow-400"></i>
-                    <span class="hidden md:inline text-sm font-medium group-hover:text-yellow-400">Şehir Ekle</span>
-                </a>
-                <a href="@Url.Action("CreateLeague", "League")" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-all duration-300 group">
-                    <i class="fas fa-calendar text-lg group-hover:text-yellow-400"></i>
-                    <span class="hidden md:inline text-sm font-medium group-hover:text-yellow-400">Lig Ekle</span>
-                </a>
-                <a href="@Url.Action("Teams", "Admin")" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-all duration-300 group">
-                    <i class="fas fa-shield-alt text-lg group-hover:text-yellow-400"></i>
-                    <span class="hidden md:inline text-sm font-medium group-hover:text-yellow-400">Takımlar</span>
-                </a>
-                <a href="@Url.Action("WeekBestTeam", "Admin")" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-all duration-300 group">
-                    <i class="fas fa-trophy text-lg group-hover:text-yellow-400"></i>
-                    <span class="hidden md:inline text-sm font-medium group-hover:text-yellow-400">Haftanın Enleri</span>
-                </a>
-                <a href="@Url.Action("Suspensions", "Admin")" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-all duration-300 group">
-                    <i class="fas fa-gavel text-lg group-hover:text-yellow-400"></i>
-                    <span class="hidden md:inline text-sm font-medium group-hover:text-yellow-400">Cezalılar</span>
-                </a>
-                <a href="@Url.Action("Index", "MatchNews")" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-all duration-300 group">
+        <!-- Anasayfa -->
+        <a href="@Url.Action("Dashboard", "Admin")" 
+           class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-all duration-300 group">
+            <i class="fas fa-home text-lg group-hover:text-yellow-400"></i>
+            <span class="hidden md:inline text-sm font-medium group-hover:text-yellow-400">Anasayfa</span>
+        </a> 
+
+        <!-- Fotoğraflar -->
+        <a href="@Url.Action("Index", "PhotoGallery")" 
+           class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-all duration-300 group">
+            <i class="fas fa-image text-lg group-hover:text-yellow-400"></i>
+            <span class="hidden md:inline text-sm font-medium group-hover:text-yellow-400">Fotoğraflar</span>
+        </a>
+
+        <!-- Statik İçerikler -->
+        <a href="@Url.Action("Index", "StaticContent")" 
+           class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-all duration-300 group">
+            <i class="fas fa-file-alt text-lg group-hover:text-yellow-400"></i>
+            <span class="hidden md:inline text-sm font-medium group-hover:text-yellow-400">Statik İçerikler</span>
+        </a> 
+    <!-- Statik İçerikler -->
+        <a href="@Url.Action("RichStatic", "StaticContent")" 
+           class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-all duration-300 group">
+            <i class="fas fa-file-alt text-lg group-hover:text-yellow-400"></i>
+            <span class="hidden md:inline text-sm font-medium group-hover:text-yellow-400">Zengin Statik İçerikler</span>
+        </a> 
+        <!-- Maç Haberleri -->
+        <a href="@Url.Action("Index", "MatchNews")" 
+           class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-all duration-300 group">
+            <i class="fas fa-newspaper text-lg group-hover:text-yellow-400"></i>
+            <span class="hidden md:inline text-sm font-medium group-hover:text-yellow-400">Maç Haberleri</span>
+        </a>
+                <!-- Maç Haberleri -->
+                <a href="@Url.Action("Index", "Story")"
+                   class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-all duration-300 group">
                     <i class="fas fa-newspaper text-lg group-hover:text-yellow-400"></i>
-                    <span class="hidden md:inline text-sm font-medium group-hover:text-yellow-400">Maç Haberleri</span>
+                    <span class="hidden md:inline text-sm font-medium group-hover:text-yellow-400">Story</span>
                 </a>
-                <a href="@Url.Action("Index", "UserManagement")" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-all duration-300 group">
-                    <i class="fas fa-users text-lg group-hover:text-yellow-400"></i>
-                    <span class="hidden md:inline text-sm font-medium group-hover:text-yellow-400">Kullanıcılar</span>
-                </a>
-                <a href="@Url.Action("Manage", "CityRestriction")" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-all duration-300 group">
-                    <i class="fas fa-ban text-lg group-hover:text-yellow-400"></i>
-                    <span class="hidden md:inline text-sm font-medium group-hover:text-yellow-400">Şehir Kısıtlamaları</span>
-                </a>
-            </div>
+    </div>
+
 
 
             <div class="flex-1 p-4 pb-20 md:pb-4">

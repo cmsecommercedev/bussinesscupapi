@@ -36,7 +36,13 @@ namespace BussinessCupApi.Data
         public DbSet<MatchSquadSubstitution> MatchSquadSubstitutions { get; set; }
         public DbSet<LeagueRule> LeagueRules { get; set; }
         public DbSet<CityRestriction> CityRestrictions { get; set; }
-        public DbSet<LeagueRankingStatus> LeagueRankingStatus { get; set; }
+      		public DbSet<LeagueRankingStatus> LeagueRankingStatus { get; set; }
+		public DbSet<PhotoGallery> PhotoGalleries { get; set; }
+		public DbSet<StaticKeyValue> StaticKeyValues { get; set; }
+        		public DbSet<RichStaticContent> RichStaticContents { get; set; }
+        public DbSet<Story> Stories { get; set; }
+        public DbSet<StoryContent> StoryContents { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -118,7 +124,7 @@ namespace BussinessCupApi.Data
                 .HasForeignKey(w => w.SeasonID)
                 .OnDelete(DeleteBehavior.Restrict);
 
-         
+
 
 
             modelBuilder.Entity<Card>()
@@ -255,6 +261,34 @@ namespace BussinessCupApi.Data
 
                 entity.ToTable("City", tb => tb.HasTrigger("trg_AfterInsert_City"));
             });
+
+            modelBuilder.Entity<PhotoGallery>(entity =>
+            {
+                entity.Property(p => p.Category).IsRequired();
+                entity.Property(p => p.FileName).IsRequired();
+                entity.Property(p => p.FilePath).IsRequired();
+                entity.Property(p => p.UploadedAt).HasDefaultValueSql("GETUTCDATE()");
+            });
+
+			modelBuilder.Entity<Story>(entity =>
+			{
+				entity.Property(s => s.Title).IsRequired().HasMaxLength(200);
+				entity.Property(s => s.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+				entity.Property(s => s.UpdatedAt).HasDefaultValueSql("GETUTCDATE()");
+			});
+
+			modelBuilder.Entity<StoryContent>(entity =>
+			{
+				entity.Property(sc => sc.MediaUrl).IsRequired().HasMaxLength(500);
+				entity.Property(sc => sc.ContentType).HasMaxLength(100);
+				entity.Property(sc => sc.DisplayOrder).HasDefaultValue(0);
+				entity.Property(sc => sc.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+				entity
+					.HasOne(sc => sc.Story)
+					.WithMany(s => s.Contents)
+					.HasForeignKey(sc => sc.StoryId)
+					.OnDelete(DeleteBehavior.Cascade);
+			});
         }
     }
 }

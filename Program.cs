@@ -38,7 +38,6 @@ builder.Services.AddCors(options =>
 
 // Scoped ve transient servisler
 builder.Services.AddScoped<LeagueManager>();
-builder.Services.AddScoped<WebProviderManager>();
 
 builder.Services.AddScoped<NotificationManager>();
 builder.Services.AddTransient<DbBackupJob>();

@@ -4,6 +4,7 @@ using BussinessCupApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BussinessCupApi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250901083522_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -347,9 +350,6 @@ namespace BussinessCupApi.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("Category")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
@@ -479,36 +479,6 @@ namespace BussinessCupApi.Migrations
                     b.HasIndex("PlayerOutID");
 
                     b.ToTable("MatchSquadSubstitutions");
-                });
-
-            modelBuilder.Entity("BussinessCupApi.Models.PhotoGallery", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FilePath")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UploadedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("PhotoGalleries");
                 });
 
             modelBuilder.Entity("BussinessCupApi.Models.Player", b =>
@@ -686,46 +656,6 @@ namespace BussinessCupApi.Migrations
                     b.ToTable("PlayerTransferRequest");
                 });
 
-            modelBuilder.Entity("BussinessCupApi.Models.RichStaticContent", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AltText")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CategoryCode")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Culture")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ImageUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("Published")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Text")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("VideoUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("RichStaticContents");
-                });
-
             modelBuilder.Entity("BussinessCupApi.Models.Settings", b =>
                 {
                     b.Property<int>("ID")
@@ -757,101 +687,6 @@ namespace BussinessCupApi.Migrations
                     b.HasKey("ID");
 
                     b.ToTable("Settings");
-                });
-
-            modelBuilder.Entity("BussinessCupApi.Models.StaticKeyValue", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Key")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("StaticKeyValues");
-                });
-
-            modelBuilder.Entity("BussinessCupApi.Models.Story", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.Property<bool>("Published")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("StoryImage")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Stories");
-                });
-
-            modelBuilder.Entity("BussinessCupApi.Models.StoryContent", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ContentType")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.Property<int>("DisplayOrder")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
-
-                    b.Property<string>("MediaUrl")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int>("StoryId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("StoryId");
-
-                    b.ToTable("StoryContents");
                 });
 
             modelBuilder.Entity("BussinessCupApi.Models.Team", b =>
@@ -1594,17 +1429,6 @@ namespace BussinessCupApi.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("BussinessCupApi.Models.StoryContent", b =>
-                {
-                    b.HasOne("BussinessCupApi.Models.Story", "Story")
-                        .WithMany("Contents")
-                        .HasForeignKey("StoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Story");
-                });
-
             modelBuilder.Entity("BussinessCupApi.Models.Team", b =>
                 {
                     b.HasOne("BussinessCupApi.Models.League", null)
@@ -1878,11 +1702,6 @@ namespace BussinessCupApi.Migrations
                     b.Navigation("Cards");
 
                     b.Navigation("Goals");
-                });
-
-            modelBuilder.Entity("BussinessCupApi.Models.Story", b =>
-                {
-                    b.Navigation("Contents");
                 });
 
             modelBuilder.Entity("BussinessCupApi.Models.Team", b =>

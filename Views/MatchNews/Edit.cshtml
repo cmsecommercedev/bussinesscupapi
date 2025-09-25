@@ -1,364 +1,310 @@
 @model BussinessCupApi.Models.MatchNews
-
 @{
     ViewData["Title"] = "Haber Düzenle";
-    if (User.IsInRole("Admin"))
-    {
-        Layout = "_AdminLayout";
-    }
-    else if (User.IsInRole("CityAdmin"))
-    {
-        Layout = "_CityAdminLayout";
-    }
+    Layout = "_AdminLayout";
 }
 
+<div class="min-h-screen bg-gray-900">
+    <style>
+        .fixed-image-frame {
+            height: 12rem;
+        }
 
-<div class="container mx-auto px-4 py-8">
-    <div class="bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
-        <h2 class="text-2xl font-bold text-yellow-500 mb-6">Haber Düzenle</h2>
-    </div>
+        @@media (min-width: 1024px) {
+            .fixed-image-frame {
+                height: 16rem;
+            }
+        }
 
-    <form asp-action="Edit" enctype="multipart/form-data">
-        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-        <input type="hidden" asp-for="Id" />
-        <input type="hidden" asp-for="CreatedDate" />
-        <input type="hidden" asp-for="Published" /> 
-        <input type="hidden" asp-for="MatchNewsMainPhoto" id="currentMainPhoto" value="@Model.MatchNewsMainPhoto" />
+        .fixed-image-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+    </style>
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="bg-gray-800 rounded-lg shadow-lg overflow-hidden mb-6">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-yellow-500">Haber Düzenle</h2>
+                </div>
 
+                <form asp-action="Edit" method="post" enctype="multipart/form-data" class="space-y-6">
+                    <input type="hidden" asp-for="Id" />
+                    <div class="grid grid-cols-1 gap-6">
+                        <!-- Kategori -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300">Kategori</label>
+                            <select name="Category" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                                <option value="News" selected="@(Model.Category.ToString() == "News")">News</option>
+                                <option value="Story" selected="@(Model.Category.ToString() == "Story")">Story</option>
+                            </select>
+                        </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-            <div class="form-group mb-3">
-                <label asp-for="Title" class="block text-sm font-medium text-gray-300 mb-1">Başlık</label>
-                <input asp-for="Title" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500" />
-                <span asp-validation-for="Title" class="text-danger"></span>
-            </div>
+                        <!-- Ana Fotoğraf -->
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Ana Fotoğraf</label>
+                                <div class="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-yellow-500 transition-colors">
+                                    <div class="space-y-2">
+                                        <i class="fas fa-cloud-upload-alt text-3xl text-gray-400"></i>
+                                        <div>
+                                            <label for="MainPhoto" class="cursor-pointer">
+                                                <span class="text-yellow-500 hover:text-yellow-400">Ana fotoğraf seçin</span>
+                                                <input type="file" name="MainPhoto" id="MainPhoto" class="hidden" accept="image/*" onchange="previewMainImage(event)">
+                                            </label>
+                                        </div>
+                                        <p class="text-xs text-gray-500">PNG, JPG, GIF maksimum 10MB</p>
+                                    </div>
+                                    <div id="mainPhotoPreview" class="mt-4 fixed-image-frame">
+                                        <img id="mainPhotoImg" src="@Model.MatchNewsMainPhoto" alt="Ana fotoğraf önizleme">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-            <div class="form-group mb-3">
-                <label asp-for="Subtitle" class="block text-sm font-medium text-gray-300 mb-1">Alt Başlık</label>
-                <input asp-for="Subtitle" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500" />
-                <span asp-validation-for="Subtitle" class="text-danger"></span>
-            </div>
+                        <!-- Çok Dilli İçerik -->
+                        <div class="space-y-6">
+                            @{
+                                var tr = Model.Contents.FirstOrDefault(c => c.Culture == "tr"); var en = Model.Contents.FirstOrDefault(c => c.Culture == "en"); var ro = Model.Contents.FirstOrDefault(c => c.Culture == "ro"); var ru = Model.Contents.FirstOrDefault(c => c.Culture == "ru");
+                            }
+                            <div>
+                                <h3 class="text-lg font-semibold text-yellow-500 mb-2">Türkçe (tr)</h3>
+                                <label class="block text-sm font-medium text-gray-300">Başlık</label>
+                                <input name="Title_tr" value="@tr?.Title" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                                <label class="block text-sm font-medium text-gray-300 mt-3">Alt Başlık</label>
+                                <input name="Subtitle_tr" value="@tr?.Subtitle" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                                <label class="block text-sm font-medium text-gray-300 mt-3">Detay Başlığı</label>
+                                <input name="DetailsTitle_tr" value="@tr?.DetailsTitle" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                                <label class="block text-sm font-medium text-gray-300 mt-3">Detaylar</label>
+                                <textarea name="Details_tr" rows="4" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">@tr?.Details</textarea>
+                            </div>
 
-            <div class="form-group mb-3">
-                <label asp-for="DetailsTitle" class="block text-sm font-medium text-gray-300 mb-1">Detay Başlığı</label>
-                <input asp-for="DetailsTitle" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500" />
-                <span asp-validation-for="DetailsTitle" class="text-danger"></span>
-            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-yellow-500 mb-2">English (en)</h3>
+                                <label class="block text-sm font-medium text-gray-300">Title</label>
+                                <input name="Title_en" value="@en?.Title" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                                <label class="block text-sm font-medium text-gray-300 mt-3">Subtitle</label>
+                                <input name="Subtitle_en" value="@en?.Subtitle" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                                <label class="block text-sm font-medium text-gray-300 mt-3">Details Title</label>
+                                <input name="DetailsTitle_en" value="@en?.DetailsTitle" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                                <label class="block text-sm font-medium text-gray-300 mt-3">Details</label>
+                                <textarea name="Details_en" rows="4" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">@en?.Details</textarea>
+                            </div>
 
-            <div class="form-group mb-3">
-                <label asp-for="Details" class="block text-sm font-medium text-gray-300 mb-1">Detaylar</label>
-                <textarea asp-for="Details" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500" rows="5"></textarea>
-                <span asp-validation-for="Details" class="text-danger"></span>
-            </div>
-        </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-yellow-500 mb-2">Română (ro)</h3>
+                                <label class="block text-sm font-medium text-gray-300">Titlu</label>
+                                <input name="Title_ro" value="@ro?.Title" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                                <label class="block text-sm font-medium text-gray-300 mt-3">Subtitlu</label>
+                                <input name="Subtitle_ro" value="@ro?.Subtitle" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                                <label class="block text-sm font-medium text-gray-300 mt-3">Titlul detaliilor</label>
+                                <input name="DetailsTitle_ro" value="@ro?.DetailsTitle" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                                <label class="block text-sm font-medium text-gray-300 mt-3">Detalii</label>
+                                <textarea name="Details_ro" rows="4" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">@ro?.Details</textarea>
+                            </div>
 
-        <div id="city-team-fields" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-            <div class="form-group mb-3">
-                <label asp-for="CityID" class="block text-sm font-medium text-gray-300 mb-1">Şehir</label>
-                <select asp-for="CityID" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white" asp-items="@(new SelectList(ViewBag.Cities, "CityID", "Name", Model.CityID))">
-                    <option value="">Şehir Seçiniz</option>
-                </select>
-                <span asp-validation-for="CityID" class="text-danger"></span>
-            </div>
-            <div class="form-group mb-3">
-                <label asp-for="TeamID" class="block text-sm font-medium text-gray-300 mb-1">Takım</label>
-                <select asp-for="TeamID" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white" asp-items="@(new SelectList(ViewBag.Teams, "TeamID", "Name", Model.TeamID))">
-                    <option value="">Takım Seçiniz</option>
-                </select>
-                <span asp-validation-for="TeamID" class="text-danger"></span>
-            </div>
-        </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-yellow-500 mb-2">Русский (ru)</h3>
+                                <label class="block text-sm font-medium text-gray-300">Заголовок</label>
+                                <input name="Title_ru" value="@ru?.Title" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                                <label class="block text-sm font-medium text-gray-300 mt-3">Подзаголовок</label>
+                                <input name="Subtitle_ru" value="@ru?.Subtitle" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                                <label class="block text-sm font-medium text-gray-300 mt-3">Заголовок деталей</label>
+                                <input name="DetailsTitle_ru" value="@ru?.DetailsTitle" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                                <label class="block text-sm font-medium text-gray-300 mt-3">Детали</label>
+                                <textarea name="Details_ru" rows="4" class="mt-1 block w-full rounded-md border-gray-700 bg-gray-700 text-white shadow-sm focus:border-yellow-500 focus:ring-yellow-500">@ru?.Details</textarea>
+                            </div>
+                        </div>
 
-        <div class="form-group mb-3 flex items-center">
-            <input asp-for="IsMainNews" type="checkbox" class="mr-2 accent-yellow-500 scale-125" id="IsMainNews" />
-            <label asp-for="IsMainNews" class="text-lg font-bold text-yellow-400 mb-1 flex items-center">
-                <i class="fas fa-star mr-1"></i> Ana Haber
-            </label>
-            <span asp-validation-for="IsMainNews" class="text-danger"></span>
-        </div>
-        <div class="form-group mb-3">
-            <label class="block text-sm font-medium text-gray-300 mb-1">Ana Fotoğraf</label>
-            <div id="mainPhotoPreview" class="mb-2">
-                @if (!string.IsNullOrEmpty(Model.MatchNewsMainPhoto))
-                {
-                    <div class="relative group">
-                        <img src="@Model.MatchNewsMainPhoto" alt="Ana Fotoğraf" 
-                             class="h-24 w-24 object-cover rounded cursor-pointer" 
-                             onclick="openModal('@Model.MatchNewsMainPhoto')" />
-                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded flex items-center justify-center">
-                            <i class="fas fa-search-plus text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200"></i>
+                        <!-- Ek Fotoğraflar -->
+                        <div class="mt-3 pt-3 border-t border-gray-700">
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Ek Fotoğraflar</label>
+                            <div class="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-yellow-500 transition-colors">
+                                <div class="space-y-2">
+                                    <i class="fas fa-images text-3xl text-gray-400"></i>
+                                    <div>
+                                        <label for="ImageFiles" class="cursor-pointer">
+                                            <span class="text-yellow-500 hover:text-yellow-400">Ek fotoğraflar seçin</span>
+                                            <input type="file" name="ImageFiles" id="ImageFiles" class="hidden" accept="image/*" multiple>
+                                        </label>
+                                    </div>
+                                    <p class="text-xs text-gray-500">Birden fazla fotoğraf seçebilirsiniz</p>
+                                </div>
+                            </div>
+
+                            @if (Model.Photos != null && Model.Photos.Any())
+                            {
+                                <div id="imagesPreviewContainer" class="mt-3 flex flex-wrap gap-2">
+                                    @foreach (var photo in Model.Photos)
+                                    {
+                                        <div class="relative group">
+                                            <img src="@photo.PhotoUrl" data-id="@photo.Id" class="w-16 h-16 lg:w-20 lg:h-20 object-cover rounded-md transition-transform duration-200 transform hover:scale-105">
+
+                                            <button type="button"
+                                                    class="delete-photo opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute top-1 right-1 bg-white text-red-600 w-6 h-6 flex items-center justify-center rounded-full shadow-md hover:bg-red-600 hover:text-white focus:outline-none"
+                                                    onclick="deletePhoto(photo.id)"
+                                                    data-id="@photo.Id">
+                                                <i class="fas fa-times text-xs"></i>
+                                            </button>
+                                        </div>
+                                    }
+
+                                </div>
+                            }
                         </div>
                     </div>
-                }
+
+                    <div class="flex justify-end space-x-3 pt-4 border-t border-gray-700">
+                        <a href="@Url.Action("Index")" class="bg-gray-700 text-white px-6 py-2 rounded-md hover:bg-gray-600 transition-colors">Geri</a>
+                        <button type="submit" class="bg-yellow-600 text-white px-6 py-2 rounded-md hover:bg-yellow-700 transition-colors">Kaydet</button>
+                    </div>
+                </form>
             </div>
-            <input type="file" name="MainPhoto" id="mainPhotoInput" class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4
-                   file:rounded-md file:border-0 file:text-sm file:font-semibold
-                   file:bg-yellow-500 file:text-gray-900 hover:file:bg-yellow-600
-                   cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-yellow-500" 
-                   accept="image/*" onchange="previewMainPhoto(this)" />
         </div>
-
-        <div class="form-group mb-3">
-            <label class="block text-sm font-medium text-gray-300 mb-1">Ek Fotoğraflar</label>
-            <div id="additionalPhotosPreview" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-2">
-                @if (Model.Photos != null && Model.Photos.Any())
-                {
-                    @foreach (var photo in Model.Photos)
-                    {
-                        <div class="relative group">
-                            <img src="@photo.PhotoUrl" alt="Haber Fotoğrafı" 
-                                 class="h-24 w-full object-cover rounded cursor-pointer" 
-                                 onclick="openModal('@photo.PhotoUrl')" />
-                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded flex items-center justify-center">
-                                <i class="fas fa-search-plus text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200"></i>
-                            </div>
-                            <button type="button" 
-                                    onclick="deletePhoto(@photo.Id, this)" 
-                                    class="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </div>
-                    }
-                }
-            </div>
-            <input type="file" name="ImageFiles" id="additionalPhotosInput" class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4
-                   file:rounded-md file:border-0 file:text-sm file:font-semibold
-                   file:bg-yellow-500 file:text-gray-900 hover:file:bg-yellow-600
-                   cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-yellow-500" 
-                   accept="image/*" multiple onchange="previewAdditionalPhotos(this)" />
-        </div>
-
-        <div class="flex space-x-4">
-            <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-2 px-4 rounded transition-colors">
-                <i class="fas fa-save mr-1"></i> Kaydet
-            </button>
-            <a asp-action="Index" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition-colors">
-                <i class="fas fa-arrow-left mr-1"></i> Listeye Dön
-            </a>
-        </div>
-    </form>
-</div>
-
-<!-- Modal -->
-<div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50 flex">
-    <div class="relative max-w-4xl w-full mx-4">
-        <img id="modalImage" src="" alt="Büyük Görüntü" class="w-full h-auto rounded-lg shadow-xl" />
-        <button onclick="closeModal()" class="absolute top-4 right-4 text-white hover:text-gray-300">
-            <i class="fas fa-times text-2xl"></i>
-        </button>
     </div>
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script>
-        // Form gönderilmeden önce kontrol
-        document.querySelector('form').addEventListener('submit', function(e) {
-            const mainPhotoInput = document.getElementById('mainPhotoInput');
-            const additionalPhotosInput = document.getElementById('additionalPhotosInput');
-            const currentMainPhoto = document.getElementById('currentMainPhoto').value;
-            
-            // Ana fotoğraf için kontrol
-            if (!mainPhotoInput.files || mainPhotoInput.files.length === 0) {
-                // Yeni fotoğraf seçilmemişse, mevcut fotoğrafı hidden input'a ekle
-                const hiddenMainPhoto = document.createElement('input');
-                hiddenMainPhoto.type = 'hidden';
-                hiddenMainPhoto.name = 'MatchNewsMainPhoto';
-                hiddenMainPhoto.value = currentMainPhoto;
-                this.appendChild(hiddenMainPhoto);
-            }
-
-            // Ek fotoğraflar için kontrol
-            if (!additionalPhotosInput.files || additionalPhotosInput.files.length === 0) {
-                // Mevcut ek fotoğrafları hidden input'a ekle
-                const currentPhotos = document.querySelectorAll('#additionalPhotosPreview img');
-                currentPhotos.forEach((img, index) => {
-                    const hiddenPhoto = document.createElement('input');
-                    hiddenPhoto.type = 'hidden';
-                    hiddenPhoto.name = `ExistingPhotos[${index}].PhotoUrl`;
-                    hiddenPhoto.value = img.src;
-                    this.appendChild(hiddenPhoto);
-                });
-            }
-        });
-
-        // Ana fotoğraf önizleme
-        function previewMainPhoto(input) {
-            const preview = document.getElementById('mainPhotoPreview');
-            const currentPhoto = document.getElementById('currentMainPhoto').value;
-            
-            if (!input.files || !input.files[0]) {
-                // Eğer yeni fotoğraf seçilmediyse, mevcut fotoğrafı koru
-                if (currentPhoto) {
-                    preview.innerHTML = `
-                        <div class="relative group">
-                            <img src="${currentPhoto}" alt="Ana Fotoğraf" 
-                                 class="h-24 w-24 object-cover rounded cursor-pointer" 
-                                 onclick="openModal('${currentPhoto}')" />
-                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded flex items-center justify-center">
-                                <i class="fas fa-search-plus text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200"></i>
-                            </div>
-                        </div>
-                    `;
+        function previewMainImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('mainPhotoImg').src = e.target.result;
                 }
-                return;
-            }
-
-            preview.innerHTML = ''; // Mevcut önizlemeyi temizle
-            const reader = new FileReader();
-            const file = input.files[0];
-            
-            // GUID ile yeni dosya adı oluştur
-            const newFileName = "main_" + generateGuid() + "_" + file.name;
-            const newFile = new File([file], newFileName, { type: file.type });
-            
-            // DataTransfer ile dosyayı güncelle
-            const dataTransfer = new DataTransfer();
-            dataTransfer.items.add(newFile);
-            input.files = dataTransfer.files;
-
-            reader.onload = function(e) {
-                const div = document.createElement('div');
-                div.className = 'relative group';
-                div.innerHTML = `
-                    <img src="${e.target.result}" alt="Ana Fotoğraf" 
-                         class="h-24 w-24 object-cover rounded cursor-pointer" 
-                         onclick="openModal('${e.target.result}')" />
-                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded flex items-center justify-center">
-                        <i class="fas fa-search-plus text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200"></i>
-                    </div>
-                `;
-                preview.appendChild(div);
-            }
-            reader.readAsDataURL(file);
-        }
-
-        // Ek fotoğraflar önizleme
-        function previewAdditionalPhotos(input) {
-            const preview = document.getElementById('additionalPhotosPreview');
-            const currentPhotos = document.querySelectorAll('#additionalPhotosPreview img');
-            
-            if (!input.files || input.files.length === 0) {
-                // Eğer yeni fotoğraf seçilmediyse, mevcut fotoğrafları koru
-                if (currentPhotos.length > 0) {
-                    preview.innerHTML = '';
-                    currentPhotos.forEach(img => {
-                        const div = document.createElement('div');
-                        div.className = 'relative group';
-                        div.innerHTML = `
-                            <img src="${img.src}" alt="Haber Fotoğrafı" 
-                                 class="h-24 w-full object-cover rounded cursor-pointer" 
-                                 onclick="openModal('${img.src}')" />
-                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded flex items-center justify-center">
-                                <i class="fas fa-search-plus text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200"></i>
-                            </div>
-                        `;
-                        preview.appendChild(div);
-                    });
-                }
-                return;
-            }
-
-            preview.innerHTML = ''; // Mevcut fotoğrafları temizle
-
-            if (input.files && input.files.length > 0) {
-                const newPhotos = [];
-                
-                // Seçilen dosyaları işle
-                Array.from(input.files).forEach(file => {
-                    // GUID ile yeni dosya adı oluştur
-                    const newFileName = generateGuid() + "_" + file.name;
-                    const newFile = new File([file], newFileName, { type: file.type });
-                    newPhotos.push(newFile);
-
-                    // Önizleme oluştur
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const div = document.createElement('div');
-                        div.className = 'relative group';
-                        div.innerHTML = `
-                            <img src="${e.target.result}" alt="Haber Fotoğrafı" 
-                                 class="h-24 w-full object-cover rounded cursor-pointer" 
-                                 onclick="openModal('${e.target.result}')" />
-                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded flex items-center justify-center">
-                                <i class="fas fa-search-plus text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200"></i>
-                            </div>
-                        `;
-                        preview.appendChild(div);
-                    }
-                    reader.readAsDataURL(file);
-                });
-
-                // DataTransfer ile dosyaları güncelle
-                const dataTransfer = new DataTransfer();
-                newPhotos.forEach(file => dataTransfer.items.add(file));
-                input.files = dataTransfer.files;
+                reader.readAsDataURL(file);
             }
         }
 
-        // GUID oluşturma fonksiyonu
-        function generateGuid() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                const r = Math.random() * 16 | 0;
-                const v = c === 'x' ? r : (r & 0x3 | 0x8);
-                return v.toString(16);
+        function deletePhoto(id) {
+            return fetch('@Url.Action("DeletePhoto")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: `id=${id}`
+            })
+            .then(r => r.json())
+            .then(result => {
+                if (result.success) {
+                    return true; // başarılı
+                } else {
+                    toastr.error(result.message || 'Fotoğraf silinemedi');
+                    return false;
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                toastr.error('Fotoğraf silinemedi');
+                return false;
             });
         }
 
-        // Fotoğraf silme fonksiyonu
-        function deletePhoto(photoId, buttonElement) {
-            if (confirm('Bu fotoğrafı silmek istediğinizden emin misiniz?')) {
-                fetch(`/MatchNews/DeletePhoto/${photoId}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                    }
-                })
-                .then(response => {
-                    if (response.ok) {
-                        // Başarılı silme işlemi
-                        const photoContainer = buttonElement.closest('.relative');
-                        photoContainer.remove();
-                    } else {
-                        alert('Fotoğraf silinirken bir hata oluştu.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Hata:', error);
-                    alert('Fotoğraf silinirken bir hata oluştu.');
-                });
-            }
-        }
 
-        // Şehir ve Takım alanlarını Ana Haber'e göre göster/gizle
-        function toggleCityTeamFields() {
-            var isMain = document.getElementById('IsMainNews').checked;
-            document.getElementById('city-team-fields').style.display = isMain ? 'none' : 'grid';
-        }
-        document.getElementById('IsMainNews').addEventListener('change', toggleCityTeamFields);
-        // Sayfa yüklendiğinde ilk durumu ayarla
-        toggleCityTeamFields();
+        let existingPhotos = []; // serverdan gelen mevcut fotoğraflar
+        let newFiles = [];       // kullanıcı eklediği yeni fotoğraflar
 
-        // Şehir değişince takımları getir
-        document.getElementById('CityID').addEventListener('change', function () {
-            var cityId = this.value;
-            var teamSelect = document.getElementById('TeamID');
-            teamSelect.innerHTML = '<option value="">Takım Seçiniz</option>';
-            if (cityId) {
-                fetch('/MatchNews/GetTeamsByCity?cityId=' + cityId)
-                    .then(response => response.json())
-                    .then(data => {
-                        data.forEach(function (team) {
-                            var opt = document.createElement('option');
-                            opt.value = team.teamID;
-                            opt.text = team.name;
-                            teamSelect.appendChild(opt);
-                        });
+        // Sayfa yüklendiğinde var olanları al
+        document.addEventListener('DOMContentLoaded', () => {
+            existingPhotos = Array.from(document.querySelectorAll('#imagesPreviewContainer img')).map(img => ({
+                id: img.dataset.id,   // var olan foto ID'si
+                src: img.src,
+                isNew: false
+            }));
+            updatePreview();
+        });
+
+        // Input değiştiğinde yeni dosyaları ekle
+        const imageInput = document.getElementById('ImageFiles');
+        imageInput.addEventListener('change', (event) => {
+            const files = Array.from(event.target.files);
+            newFiles = newFiles.concat(files.map(f => ({ file: f, isNew: true })));
+            updatePreview();
+        });
+
+        function updatePreview() {
+            const preview = document.getElementById('imagesPreviewContainer');
+            preview.innerHTML = '';
+
+            // Var olan fotoğraflar
+            existingPhotos.forEach((photo, index) => {
+                const div = document.createElement('div');
+                div.className = 'relative group';
+
+                const img = document.createElement('img');
+                img.src = photo.src;
+                img.className = 'w-16 h-16 lg:w-20 lg:h-20 object-cover rounded-md transition-transform duration-200 transform hover:scale-105';
+                div.appendChild(img);
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute top-1 right-1 bg-white text-red-600 w-6 h-6 flex items-center justify-center rounded-full shadow-md hover:bg-red-600 hover:text-white focus:outline-none';
+                btn.innerHTML = '<i class="fas fa-times text-xs"></i>';
+                        btn.onclick = () => {
+            if (photo.isNew) {
+                // Yeni eklenen fotoğraf → sadece local'den kaldır
+                newFiles.splice(index, 1);
+                updatePreview();
+            } else {
+                // Var olan fotoğraf → server'dan sil ve local'den kaldır
+                deletePhoto(photo.id)
+                    .then(success => {
+                        if (success) {
+                            existingPhotos.splice(index, 1);
+                            updatePreview();
+                        }
                     });
             }
-        });
+        }
+                div.appendChild(btn);
+
+                preview.appendChild(div);
+            });
+
+            // Yeni seçilen fotoğraflar
+            newFiles.forEach((item, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const div = document.createElement('div');
+                    div.className = 'relative group';
+
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'w-16 h-16 lg:w-20 lg:h-20 object-cover rounded-md transition-transform duration-200 transform hover:scale-105';
+                    div.appendChild(img);
+
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute top-1 right-1 bg-white text-red-600 w-6 h-6 flex items-center justify-center rounded-full shadow-md hover:bg-red-600 hover:text-white focus:outline-none';
+                    btn.innerHTML = '<i class="fas fa-times text-xs"></i>';
+        btn.onclick = () => {
+                    if (photo.isNew) {
+                        // Yeni eklenen fotoğraf → sadece local'den kaldır
+                        newFiles.splice(index, 1);
+                        updatePreview();
+                    } else {
+                        // Var olan fotoğraf → server'dan sil ve local'den kaldır
+                        deletePhoto(photo.id)
+                            .then(success => {
+                                if (success) {
+                                    existingPhotos.splice(index, 1);
+                                    updatePreview();
+                                }
+                            });
+                    }
+                }
+                    div.appendChild(btn);
+
+                    preview.appendChild(div);
+                }
+                reader.readAsDataURL(item.file);
+            });
+        }
+
+
     </script>
 }
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />

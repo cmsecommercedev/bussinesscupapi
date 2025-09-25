@@ -22,5 +22,6 @@ namespace BussinessCupApi.Models
         public string? AppStopMessage { get; set; }
         
         public DateTime LastUpdated { get; set; }
+        public DateTime? TournamentStartDate { get; set; }
     }
 } 

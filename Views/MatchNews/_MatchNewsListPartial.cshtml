@@ -1,0 +1,100 @@
+@model MatchNewsIndexViewModel
+
+@if (Model.MatchNewsList != null && Model.MatchNewsList.Any())
+{
+    <div class="grid gap-6">
+        @foreach (var newsItem in Model.MatchNewsList)
+        {
+            var matchNews = newsItem.MatchNews;
+            var content = newsItem.Content;
+
+            <div class="bg-gray-800 rounded-lg shadow-md overflow-hidden">
+                <!-- Ana Fotoğraf -->
+                @if (!string.IsNullOrEmpty(matchNews.MatchNewsMainPhoto))
+                {
+<img src="@matchNews.MatchNewsMainPhoto"
+     alt="Haber Fotoğrafı"
+     class="w-full max-h-60 object-contain bg-gray-900 rounded-t-lg">
+
+
+                }
+                else
+                {
+                    <div class="w-full h-48 bg-gray-600 flex items-center justify-center">
+                        <i class="fas fa-image text-gray-400 text-4xl"></i>
+                    </div>
+                }
+
+                <!-- İçerik -->
+                <div class="p-4">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold text-white mb-1">
+                                @(content?.Title ?? "Başlık bulunamadı")
+                                <span class="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-600 text-white">
+                                    <i class="fas fa-star mr-1"></i>Ana Haber
+                                </span>
+                            </h3>
+                            @if (!string.IsNullOrEmpty(content?.Subtitle))
+                            {
+                                <p class="text-gray-300 text-sm mb-2">@content.Subtitle</p>
+                            }
+                            <div class="flex items-center space-x-4 text-xs text-gray-400">
+                                <span><i class="fas fa-calendar mr-1"></i>@matchNews.CreatedDate.ToString("dd.MM.yyyy HH:mm")</span>
+                                <span class="flex items-center">
+                                    <i class="fas fa-eye mr-1"></i>
+                                    @if (matchNews.Published)
+                                    {
+                                        <span class="text-green-400">Yayında</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-red-400">Yayında Değil</span>
+                                    }
+                                </span>
+                            </div>
+                            <div class="mt-2">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xxs font-medium bg-blue-600 text-white uppercase">@matchNews.Category</span>
+                            </div>
+                        </div>
+
+                        <!-- İşlem Butonları -->
+                        <div class="flex items-center space-x-2 ml-4">
+                            <a href="@Url.Action("Edit", new { id = matchNews.Id })"
+                               class="bg-blue-600 text-white px-3 py-1 rounded-md text-xs hover:bg-blue-700 transition-colors">
+                                <i class="fas fa-edit mr-1"></i>Düzenle
+                            </a>
+                            <button onclick="togglePublishStatus(@matchNews.Id, @(matchNews.Published ? "false" : "true"))"
+                                    class="@(matchNews.Published ? "bg-orange-600 hover:bg-orange-700" : "bg-green-600 hover:bg-green-700") text-white px-3 py-1 rounded-md text-xs transition-colors">
+                                <i class="fas @(matchNews.Published ? "fa-eye-slash" : "fa-eye") mr-1"></i>
+                                @(matchNews.Published ? "Gizle" : "Yayınla")
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Ek Fotoğraflar -->
+                    @if (matchNews.Photos != null && matchNews.Photos.Any())
+                    {
+                        <div class="mt-4">
+                            <div class="flex flex-wrap gap-2">
+                                @foreach (var photo in matchNews.Photos.OrderByDescending(p => p.Id))
+                                {
+                                    <img src="@photo.PhotoUrl"
+                                         alt="Ek Fotoğraf"
+                                         class="w-16 h-16 lg:w-20 lg:h-20 object-cover rounded-md border border-gray-600">
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="text-center py-8">
+        <i class="fas fa-newspaper text-4xl text-gray-500 mb-4"></i>
+        <p class="text-gray-400">Henüz haber bulunmamaktadır.</p>
+    </div>
+} 
