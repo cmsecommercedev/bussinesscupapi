@@ -923,6 +923,7 @@ namespace BussinessCupApi.Controllers
                 settings.AppStop = model.AppStop;
                 settings.AppStopMessage = model.AppStopMessage;
                 settings.LastUpdated = DateTime.Now;
+                settings.TournamentStartDate = model.TournamentStartDate;
 
                 await _context.SaveChangesAsync();
 

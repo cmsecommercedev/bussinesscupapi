@@ -26,13 +26,22 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label asp-for="iOSVersion" class="block text-gray-300 mb-2"></label>
-                    <input asp-for="iOSVersion" class="w-full bg-gray-700 text-white rounded p-2 border border-gray-600 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500">
+                    <input asp-for="iOSVersion"
+                        class="w-full bg-gray-700 text-white rounded p-2 border border-gray-600 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500">
                 </div>
 
                 <div>
                     <label asp-for="AndroidVersion" class="block text-gray-300 mb-2"></label>
-                    <input asp-for="AndroidVersion" class="w-full bg-gray-700 text-white rounded p-2 border border-gray-600 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500">
+                    <input asp-for="AndroidVersion"
+                        class="w-full bg-gray-700 text-white rounded p-2 border border-gray-600 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500">
                 </div>
+
+<div>
+    <label asp-for="TournamentStartDate" class="block text-gray-300 mb-2"></label>
+    <input asp-for="TournamentStartDate" type="datetime-local"
+        class="w-full bg-gray-700 text-white rounded p-2 border border-gray-600 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500">
+</div>
+
 
                 <div class="col-span-2">
                     <label class="inline-flex items-center mb-4">
@@ -50,14 +59,15 @@
 
                 <div class="col-span-2">
                     <label asp-for="AppStopMessage" class="block text-gray-300 mb-2"></label>
-                    <textarea asp-for="AppStopMessage" rows="3" 
-                              class="w-full bg-gray-700 text-white rounded p-2 border border-gray-600 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500"
-                              placeholder="Uygulama durdurulduğunda gösterilecek mesaj..."></textarea>
+                    <textarea asp-for="AppStopMessage" rows="3"
+                        class="w-full bg-gray-700 text-white rounded p-2 border border-gray-600 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500"
+                        placeholder="Uygulama durdurulduğunda gösterilecek mesaj..."></textarea>
                 </div>
             </div>
 
             <div class="mt-6">
-                <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-2 px-4 rounded">
+                <button type="submit"
+                    class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-2 px-4 rounded">
                     Ayarları Kaydet
                 </button>
             </div>
@@ -73,11 +83,13 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label class="block text-gray-300 mb-2">OneSignal App ID</label>
-                    <input type="text" value="@ViewBag.OneSignalAppId" readonly class="w-full bg-gray-700 text-gray-400 rounded p-2 border border-gray-600">
+                    <input type="text" value="@ViewBag.OneSignalAppId" readonly
+                        class="w-full bg-gray-700 text-gray-400 rounded p-2 border border-gray-600">
                 </div>
                 <div>
                     <label class="block text-gray-300 mb-2">OneSignal API Key</label>
-                    <input type="text" value="@ViewBag.OneSignalApiKey" readonly class="w-full bg-gray-700 text-gray-400 rounded p-2 border border-gray-600">
+                    <input type="text" value="@ViewBag.OneSignalApiKey" readonly
+                        class="w-full bg-gray-700 text-gray-400 rounded p-2 border border-gray-600">
                 </div>
             </div>
             <p class="mt-2 text-sm text-gray-400">
@@ -85,4 +97,4 @@
             </p>
         </div>
     </div>
-</div> 
+</div>
