@@ -58,6 +58,22 @@
 				}
 			</div>
 
+			<div class="md:col-span-3">
+				<label class="block text-gray-300 mb-1">Profile Image (Video Preview)</label>
+				<input asp-for="ProfileImageFile" type="file" accept="image/*"
+					class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:border-yellow-500" />
+				<p class="text-xs text-gray-400 mt-1">Videoların önizleme resimleri için kullanılır</p>
+				@if (!string.IsNullOrWhiteSpace(Model?.ProfileImageUrl))
+				{
+					<div class="mt-2 text-xs text-gray-400 break-all">
+						<span>Current:</span>
+						<a href="@Model.ProfileImageUrl" target="_blank"
+							class="text-yellow-400 hover:underline">@Model.ProfileImageUrl</a>
+					</div>
+					<input type="hidden" asp-for="ProfileImageUrl" />
+				}
+			</div>
+
 			<div class="md:col-span-4">
 				<label class="block text-gray-300 mb-1">Video Url (optional)</label>
 				<input asp-for="VideoUrl"
@@ -116,12 +132,13 @@
 						<tr>
 							<th class="px-6 py-3">Culture</th>
 							<th class="px-6 py-3">Image</th>
+							<th class="px-6 py-3">Profile Image</th>
 							<th class="px-6 py-3">Video</th>
 							<th class="px-6 py-3">Text</th>
 							<th class="px-6 py-3">Alt</th>
 							<th class="px-6 py-3">Published</th>
 							<th class="px-6 py-3">Updated</th>
-							- <th class="px-6 py-3 text-right">İşlem</th>
+							<th class="px-6 py-3 text-right">İşlem</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -151,7 +168,19 @@
 									{
 										<span class="text-gray-500">-</span>
 									}
-
+								</td>
+								<td class="px-6 py-3">
+									@if (!string.IsNullOrWhiteSpace(x.ProfileImageUrl))
+									{
+										<a href="@x.ProfileImageUrl" target="_blank" class="inline-block">
+											<img src="@x.ProfileImageUrl" alt="Profile Image"
+												class="h-10 w-10 object-cover rounded border border-gray-600" />
+										</a>
+									}
+									else
+									{
+										<span class="text-gray-500">-</span>
+									}
 								</td>
 								<td class="px-6 py-3 truncate max-w-[220px]">@x.VideoUrl</td>
 								<td class="px-6 py-3 whitespace-pre-line max-w-[420px]">@x.Text</td>

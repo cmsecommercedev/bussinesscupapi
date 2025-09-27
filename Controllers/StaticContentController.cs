@@ -102,6 +102,17 @@ namespace BussinessCupApi.Controllers
 				model.ImageUrl = _r2Manager.GetFileUrl(key);
 			}
 
+			// Profil görseli yüklendiyse R2'ye yükle
+			if (model.ProfileImageFile != null && model.ProfileImageFile.Length > 0)
+			{
+				var ext = Path.GetExtension(model.ProfileImageFile.FileName);
+				var safeCat = string.IsNullOrWhiteSpace(model.CategoryCode) ? "misc" : model.CategoryCode.Trim().ToLower();
+				var key = $"richstatic/profile/{safeCat}/{Guid.NewGuid()}{ext}";
+				using var stream = model.ProfileImageFile.OpenReadStream();
+				await _r2Manager.UploadFileAsync(key, stream, model.ProfileImageFile.ContentType);
+				model.ProfileImageUrl = _r2Manager.GetFileUrl(key);
+			}
+
 				// Türkçe kayıt oluştur
 				model.CreatedAt = DateTime.UtcNow;
 				model.UpdatedAt = DateTime.UtcNow;
@@ -118,6 +129,7 @@ namespace BussinessCupApi.Controllers
 				{
 					CategoryCode = model.CategoryCode,
 					ImageUrl = model.ImageUrl,
+					ProfileImageUrl = model.ProfileImageUrl,
 					CreatedAt = model.CreatedAt,
 					UpdatedAt = model.UpdatedAt,
 					Culture = "en",
@@ -129,6 +141,7 @@ namespace BussinessCupApi.Controllers
 				{
 					CategoryCode = model.CategoryCode,
 					ImageUrl = model.ImageUrl,
+					ProfileImageUrl = model.ProfileImageUrl,
 					CreatedAt = model.CreatedAt,
 					UpdatedAt = model.UpdatedAt,
 					Culture = "ru",
@@ -140,6 +153,7 @@ namespace BussinessCupApi.Controllers
 				{
 					CategoryCode = model.CategoryCode,
 					ImageUrl = model.ImageUrl,
+					ProfileImageUrl = model.ProfileImageUrl,
 					CreatedAt = model.CreatedAt,
 					UpdatedAt = model.UpdatedAt,
 					Culture = "ro",
