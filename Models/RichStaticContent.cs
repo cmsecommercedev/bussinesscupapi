@@ -10,6 +10,7 @@ namespace BussinessCupApi.Models
 		public string? CategoryCode { get; set; } // e.g., "flags", "home_hero"
 		public string? Culture { get; set; } // e.g., "tr", "en", "de", "ru" (or any you add)
 		public string? ImageUrl { get; set; } // optional
+		public string? ProfileImageUrl { get; set; } // video preview image (optional)
 		public string? VideoUrl { get; set; } // optional
 		public string? Text { get; set; } // rich/plain text
 		public string? AltText { get; set; } // image alt text
@@ -19,5 +20,8 @@ namespace BussinessCupApi.Models
 
 		[NotMapped]
 		public IFormFile? ImageFile { get; set; } // upload (optional)
+		
+		[NotMapped]
+		public IFormFile? ProfileImageFile { get; set; } // profile image upload (optional)
 	}
 }
