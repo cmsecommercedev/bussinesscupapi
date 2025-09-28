@@ -193,6 +193,7 @@ namespace BussinessCupApi.Controllers.Api // Namespace'i kontrol edin
                     x.CategoryCode,
                     x.Culture,
                     x.ImageUrl,
+                    x.ProfileImageUrl,
                     x.VideoUrl,
                     x.Text,
                     x.AltText,
