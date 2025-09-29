@@ -14,11 +14,13 @@ namespace BussinessCupApi.Managers
         private readonly IConfiguration _configuration;
         private readonly ILogger _logger;
         private readonly FirebaseMessaging _firebaseMessaging;
+        private readonly OpenAiManager _aiManager;
 
-        public NotificationManager(IConfiguration configuration, ILogger<NotificationManager> logger)
+        public NotificationManager(IConfiguration configuration, ILogger<NotificationManager> logger, OpenAiManager aiManager)
         {
             _configuration = configuration;
             _logger = logger;
+            _aiManager = aiManager;
 
             if (FirebaseApp.DefaultInstance == null)
             {
@@ -41,18 +43,46 @@ namespace BussinessCupApi.Managers
         {
             try
             {
-                var message = new Message()
+                // Languages: tr (original), ru, ro, en
+                var languages = new List<(string langCode, string displayName)>
                 {
-                    Notification = new Notification()
-                    {
-                        Title = model.TitleTr,
-                        Body = model.MessageTr
-                    },
-                    Topic = "all_users" // This will send to all users subscribed to the "all_users" topic
+                    ("tr", "Turkish"),
+                    ("ru", "Russian"),
+                    ("ro", "Romanian"),
+                    ("en", "English")
                 };
 
-                var response = await _firebaseMessaging.SendAsync(message);
-                return (true, response); // response mesaj ID'sidir
+                var responses = new List<string>();
+
+                foreach (var (langCode, displayName) in languages)
+                {
+                    string title = model.TitleTr;
+                    string body = model.MessageTr;
+
+                    if (langCode != "tr")
+                    {
+                        // Translate title and body from Turkish to target language
+                        title = await _aiManager.TranslateFromTurkishAsync(model.TitleTr ?? string.Empty, displayName);
+                        body = await _aiManager.TranslateFromTurkishAsync(model.MessageTr ?? string.Empty, displayName);
+                    }
+
+                    var topic = $"all_users_{langCode}";
+
+                    var message = new Message()
+                    {
+                        Notification = new Notification()
+                        {
+                            Title = title,
+                            Body = body
+                        },
+                        Topic = topic
+                    };
+
+                    var resp = await _firebaseMessaging.SendAsync(message);
+                    responses.Add($"{topic}:{resp}");
+                }
+
+                return (true, string.Join("; ", responses));
             }
             catch (Exception ex)
             {
