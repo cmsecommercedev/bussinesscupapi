@@ -1373,7 +1373,7 @@ namespace BussinessCupApi.Controllers
                 MessageTr = dto.Detail
             };
 
-            var (success, message) = await _notificationManager.SendNotificationToAllUsers(notification);
+            var (success, message) = await _notificationManager.SendNotificationToAllUsers(notification,"all_users");
             if (success)
                 return Ok(new { message });
             return StatusCode(500, message);

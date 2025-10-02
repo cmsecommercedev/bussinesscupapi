@@ -1,7 +1,9 @@
 using BussinessCupApi.Attributes;
 using BussinessCupApi.Managers;
+using BussinessCupApi.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace BussinessCupApi.Controllers.Api
@@ -26,7 +28,26 @@ namespace BussinessCupApi.Controllers.Api
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var result = await _notificationManager.SendNotificationToAllUsers(model);
+            var topic = $"all_users";
+
+            var result = await _notificationManager.SendNotificationToAllUsers(model,topic);
+            if (result.success)
+                return Ok(new { success = true, message = result.message });
+
+            _logger.LogWarning("Push send failed: {Message}", result.message);
+            return StatusCode(500, new { success = false, message = result.message });
+        }
+
+        [HttpPost("sendteam")]
+        public async Task<IActionResult> SendTeam([FromBody] NotificationViewModel model,int teamid)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            string topic = $"team_{teamid}";
+
+
+            var result = await _notificationManager.SendNotificationToAllUsers(model, topic);
             if (result.success)
                 return Ok(new { success = true, message = result.message });
 

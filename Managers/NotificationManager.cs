@@ -39,7 +39,7 @@ namespace BussinessCupApi.Managers
             _firebaseMessaging = FirebaseMessaging.DefaultInstance;
         }
 
-        public async Task<(bool success, string message)> SendNotificationToAllUsers(NotificationViewModel model)
+        public async Task<(bool success, string message)> SendNotificationToAllUsers(NotificationViewModel model,string topicnoculture)
         {
             try
             {
@@ -66,7 +66,7 @@ namespace BussinessCupApi.Managers
                         body = await _aiManager.TranslateFromTurkishAsync(model.MessageTr ?? string.Empty, displayName);
                     }
 
-                    var topic = $"all_users_{langCode}";
+                    var topic = $"{topicnoculture}_{langCode}";
 
                     var message = new Message()
                     {

@@ -50,5 +50,62 @@ namespace BussinessCupApi.Controllers.Api // Namespace'i kontrol edin
                 return StatusCode(500, new { success = false, message = $"Hata: {result.message}" });
         }
 
+        [HttpPost("addteamtofav")]
+        public async Task<IActionResult> AddTeamToFav([FromQuery] int teamId, [FromQuery] string userToken, string MacID, string culture = "tr")
+        {
+            // Zaten favori mi kontrol et
+            bool alreadyExists = await _context.FavouriteTeams
+                .AnyAsync(f => f.TeamID == teamId && f.UserToken == userToken);
+
+            if (alreadyExists)
+                return Ok(new { success = true, message = "Bu takım zaten favorilerde." });
+
+            // Tabloya ekle
+            var fav = new FavouriteTeams
+            {
+                TeamID = teamId,
+                UserToken = userToken,
+                MacID = MacID
+            };
+            _context.FavouriteTeams.Add(fav);
+            await _context.SaveChangesAsync();
+
+            // Firebase topic abone et
+            string topic = $"team_{teamId}_{culture}";
+            var result = await _notificationManager.SubscribeToTopicAsync(new[] { userToken }, topic);
+
+            if (result.success)
+                return Ok(new { success = true, message = $"Takım favorilere eklendi ve topic'e abone olundu: {topic}" });
+            else
+                return StatusCode(500, new { success = false, message = $"Favorilere eklendi fakat topic abonesi yapılamadı: {result.message}" });
+        }
+
+        [HttpPost("removeteamfromfav")]
+        public async Task<IActionResult> RemoveTeamFromFav([FromQuery] int teamId, [FromQuery] string userToken, string MacID, string culture = "tr")
+        {
+            if (teamId <= 0 || string.IsNullOrWhiteSpace(userToken))
+                return BadRequest("Geçersiz takım veya kullanıcı token bilgisi.");
+
+            // Favori kaydını bul
+            var fav = await _context.FavouriteTeams
+                .FirstOrDefaultAsync(f => f.TeamID == teamId && f.MacID == MacID);
+
+            if (fav == null)
+                return Ok(new { success = true, message = "Bu takım zaten favorilerde değil." });
+
+            // Tablo kaydını sil
+            _context.FavouriteTeams.Remove(fav);
+            await _context.SaveChangesAsync();
+
+            // Firebase topic'ten çıkar
+            string topic = $"team_{teamId}_{culture}";
+            var result = await _notificationManager.UnsubscribeFromTopicAsync(new[] { userToken }, topic);
+
+            if (result.success)
+                return Ok(new { success = true, message = $"Takım favorilerden çıkarıldı ve topic'ten çıkıldı: {topic}" });
+            else
+                return StatusCode(500, new { success = false, message = $"Favorilerden çıkarıldı fakat topic'ten çıkılamadı: {result.message}" });
+        }
+
     }
 }
