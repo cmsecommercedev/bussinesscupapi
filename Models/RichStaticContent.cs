@@ -19,7 +19,7 @@ namespace BussinessCupApi.Models
 		public bool Published { get; set; } = true;
 
 		[NotMapped]
-		public IFormFile? ImageFile { get; set; } // upload (optional)
+		public IFormFile? MediaFile { get; set; } // upload (optional)
 		
 		[NotMapped]
 		public IFormFile? ProfileImageFile { get; set; } // profile image upload (optional)

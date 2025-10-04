@@ -92,13 +92,13 @@ namespace BussinessCupApi.Controllers
 			}
 
 			// Görsel yüklendiyse R2'ye yükle
-			if (model.ImageFile != null && model.ImageFile.Length > 0)
+			if (model.MediaFile != null && model.MediaFile.Length > 0)
 			{
-				var ext = Path.GetExtension(model.ImageFile.FileName);
+				var ext = Path.GetExtension(model.MediaFile.FileName);
 				var safeCat = string.IsNullOrWhiteSpace(model.CategoryCode) ? "misc" : model.CategoryCode.Trim().ToLower();
 				var key = $"richstatic/{safeCat}/{Guid.NewGuid()}{ext}";
-				using var stream = model.ImageFile.OpenReadStream();
-				await _r2Manager.UploadFileAsync(key, stream, model.ImageFile.ContentType);
+				using var stream = model.MediaFile.OpenReadStream();
+				await _r2Manager.UploadFileAsync(key, stream, model.MediaFile.ContentType);
 				model.MediaUrl = _r2Manager.GetFileUrl(key);
 			}
 
@@ -119,60 +119,69 @@ namespace BussinessCupApi.Controllers
 			model.Culture = "tr";
 			_context.RichStaticContents.Add(model);
 
-			// Diğer diller için çeviri ve kayıt (sadece text doluysa)
-			var text = model.Text ?? "";
-			if (!string.IsNullOrWhiteSpace(text))
-			{
-				var enText = await _openAIManager.TranslateFromTurkishAsync(text, "English");
-				var ruText = await _openAIManager.TranslateFromTurkishAsync(text, "Russian");
-				var roText = await _openAIManager.TranslateFromTurkishAsync(text, "Romanian");
+            // Diğer diller için çeviri ve kayıt (sadece text doluysa)
+            // Diğer diller için çeviri ve kayıt (boşsa direkt boş string kaydedilecek)
+            var text = model.Text ?? string.Empty;
 
-				var enModel = new RichStaticContent
-				{
-					CategoryCode = model.CategoryCode,
-					MediaUrl = model.MediaUrl,
-					ProfileImageUrl = model.ProfileImageUrl,
-					CreatedAt = model.CreatedAt,
-					UpdatedAt = model.UpdatedAt,
-					Culture = "en",
-					Text = enText,
-					EmbedVideoUrl = model.EmbedVideoUrl,
-					AltText = model.AltText
+            string enText = "";
+            string ruText = "";
+            string roText = "";
 
-				};
-				_context.RichStaticContents.Add(enModel);
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                enText = await _openAIManager.TranslateFromTurkishAsync(text, "English");
+                ruText = await _openAIManager.TranslateFromTurkishAsync(text, "Russian");
+                roText = await _openAIManager.TranslateFromTurkishAsync(text, "Romanian");
+            }
 
-				var ruModel = new RichStaticContent
-				{
-					CategoryCode = model.CategoryCode,
-					MediaUrl = model.MediaUrl,
-					ProfileImageUrl = model.ProfileImageUrl,
-					CreatedAt = model.CreatedAt,
-					UpdatedAt = model.UpdatedAt,
-					Culture = "ru",
-					Text = ruText,
-					EmbedVideoUrl = model.EmbedVideoUrl,
-					AltText = model.AltText
+            // İngilizce kayıt
+            var enModel = new RichStaticContent
+            {
+                CategoryCode = model.CategoryCode,
+                MediaUrl = model.MediaUrl,
+                ProfileImageUrl = model.ProfileImageUrl,
+                CreatedAt = model.CreatedAt,
+                UpdatedAt = model.UpdatedAt,
+                Culture = "en",
+                Text = enText, // boş olabilir
+                EmbedVideoUrl = model.EmbedVideoUrl,
+                AltText = model.AltText
+            };
+            _context.RichStaticContents.Add(enModel);
 
-				};
-				_context.RichStaticContents.Add(ruModel);
+            // Rusça kayıt
+            var ruModel = new RichStaticContent
+            {
+                CategoryCode = model.CategoryCode,
+                MediaUrl = model.MediaUrl,
+                ProfileImageUrl = model.ProfileImageUrl,
+                CreatedAt = model.CreatedAt,
+                UpdatedAt = model.UpdatedAt,
+                Culture = "ru",
+                Text = ruText,
+                EmbedVideoUrl = model.EmbedVideoUrl,
+                AltText = model.AltText
+            };
+            _context.RichStaticContents.Add(ruModel);
 
-				var roModel = new RichStaticContent
-				{
-					CategoryCode = model.CategoryCode,
-					MediaUrl = model.MediaUrl,
-					ProfileImageUrl = model.ProfileImageUrl,
-					CreatedAt = model.CreatedAt,
-					UpdatedAt = model.UpdatedAt,
-					Culture = "ro",
-					Text = roText,
-					EmbedVideoUrl = model.EmbedVideoUrl,
-					AltText = model.AltText
-				};
-				_context.RichStaticContents.Add(roModel);
-			}
+            // Romence kayıt
+            var roModel = new RichStaticContent
+            {
+                CategoryCode = model.CategoryCode,
+                MediaUrl = model.MediaUrl,
+                ProfileImageUrl = model.ProfileImageUrl,
+                CreatedAt = model.CreatedAt,
+                UpdatedAt = model.UpdatedAt,
+                Culture = "ro",
+                Text = roText,
+                EmbedVideoUrl = model.EmbedVideoUrl,
+                AltText = model.AltText
+            };
+            _context.RichStaticContents.Add(roModel);
 
-			await _context.SaveChangesAsync();
+
+
+            await _context.SaveChangesAsync();
 			TempData["SuccessMessage"] = "Rich static içerik kaydedildi.";
 			return RedirectToAction(nameof(RichStatic));
 		}

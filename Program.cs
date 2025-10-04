@@ -1,22 +1,23 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
+using BussinessCupApi;
+using BussinessCupApi.CloudflareManager;
 using BussinessCupApi.Data;
-using Microsoft.OpenApi.Models;
+using BussinessCupApi.Jobs;
+using BussinessCupApi.Managers;
+using BussinessCupApi.Models;
+using BussinessCupApi.Models.UserPlayerTypes;
+using Hangfire;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.FileProviders;
-using Microsoft.AspNetCore.Identity;
-using System;
-using BussinessCupApi.Models;
-using BussinessCupApi;
-using BussinessCupApi.Managers;
-using BussinessCupApi.CloudflareManager;
 using Microsoft.Extensions.Options;
-using Hangfire;
-using BussinessCupApi.Jobs;
-using BussinessCupApi.Models.UserPlayerTypes;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -113,6 +114,11 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 100 * 1024 * 1024; // 100 MB
+});
+
 builder.Services.AddMemoryCache();
 builder.Services.AddDistributedMemoryCache(); // veya Redis için: AddStackExchangeRedisCache
 
@@ -155,6 +161,12 @@ builder.Logging.AddProvider(new CloudflareD1LoggerProvider(
     options.ApiUrl, options.BearerToken));
 
 var app = builder.Build();
+
+app.Use(async (context, next) =>
+{
+    context.Features.Get<IHttpMaxRequestBodySizeFeature>().MaxRequestBodySize = 100 * 1024 * 1024;
+    await next.Invoke();
+});
 
 using (var scope = app.Services.CreateScope())
 {

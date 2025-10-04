@@ -45,7 +45,7 @@
 
 			<div class="md:col-span-3">
 				<label class="block text-gray-300 mb-1">Media Upload</label>
-				<input asp-for="ImageFile" type="file" accept="image/*,video/mp4"
+				<input asp-for="MediaFile" type="file" accept="image/*,video/mp4"
 					class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:border-yellow-500" />
 				@if (!string.IsNullOrWhiteSpace(Model?.MediaUrl))
 				{
@@ -75,7 +75,7 @@
 			</div>
 
 			<div class="md:col-span-4">
-				<label class="block text-gray-300 mb-1">Video Url (optional)</label>
+				<label class="block text-gray-300 mb-1">Video Url (optional) (Embed Youtube Link)</label>
 				<input asp-for="EmbedVideoUrl" type="url"
 					class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:border-yellow-500"
 					placeholder="https://..." />
