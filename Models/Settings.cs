@@ -24,5 +24,7 @@ namespace BussinessCupApi.Models
         public DateTime LastUpdated { get; set; }
         [Display(Name = "Turnuva Başlangıç Tarihi")]
         public DateTime? TournamentStartDate { get; set; }
+        [Display(Name = "Turnuva Bitiş Tarihi")]
+        public DateTime? TournamentEndDate { get; set; }
     }
 }
