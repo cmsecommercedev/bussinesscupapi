@@ -36,7 +36,7 @@ namespace BussinessCupApi.Controllers.Api // Namespace'i kontrol edin
         }
 
         [HttpPost("addusertoall")]
-        public async Task<IActionResult> AddUserToAll([FromQuery] string userToken,string culture="tr")
+        public async Task<IActionResult> AddUserToAll([FromQuery] string userToken, string culture = "tr")
         {
             if (string.IsNullOrWhiteSpace(userToken))
                 return BadRequest("Geçersiz macid veya kullanıcı token bilgisi.");
@@ -105,6 +105,18 @@ namespace BussinessCupApi.Controllers.Api // Namespace'i kontrol edin
                 return Ok(new { success = true, message = $"Takım favorilerden çıkarıldı ve topic'ten çıkıldı: {topic}" });
             else
                 return StatusCode(500, new { success = false, message = $"Favorilerden çıkarıldı fakat topic'ten çıkılamadı: {result.message}" });
+        }
+
+        [HttpGet("isteamfav")]
+        public async Task<IActionResult> IsTeamFav([FromQuery] int teamId, [FromQuery] string macId)
+        {
+            if (teamId <= 0 || string.IsNullOrWhiteSpace(macId))
+                return BadRequest("Geçersiz takım veya cihaz bilgisi.");
+
+            bool isFav = await _context.FavouriteTeams
+                .AnyAsync(f => f.TeamID == teamId && f.MacID == macId);
+
+            return Ok(new { isFavourite = isFav });
         }
 
     }

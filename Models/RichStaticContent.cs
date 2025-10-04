@@ -9,9 +9,9 @@ namespace BussinessCupApi.Models
 		public int Id { get; set; }
 		public string? CategoryCode { get; set; } // e.g., "flags", "home_hero"
 		public string? Culture { get; set; } // e.g., "tr", "en", "de", "ru" (or any you add)
-		public string? ImageUrl { get; set; } // optional
+		public string? MediaUrl { get; set; } // optional
 		public string? ProfileImageUrl { get; set; } // video preview image (optional)
-		public string? VideoUrl { get; set; } // optional
+		public string? EmbedVideoUrl { get; set; } // optional
 		public string? Text { get; set; } // rich/plain text
 		public string? AltText { get; set; } // image alt text
 		public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

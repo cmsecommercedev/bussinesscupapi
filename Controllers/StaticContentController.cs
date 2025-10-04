@@ -76,12 +76,12 @@ namespace BussinessCupApi.Controllers
 
 			ViewBag.Items = items;
 			return View(new RichStaticContent());
-			}
+		}
 
 		[HttpPost]
 		[ValidateAntiForgeryToken]
 		public async Task<IActionResult> RichStatic(RichStaticContent model)
-		{ 
+		{
 			if (!ModelState.IsValid)
 			{
 				ViewBag.Items = await _context.RichStaticContents
@@ -99,7 +99,7 @@ namespace BussinessCupApi.Controllers
 				var key = $"richstatic/{safeCat}/{Guid.NewGuid()}{ext}";
 				using var stream = model.ImageFile.OpenReadStream();
 				await _r2Manager.UploadFileAsync(key, stream, model.ImageFile.ContentType);
-				model.ImageUrl = _r2Manager.GetFileUrl(key);
+				model.MediaUrl = _r2Manager.GetFileUrl(key);
 			}
 
 			// Profil görseli yüklendiyse R2'ye yükle
@@ -113,14 +113,16 @@ namespace BussinessCupApi.Controllers
 				model.ProfileImageUrl = _r2Manager.GetFileUrl(key);
 			}
 
-				// Türkçe kayıt oluştur
-				model.CreatedAt = DateTime.UtcNow;
-				model.UpdatedAt = DateTime.UtcNow;
-				model.Culture = "tr";
-				_context.RichStaticContents.Add(model);
+			// Türkçe kayıt oluştur
+			model.CreatedAt = DateTime.UtcNow;
+			model.UpdatedAt = DateTime.UtcNow;
+			model.Culture = "tr";
+			_context.RichStaticContents.Add(model);
 
-				// Diğer diller için çeviri ve kayıt
-				var text = model.Text ?? "";
+			// Diğer diller için çeviri ve kayıt (sadece text doluysa)
+			var text = model.Text ?? "";
+			if (!string.IsNullOrWhiteSpace(text))
+			{
 				var enText = await _openAIManager.TranslateFromTurkishAsync(text, "English");
 				var ruText = await _openAIManager.TranslateFromTurkishAsync(text, "Russian");
 				var roText = await _openAIManager.TranslateFromTurkishAsync(text, "Romanian");
@@ -128,43 +130,52 @@ namespace BussinessCupApi.Controllers
 				var enModel = new RichStaticContent
 				{
 					CategoryCode = model.CategoryCode,
-					ImageUrl = model.ImageUrl,
+					MediaUrl = model.MediaUrl,
 					ProfileImageUrl = model.ProfileImageUrl,
 					CreatedAt = model.CreatedAt,
 					UpdatedAt = model.UpdatedAt,
 					Culture = "en",
-					Text = enText
+					Text = enText,
+					EmbedVideoUrl = model.EmbedVideoUrl,
+					AltText = model.AltText
+
 				};
 				_context.RichStaticContents.Add(enModel);
 
 				var ruModel = new RichStaticContent
 				{
 					CategoryCode = model.CategoryCode,
-					ImageUrl = model.ImageUrl,
+					MediaUrl = model.MediaUrl,
 					ProfileImageUrl = model.ProfileImageUrl,
 					CreatedAt = model.CreatedAt,
 					UpdatedAt = model.UpdatedAt,
 					Culture = "ru",
-					Text = ruText
+					Text = ruText,
+					EmbedVideoUrl = model.EmbedVideoUrl,
+					AltText = model.AltText
+
 				};
 				_context.RichStaticContents.Add(ruModel);
 
 				var roModel = new RichStaticContent
 				{
 					CategoryCode = model.CategoryCode,
-					ImageUrl = model.ImageUrl,
+					MediaUrl = model.MediaUrl,
 					ProfileImageUrl = model.ProfileImageUrl,
 					CreatedAt = model.CreatedAt,
 					UpdatedAt = model.UpdatedAt,
 					Culture = "ro",
-					Text = roText
+					Text = roText,
+					EmbedVideoUrl = model.EmbedVideoUrl,
+					AltText = model.AltText
 				};
 				_context.RichStaticContents.Add(roModel);
-
-				await _context.SaveChangesAsync();
-				TempData["SuccessMessage"] = "Rich static içerik kaydedildi.";
-				return RedirectToAction(nameof(RichStatic));
 			}
+
+			await _context.SaveChangesAsync();
+			TempData["SuccessMessage"] = "Rich static içerik kaydedildi.";
+			return RedirectToAction(nameof(RichStatic));
+		}
 
 		[HttpPost]
 		[ValidateAntiForgeryToken]
