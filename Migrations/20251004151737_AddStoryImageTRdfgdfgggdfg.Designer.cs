@@ -4,6 +4,7 @@ using BussinessCupApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BussinessCupApi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251004151737_AddStoryImageTRdfgdfgggdfg")]
+    partial class AddStoryImageTRdfgdfgggdfg
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -684,46 +687,6 @@ namespace BussinessCupApi.Migrations
                     b.ToTable("PlayerTransferRequest");
                 });
 
-            modelBuilder.Entity("BussinessCupApi.Models.RichContentCategory", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("RichContentCategories");
-                });
-
             modelBuilder.Entity("BussinessCupApi.Models.RichStaticContent", b =>
                 {
                     b.Property<int>("Id")
@@ -735,8 +698,8 @@ namespace BussinessCupApi.Migrations
                     b.Property<string>("AltText")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("CategoryId")
-                        .HasColumnType("int");
+                    b.Property<string>("CategoryCode")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -766,8 +729,6 @@ namespace BussinessCupApi.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CategoryId");
 
                     b.HasIndex("SeasonId");
 
@@ -1636,17 +1597,10 @@ namespace BussinessCupApi.Migrations
 
             modelBuilder.Entity("BussinessCupApi.Models.RichStaticContent", b =>
                 {
-                    b.HasOne("BussinessCupApi.Models.RichContentCategory", "Category")
-                        .WithMany("RichStaticContents")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("BussinessCupApi.Models.Season", "Season")
                         .WithMany()
                         .HasForeignKey("SeasonId")
                         .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Category");
 
                     b.Navigation("Season");
                 });
@@ -1935,11 +1889,6 @@ namespace BussinessCupApi.Migrations
                     b.Navigation("Cards");
 
                     b.Navigation("Goals");
-                });
-
-            modelBuilder.Entity("BussinessCupApi.Models.RichContentCategory", b =>
-                {
-                    b.Navigation("RichStaticContents");
                 });
 
             modelBuilder.Entity("BussinessCupApi.Models.Story", b =>

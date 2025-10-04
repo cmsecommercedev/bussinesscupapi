@@ -170,11 +170,15 @@ namespace BussinessCupApi.Controllers.Api // Namespace'i kontrol edin
         [HttpGet("richstatic")]
         public async Task<ActionResult> GetRichStatic([FromQuery] string? category = null, [FromQuery] string? culture = null, [FromQuery] bool? published = true)
         {
-            var query = _context.RichStaticContents.AsNoTracking();
+            var query = _context.RichStaticContents
+                .AsNoTracking()
+                .Include(x => x.Category)
+                .Include(x => x.Season)
+                .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(category))
             {
-                query = query.Where(x => x.CategoryCode == category);
+                query = query.Where(x => x.Category != null && x.Category.Code == category);
             }
             if (!string.IsNullOrWhiteSpace(culture))
             {
@@ -190,7 +194,10 @@ namespace BussinessCupApi.Controllers.Api // Namespace'i kontrol edin
                 .Select(x => new
                 {
                     x.Id,
-                    x.CategoryCode,
+                    CategoryCode = x.Category != null ? x.Category.Code : null,
+                    CategoryName = x.Category != null ? x.Category.Name : null,
+                    SeasonId = x.SeasonId,
+                    SeasonName = x.Season != null ? x.Season.Name : null,
                     x.Culture,
                     x.MediaUrl,
                     x.ProfileImageUrl,

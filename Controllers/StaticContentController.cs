@@ -70,11 +70,26 @@ namespace BussinessCupApi.Controllers
 		public async Task<IActionResult> RichStatic()
 		{
 			var items = await _context.RichStaticContents
+				.Include(x => x.Season)
+				.Include(x => x.Category)
 				.AsNoTracking()
 				.OrderByDescending(x => x.UpdatedAt)
 				.ToListAsync();
 
+			var seasons = await _context.Season
+				.AsNoTracking()
+				.OrderByDescending(x => x.SeasonID)
+				.ToListAsync();
+
+			var categories = await _context.RichContentCategories
+				.AsNoTracking()
+				.Where(x => x.IsActive)
+				.OrderBy(x => x.Name)
+				.ToListAsync();
+
 			ViewBag.Items = items;
+			ViewBag.Seasons = seasons;
+			ViewBag.Categories = categories;
 			return View(new RichStaticContent());
 		}
 
@@ -85,18 +100,46 @@ namespace BussinessCupApi.Controllers
 			if (!ModelState.IsValid)
 			{
 				ViewBag.Items = await _context.RichStaticContents
+					.Include(x => x.Season)
+					.Include(x => x.Category)
 					.AsNoTracking()
 					.OrderByDescending(x => x.UpdatedAt)
 					.ToListAsync();
+				
+				var seasons = await _context.Season
+					.AsNoTracking()
+					.OrderByDescending(x => x.SeasonID)
+					.ToListAsync();
+				ViewBag.Seasons = seasons;
+
+				var categories = await _context.RichContentCategories
+					.AsNoTracking()
+					.Where(x => x.IsActive)
+					.OrderBy(x => x.Name)
+					.ToListAsync();
+				ViewBag.Categories = categories;
+				
 				return View(model);
+			}
+
+			// Get category code for file naming
+			var categoryCode = "misc";
+			if (model.CategoryId.HasValue)
+			{
+				var category = await _context.RichContentCategories
+					.AsNoTracking()
+					.FirstOrDefaultAsync(x => x.Id == model.CategoryId.Value);
+				if (category != null && !string.IsNullOrWhiteSpace(category.Code))
+				{
+					categoryCode = category.Code.Trim().ToLower();
+				}
 			}
 
 			// Görsel yüklendiyse R2'ye yükle
 			if (model.MediaFile != null && model.MediaFile.Length > 0)
 			{
 				var ext = Path.GetExtension(model.MediaFile.FileName);
-				var safeCat = string.IsNullOrWhiteSpace(model.CategoryCode) ? "misc" : model.CategoryCode.Trim().ToLower();
-				var key = $"richstatic/{safeCat}/{Guid.NewGuid()}{ext}";
+				var key = $"richstatic/{categoryCode}/{Guid.NewGuid()}{ext}";
 				using var stream = model.MediaFile.OpenReadStream();
 				await _r2Manager.UploadFileAsync(key, stream, model.MediaFile.ContentType);
 				model.MediaUrl = _r2Manager.GetFileUrl(key);
@@ -106,8 +149,7 @@ namespace BussinessCupApi.Controllers
 			if (model.ProfileImageFile != null && model.ProfileImageFile.Length > 0)
 			{
 				var ext = Path.GetExtension(model.ProfileImageFile.FileName);
-				var safeCat = string.IsNullOrWhiteSpace(model.CategoryCode) ? "misc" : model.CategoryCode.Trim().ToLower();
-				var key = $"richstatic/profile/{safeCat}/{Guid.NewGuid()}{ext}";
+				var key = $"richstatic/profile/{categoryCode}/{Guid.NewGuid()}{ext}";
 				using var stream = model.ProfileImageFile.OpenReadStream();
 				await _r2Manager.UploadFileAsync(key, stream, model.ProfileImageFile.ContentType);
 				model.ProfileImageUrl = _r2Manager.GetFileUrl(key);
@@ -137,7 +179,8 @@ namespace BussinessCupApi.Controllers
             // İngilizce kayıt
             var enModel = new RichStaticContent
             {
-                CategoryCode = model.CategoryCode,
+                CategoryId = model.CategoryId,
+                SeasonId = model.SeasonId,
                 MediaUrl = model.MediaUrl,
                 ProfileImageUrl = model.ProfileImageUrl,
                 CreatedAt = model.CreatedAt,
@@ -145,14 +188,16 @@ namespace BussinessCupApi.Controllers
                 Culture = "en",
                 Text = enText, // boş olabilir
                 EmbedVideoUrl = model.EmbedVideoUrl,
-                AltText = model.AltText
+                AltText = model.AltText,
+                Published = model.Published
             };
             _context.RichStaticContents.Add(enModel);
 
             // Rusça kayıt
             var ruModel = new RichStaticContent
             {
-                CategoryCode = model.CategoryCode,
+                CategoryId = model.CategoryId,
+                SeasonId = model.SeasonId,
                 MediaUrl = model.MediaUrl,
                 ProfileImageUrl = model.ProfileImageUrl,
                 CreatedAt = model.CreatedAt,
@@ -160,14 +205,16 @@ namespace BussinessCupApi.Controllers
                 Culture = "ru",
                 Text = ruText,
                 EmbedVideoUrl = model.EmbedVideoUrl,
-                AltText = model.AltText
+                AltText = model.AltText,
+                Published = model.Published
             };
             _context.RichStaticContents.Add(ruModel);
 
             // Romence kayıt
             var roModel = new RichStaticContent
             {
-                CategoryCode = model.CategoryCode,
+                CategoryId = model.CategoryId,
+                SeasonId = model.SeasonId,
                 MediaUrl = model.MediaUrl,
                 ProfileImageUrl = model.ProfileImageUrl,
                 CreatedAt = model.CreatedAt,
@@ -175,7 +222,8 @@ namespace BussinessCupApi.Controllers
                 Culture = "ro",
                 Text = roText,
                 EmbedVideoUrl = model.EmbedVideoUrl,
-                AltText = model.AltText
+                AltText = model.AltText,
+                Published = model.Published
             };
             _context.RichStaticContents.Add(roModel);
 

@@ -40,6 +40,7 @@ namespace BussinessCupApi.Data
 		public DbSet<PhotoGallery> PhotoGalleries { get; set; }
 		public DbSet<StaticKeyValue> StaticKeyValues { get; set; }
         		public DbSet<RichStaticContent> RichStaticContents { get; set; }
+		public DbSet<RichContentCategory> RichContentCategories { get; set; }
         public DbSet<Story> Stories { get; set; }
         public DbSet<StoryContent> StoryContents { get; set; }
 
@@ -288,6 +289,32 @@ namespace BussinessCupApi.Data
 					.WithMany(s => s.Contents)
 					.HasForeignKey(sc => sc.StoryId)
 					.OnDelete(DeleteBehavior.Cascade);
+			});
+
+			// RichStaticContent relationships
+			modelBuilder.Entity<RichStaticContent>(entity =>
+			{
+				entity
+					.HasOne(rsc => rsc.Category)
+					.WithMany(c => c.RichStaticContents)
+					.HasForeignKey(rsc => rsc.CategoryId)
+					.OnDelete(DeleteBehavior.SetNull);
+					
+				entity
+					.HasOne(rsc => rsc.Season)
+					.WithMany()
+					.HasForeignKey(rsc => rsc.SeasonId)
+					.OnDelete(DeleteBehavior.SetNull);
+			});
+
+			// RichContentCategory configuration
+			modelBuilder.Entity<RichContentCategory>(entity =>
+			{
+				entity.Property(rc => rc.Name).IsRequired().HasMaxLength(100);
+				entity.Property(rc => rc.Code).HasMaxLength(50);
+				entity.Property(rc => rc.Description).HasMaxLength(500);
+				entity.Property(rc => rc.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+				entity.Property(rc => rc.UpdatedAt).HasDefaultValueSql("GETUTCDATE()");
 			});
         }
     }
