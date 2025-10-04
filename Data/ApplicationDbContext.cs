@@ -33,6 +33,7 @@ namespace BussinessCupApi.Data
         public DbSet<MatchNewsPhoto> MatchNewsPhotos { get; set; }
         public DbSet<PlayerTransferRequest> PlayerTransferRequest { get; set; }
         public DbSet<FavouriteTeams> FavouriteTeams { get; set; }
+        public DbSet<FavouritePlayers> FavouritePlayers { get; set; }
         public DbSet<MatchSquadSubstitution> MatchSquadSubstitutions { get; set; }
         public DbSet<LeagueRule> LeagueRules { get; set; }
         public DbSet<CityRestriction> CityRestrictions { get; set; }

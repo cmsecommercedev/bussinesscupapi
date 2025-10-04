@@ -119,5 +119,74 @@ namespace BussinessCupApi.Controllers.Api // Namespace'i kontrol edin
             return Ok(new { isFavourite = isFav });
         }
 
+        [HttpPost("addplayertofav")]
+        public async Task<IActionResult> AddPlayerToFav([FromQuery] int playerId, [FromQuery] string userToken, string MacID, string culture = "tr")
+        {
+            // Zaten favori mi kontrol et
+            bool alreadyExists = await _context.FavouritePlayers
+                .AnyAsync(f => f.PlayerID == playerId && f.UserToken == userToken);
+
+            if (alreadyExists)
+                return Ok(new { success = true, message = "Bu oyuncu zaten favorilerde." });
+
+            // Tabloya ekle
+            var fav = new FavouritePlayers
+            {
+                PlayerID = playerId,
+                UserToken = userToken,
+                MacID = MacID
+            };
+            _context.FavouritePlayers.Add(fav);
+            await _context.SaveChangesAsync();
+
+            // Firebase topic abone et
+            string topic = $"player_{playerId}_{culture}";
+            var result = await _notificationManager.SubscribeToTopicAsync(new[] { userToken }, topic);
+
+            if (result.success)
+                return Ok(new { success = true, message = $"Oyuncu favorilere eklendi ve topic'e abone olundu: {topic}" });
+            else
+                return StatusCode(500, new { success = false, message = $"Favorilere eklendi fakat topic abonesi yapılamadı: {result.message}" });
+        }
+
+        [HttpPost("removeplayerfromfav")]
+        public async Task<IActionResult> RemovePlayerFromFav([FromQuery] int playerId, [FromQuery] string userToken, string MacID, string culture = "tr")
+        {
+            if (playerId <= 0 || string.IsNullOrWhiteSpace(userToken))
+                return BadRequest("Geçersiz oyuncu veya kullanıcı token bilgisi.");
+
+            // Favori kaydını bul
+            var fav = await _context.FavouritePlayers
+                .FirstOrDefaultAsync(f => f.PlayerID == playerId && f.MacID == MacID);
+
+            if (fav == null)
+                return Ok(new { success = true, message = "Bu oyuncu zaten favorilerde değil." });
+
+            // Tablo kaydını sil
+            _context.FavouritePlayers.Remove(fav);
+            await _context.SaveChangesAsync();
+
+            // Firebase topic'ten çıkar
+            string topic = $"player_{playerId}_{culture}";
+            var result = await _notificationManager.UnsubscribeFromTopicAsync(new[] { userToken }, topic);
+
+            if (result.success)
+                return Ok(new { success = true, message = $"Oyuncu favorilerden çıkarıldı ve topic'ten çıkıldı: {topic}" });
+            else
+                return StatusCode(500, new { success = false, message = $"Favorilerden çıkarıldı fakat topic'ten çıkılamadı: {result.message}" });
+        }
+
+        [HttpGet("isplayerfav")]
+        public async Task<IActionResult> IsPlayerFav([FromQuery] int playerId, [FromQuery] string macId)
+        {
+            if (playerId <= 0 || string.IsNullOrWhiteSpace(macId))
+                return BadRequest("Geçersiz oyuncu veya cihaz bilgisi.");
+
+            bool isFav = await _context.FavouritePlayers
+                .AnyAsync(f => f.PlayerID == playerId && f.MacID == macId);
+
+            return Ok(new { isFavourite = isFav });
+        }
+
     }
 }
