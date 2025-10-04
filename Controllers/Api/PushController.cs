@@ -54,6 +54,22 @@ namespace BussinessCupApi.Controllers.Api
             _logger.LogWarning("Push send failed: {Message}", result.message);
             return StatusCode(500, new { success = false, message = result.message });
         }
+
+        [HttpPost("sendplayer")]
+        public async Task<IActionResult> SendPlayer([FromBody] NotificationViewModel model, int playerid)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            string topic = $"player_{playerid}";
+
+            var result = await _notificationManager.SendNotificationToAllUsers(model, topic);
+            if (result.success)
+                return Ok(new { success = true, message = result.message });
+
+            _logger.LogWarning("Push send failed: {Message}", result.message);
+            return StatusCode(500, new { success = false, message = result.message });
+        }
     }
 }
 
