@@ -14,7 +14,5 @@ namespace BussinessCupApi.Models
         [Required]
         public string UserToken { get; set; }
         public string MacID { get; set; }
-        [ForeignKey("TeamID")]
-        public virtual Team Team { get; set; }
     }
 }

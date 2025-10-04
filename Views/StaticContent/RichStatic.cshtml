@@ -4,7 +4,7 @@
 	Layout = "_AdminLayout";
 
 	var items = ViewBag.Items as System.Collections.Generic.List<BussinessCupApi.Models.RichStaticContent>;
-	var categories = new[] { "moments", "flags", "sponsors", "presentedby", "contact", "rules", "terms", "privacy" };
+	var categories = new[] { "moments", "flags", "sponsors", "presentedby", "posttournament", "pretournament", "terms", "privacy" };
 }
 
 <div class="max-w-6xl mx-auto p-6">
@@ -45,16 +45,16 @@
 
 			<div class="md:col-span-3">
 				<label class="block text-gray-300 mb-1">Media Upload</label>
-				<input asp-for="ImageFile" type="file" accept="image/*,video/mp4"
+				<input asp-for="MediaFile" type="file" accept="image/*,video/mp4"
 					class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:border-yellow-500" />
-				@if (!string.IsNullOrWhiteSpace(Model?.ImageUrl))
+				@if (!string.IsNullOrWhiteSpace(Model?.MediaUrl))
 				{
 					<div class="mt-2 text-xs text-gray-400 break-all">
 						<span>Current:</span>
-						<a href="@Model.ImageUrl" target="_blank"
-							class="text-yellow-400 hover:underline">@Model.ImageUrl</a>
+						<a href="@Model.MediaUrl" target="_blank"
+							class="text-yellow-400 hover:underline">@Model.MediaUrl</a>
 					</div>
-					<input type="hidden" asp-for="ImageUrl" />
+					<input type="hidden" asp-for="MediaUrl" />
 				}
 			</div>
 
@@ -75,8 +75,8 @@
 			</div>
 
 			<div class="md:col-span-4">
-				<label class="block text-gray-300 mb-1">Video Url (optional)</label>
-				<input asp-for="VideoUrl"
+				<label class="block text-gray-300 mb-1">Video Url (optional) (Embed Youtube Link)</label>
+				<input asp-for="EmbedVideoUrl" type="url"
 					class="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:border-yellow-500"
 					placeholder="https://..." />
 			</div>
@@ -147,19 +147,19 @@
 							<tr class="border-b border-gray-700 hover:bg-gray-700/40">
 								<td class="px-6 py-3">@x.Culture</td>
 								<td class="px-6 py-3">
-									@if (!string.IsNullOrWhiteSpace(x.ImageUrl))
+									@if (!string.IsNullOrWhiteSpace(x.MediaUrl))
 									{
-										if (x.ImageUrl.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase))
+										if (x.MediaUrl.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase))
 										{
-											<a href="@x.ImageUrl" target="_blank" class="inline-block">
+											<a href="@x.MediaUrl" target="_blank" class="inline-block">
 												<img src="/images/defaultvideo.png" alt="Video"
 													class="h-10 w-10 object-cover rounded border border-gray-600" />
 											</a>
 										}
 										else
 										{
-											<a href="@x.ImageUrl" target="_blank" class="inline-block">
-												<img src="@x.ImageUrl" alt="@x.AltText"
+											<a href="@x.MediaUrl" target="_blank" class="inline-block">
+												<img src="@x.MediaUrl" alt="@x.AltText"
 													class="h-10 w-10 object-cover rounded border border-gray-600" />
 											</a>
 										}
@@ -182,7 +182,7 @@
 										<span class="text-gray-500">-</span>
 									}
 								</td>
-								<td class="px-6 py-3 truncate max-w-[220px]">@x.VideoUrl</td>
+								<td class="px-6 py-3 truncate max-w-[220px]">@x.EmbedVideoUrl</td>
 								<td class="px-6 py-3 whitespace-pre-line max-w-[420px]">@x.Text</td>
 								<td class="px-6 py-3 whitespace-pre-line max-w-[260px]">@x.AltText</td>
 								<td class="px-6 py-3">@(x.Published ? "Yes" : "No")</td>
