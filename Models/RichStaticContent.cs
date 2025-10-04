@@ -7,8 +7,9 @@ namespace BussinessCupApi.Models
 	public class RichStaticContent
 	{
 		public int Id { get; set; }
-		public string? CategoryCode { get; set; } // e.g., "flags", "home_hero"
+		public int? CategoryId { get; set; } // reference to RichContentCategory
 		public string? Culture { get; set; } // e.g., "tr", "en", "de", "ru" (or any you add)
+		public int? SeasonId { get; set; } // optional season reference
 		public string? MediaUrl { get; set; } // optional
 		public string? ProfileImageUrl { get; set; } // video preview image (optional)
 		public string? EmbedVideoUrl { get; set; } // optional
@@ -23,5 +24,9 @@ namespace BussinessCupApi.Models
 		
 		[NotMapped]
 		public IFormFile? ProfileImageFile { get; set; } // profile image upload (optional)
+
+		// Navigation properties
+		public virtual RichContentCategory? Category { get; set; }
+		public virtual Season? Season { get; set; }
 	}
 }
