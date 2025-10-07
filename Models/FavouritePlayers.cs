@@ -14,5 +14,6 @@ namespace BussinessCupApi.Models
         [Required]
         public string UserToken { get; set; }
         public string MacID { get; set; }
+        public string? Culture { get; set; } // eklendi
     }
 }

@@ -49,7 +49,6 @@ namespace BussinessCupApi.Controllers.Api // Namespace'i kontrol edin
             else
                 return StatusCode(500, new { success = false, message = $"Hata: {result.message}" });
         }
-
         [HttpPost("addteamtofav")]
         public async Task<IActionResult> AddTeamToFav([FromQuery] int teamId, [FromQuery] string userToken, string MacID, string culture = "tr")
         {
@@ -65,7 +64,8 @@ namespace BussinessCupApi.Controllers.Api // Namespace'i kontrol edin
             {
                 TeamID = teamId,
                 UserToken = userToken,
-                MacID = MacID
+                MacID = MacID,
+                Culture = culture
             };
             _context.FavouriteTeams.Add(fav);
             await _context.SaveChangesAsync();
@@ -97,8 +97,9 @@ namespace BussinessCupApi.Controllers.Api // Namespace'i kontrol edin
             _context.FavouriteTeams.Remove(fav);
             await _context.SaveChangesAsync();
 
-            // Firebase topic'ten çıkar
-            string topic = $"team_{teamId}_{culture}";
+            // Firebase topic'ten çıkar - kaydedilen culture'ı kullan
+            var topicCulture = string.IsNullOrWhiteSpace(fav.Culture) ? culture : fav.Culture;
+            string topic = $"team_{teamId}_{topicCulture}";
             var result = await _notificationManager.UnsubscribeFromTopicAsync(new[] { userToken }, topic);
 
             if (result.success)
@@ -106,6 +107,7 @@ namespace BussinessCupApi.Controllers.Api // Namespace'i kontrol edin
             else
                 return StatusCode(500, new { success = false, message = $"Favorilerden çıkarıldı fakat topic'ten çıkılamadı: {result.message}" });
         }
+
 
         [HttpGet("isteamfav")]
         public async Task<IActionResult> IsTeamFav([FromQuery] int teamId, [FromQuery] string macId)
@@ -134,7 +136,8 @@ namespace BussinessCupApi.Controllers.Api // Namespace'i kontrol edin
             {
                 PlayerID = playerId,
                 UserToken = userToken,
-                MacID = MacID
+                MacID = MacID,
+                Culture = culture
             };
             _context.FavouritePlayers.Add(fav);
             await _context.SaveChangesAsync();
@@ -166,8 +169,9 @@ namespace BussinessCupApi.Controllers.Api // Namespace'i kontrol edin
             _context.FavouritePlayers.Remove(fav);
             await _context.SaveChangesAsync();
 
-            // Firebase topic'ten çıkar
-            string topic = $"player_{playerId}_{culture}";
+            // Firebase topic'ten çıkar - kaydedilen culture'ı kullan
+            var topicCulture = string.IsNullOrWhiteSpace(fav.Culture) ? culture : fav.Culture;
+            string topic = $"player_{playerId}_{topicCulture}";
             var result = await _notificationManager.UnsubscribeFromTopicAsync(new[] { userToken }, topic);
 
             if (result.success)
