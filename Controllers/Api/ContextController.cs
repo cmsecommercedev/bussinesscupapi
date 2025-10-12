@@ -166,9 +166,9 @@ namespace BussinessCupApi.Controllers.Api // Namespace'i kontrol edin
         }
 
 
-        // GET: /api/context/richstatic?category=flags&culture=tr
+        // GET: /api/context/richstatic?category=flags&culture=tr&season=2024
         [HttpGet("richstatic")]
-        public async Task<ActionResult> GetRichStatic([FromQuery] string? category = null, [FromQuery] string? culture = null, [FromQuery] bool? published = true)
+        public async Task<ActionResult> GetRichStatic([FromQuery] string? category = null, [FromQuery] string? culture = null, [FromQuery] bool? published = true, [FromQuery] string? season = null)
         {
             var query = _context.RichStaticContents
                 .AsNoTracking()
@@ -183,6 +183,10 @@ namespace BussinessCupApi.Controllers.Api // Namespace'i kontrol edin
             if (!string.IsNullOrWhiteSpace(culture))
             {
                 query = query.Where(x => x.Culture == culture);
+            }
+            if (!string.IsNullOrWhiteSpace(season))
+            {
+                query = query.Where(x => x.Season != null && x.Season.Name == season);
             }
             if (published.HasValue)
             {
