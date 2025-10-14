@@ -36,7 +36,14 @@
 				</label>
 			</div>
 			<div class="flex justify-end">
-				<button type="submit" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-semibold rounded-lg">Kaydet</button>
+					<button id="story-submit-btn" type="submit" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-semibold rounded-lg">Kaydet</button>
+			</div>
+			<div id="story-loading" class="hidden mt-3 text-yellow-400 font-semibold flex items-center gap-2">
+					<svg class="animate-spin h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+					</svg>
+					Yükleniyor...
 			</div>
 		</form>
 	</div>
@@ -93,3 +100,10 @@
 		}
 	</div>
 </div>
+
+<script>
+    document.querySelector('form[asp-action="Create"]').addEventListener('submit', function(e) {
+        document.getElementById('story-submit-btn').disabled = true;
+        document.getElementById('story-loading').classList.remove('hidden');
+    });
+</script>
