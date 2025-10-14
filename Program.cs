@@ -164,7 +164,7 @@ var app = builder.Build();
 
 app.Use(async (context, next) =>
 {
-    context.Features.Get<IHttpMaxRequestBodySizeFeature>().MaxRequestBodySize = 100 * 1024 * 1024;
+    context.Features.Get<IHttpMaxRequestBodySizeFeature>().MaxRequestBodySize = 500 * 1024 * 1024;
     await next.Invoke();
 });
 
